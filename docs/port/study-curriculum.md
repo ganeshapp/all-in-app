@@ -1104,3 +1104,288 @@ Widget `RangeBoardBreakdown({ title, range, board, dead = [] })`:
 - Layout: rounded 12 px card (line border, ink-850, 12 px padding). Header: title (~12.8 px semibold) left, faint ~10.9 px `"{total} combos on {board.join(" ")}"` right (e.g. `183 combos on Ks 9d 4c`). Rows (~11.5 px): label in an 86 px column (muted), a 10 px-tall rounded track with the tone-coloured fill, then a 56 px right-aligned mono `fmtPct(combos / total)`.
 - If `board.length < 5` and either count is > 0, a footer row (faint ~11.2 px, 16 px gaps): `"Flush draws: {fmtPct(flushDraws / total)}"` if > 0 and `"Open-enders: {fmtPct(oesds / total)}"` if > 0.
 
+---
+
+## 13. Engine contracts the curriculum depends on
+
+These functions live in the engine subsystem (ported separately) but the Study tab's
+observable output depends on their exact behaviour, so the contract is restated here.
+
+### 13.1 `topPercentRange(pct)` — Chen-formula strength ordering
+
+```dart
+double chenScore(String label) {
+  int rankValue(String r) => RANKS.indexOf(r) + 2;             // '2'..'A' → 2..14
+  double high(int v) => v == 14 ? 10 : v == 13 ? 8 : v == 12 ? 7 : v == 11 ? 6 : v / 2;
+  final kind = kindOf(label);
+  final hi = rankValue(label[0]);
+  if (kind == pair) return max(5, high(hi) * 2);
+  final lo = rankValue(label[1]);
+  var score = high(hi);
+  if (kind == suited) score += 2;
+  final gap = hi - lo - 1;
+  if (gap == 1) score -= 1; else if (gap == 2) score -= 2; else if (gap == 3) score -= 4; else if (gap >= 4) score -= 5;
+  if (gap <= 1 && hi < 12) score += 1;                          // straight bonus: 0/1 gap and both below Queen
+  return score;
+}
+
+List<RankedHand> rankedHands() => allLabels()          // 169 labels in grid order (row-major)
+    .map((l) => (label: l, score: chenScore(l), combos: comboCount(l)))
+    .sortedBy: score desc, then kind (pair < suited < offsuit), then high-card rank desc.
+    // The sort must be STABLE (JS Array.sort is stable): remaining ties keep grid order.
+
+Set<String> topPercentRange(num pct) {
+  final target = clamp(pct, 0, 100) / 100 * 1326;
+  final out = <String>{}; var acc = 0;
+  for (final h in rankedHands()) { if (acc >= target) break; out.add(h.label); acc += h.combos; }
+  return out;   // insertion order = strength order
+}
+```
+
+Note the loop adds a hand *before* checking whether it overshoots, so the result is the
+smallest strength-prefix whose combo total reaches the target (e.g. 15 % → 204 combos = 15.4 %).
+`topPercentRange(100).length == 169`, `rankedHands()[0].label == "AA"`.
+
+The full ranked order (1-based rank: label (score)) — pin this list in a Dart test; the
+golden file `scripts/golden/charts.json` (`ranked`: array of 169 labels; `topPct`: object
+`"1".."100"` → sorted label arrays) is the mechanical source for all 100 percentages:
+
+```
+1:AA(20) 2:KK(16) 3:QQ(14) 4:JJ(12) 5:AKs(12) 6:AQs(11) 7:TT(10) 8:AJs(10) 9:KQs(10) 10:AKo(10)
+11:99(9) 12:KJs(9) 13:QJs(9) 14:JTs(9) 15:AQo(9) 16:88(8) 17:ATs(8) 18:KTs(8) 19:QTs(8) 20:J9s(8)
+21:T9s(8) 22:AJo(8) 23:KQo(8) 24:98s(7.5) 25:77(7) 26:A9s(7) 27:A8s(7) 28:A7s(7) 29:A6s(7) 30:A5s(7)
+31:A4s(7) 32:A3s(7) 33:A2s(7) 34:Q9s(7) 35:T8s(7) 36:87s(7) 37:KJo(7) 38:QJo(7) 39:JTo(7) 40:97s(6.5)
+41:76s(6.5) 42:66(6) 43:K9s(6) 44:J8s(6) 45:86s(6) 46:65s(6) 47:ATo(6) 48:KTo(6) 49:QTo(6) 50:J9o(6)
+51:T9o(6) 52:75s(5.5) 53:54s(5.5) 54:98o(5.5) 55:55(5) 56:44(5) 57:33(5) 58:22(5) 59:K8s(5) 60:K7s(5)
+61:K6s(5) 62:K5s(5) 63:K4s(5) 64:K3s(5) 65:K2s(5) 66:Q8s(5) 67:T7s(5) 68:64s(5) 69:43s(5) 70:A9o(5)
+71:A8o(5) 72:A7o(5) 73:A6o(5) 74:A5o(5) 75:A4o(5) 76:A3o(5) 77:A2o(5) 78:Q9o(5) 79:T8o(5) 80:87o(5)
+81:96s(4.5) 82:53s(4.5) 83:32s(4.5) 84:97o(4.5) 85:76o(4.5) 86:Q7s(4) 87:Q6s(4) 88:Q5s(4) 89:Q4s(4) 90:Q3s(4)
+91:Q2s(4) 92:J7s(4) 93:85s(4) 94:42s(4) 95:K9o(4) 96:J8o(4) 97:86o(4) 98:65o(4) 99:74s(3.5) 100:75o(3.5)
+101:54o(3.5) 102:J6s(3) 103:J5s(3) 104:J4s(3) 105:J3s(3) 106:J2s(3) 107:T6s(3) 108:63s(3) 109:K8o(3) 110:K7o(3)
+111:K6o(3) 112:K5o(3) 113:K4o(3) 114:K3o(3) 115:K2o(3) 116:Q8o(3) 117:T7o(3) 118:64o(3) 119:43o(3) 120:95s(2.5)
+121:52s(2.5) 122:96o(2.5) 123:53o(2.5) 124:32o(2.5) 125:T5s(2) 126:T4s(2) 127:T3s(2) 128:T2s(2) 129:84s(2) 130:Q7o(2)
+131:Q6o(2) 132:Q5o(2) 133:Q4o(2) 134:Q3o(2) 135:Q2o(2) 136:J7o(2) 137:85o(2) 138:42o(2) 139:94s(1.5) 140:93s(1.5)
+141:92s(1.5) 142:73s(1.5) 143:74o(1.5) 144:83s(1) 145:82s(1) 146:62s(1) 147:J6o(1) 148:J5o(1) 149:J4o(1) 150:J3o(1)
+151:J2o(1) 152:T6o(1) 153:63o(1) 154:72s(0.5) 155:95o(0.5) 156:52o(0.5) 157:T5o(0) 158:T4o(0) 159:T3o(0) 160:T2o(0)
+161:84o(0) 162:94o(-0.5) 163:93o(-0.5) 164:92o(-0.5) 165:73o(-0.5) 166:83o(-1) 167:82o(-1) 168:62o(-1) 169:72o(-1.5)
+```
+
+### 13.2 `chartToSet(chart, min = 0.5)` and the pre-flop charts
+
+`PREFLOP_100` (file `src/data/preflop.ts`, auto-generated from `scripts/preflop_gen.ts`) has the schema:
+
+```
+PreflopCharts { rfi: { UTG, MP, CO, BTN, SB: ChartFreqs }, vsRfi: { "<pos>_vs_<opener>": { threebet: ChartFreqs, call: ChartFreqs } } }
+ChartFreqs = Map<HandLabel, double 0..1>   // frequency the hand takes that action; absent = 0
+```
+
+`chartToSet(chart, min)` = `{ label | chart[label] >= min }` in chart key order. The
+curriculum uses only these three charts; they are small enough to embed verbatim:
+
+`rfi.UTG` (35 entries):
+```
+22:1 33:1 44:1 55:1 66:1 77:1 88:1 99:1 TT:1 JJ:1 QQ:1 KK:1 AA:1 A9s:1 ATs:1 AJs:1 AQs:1 AKs:1
+A5s:0.5 A4s:0.5 A3s:0.5 A2s:0.5 KTs:1 KJs:1 KQs:1 QTs:1 QJs:1 JTs:1 T9s:1 98s:0.5
+ATo:1 AJo:1 AQo:1 AKo:1 KQo:1
+```
+→ `chartToSet` at 0.5 keeps all 35 (206 combos, 15.5 %).
+
+`rfi.BTN` (97 entries):
+```
+22:1 33:1 44:1 55:1 66:1 77:1 88:1 99:1 TT:1 JJ:1 QQ:1 KK:1 AA:1
+A2s:1 A3s:1 A4s:1 A5s:1 A6s:1 A7s:1 A8s:1 A9s:1 ATs:1 AJs:1 AQs:1 AKs:1
+K2s:1 K3s:1 K4s:1 K5s:1 K6s:1 K7s:1 K8s:1 K9s:1 KTs:1 KJs:1 KQs:1
+Q4s:1 Q5s:1 Q6s:1 Q7s:1 Q8s:1 Q9s:1 QTs:1 QJs:1 Q3s:0.5 Q2s:0.5
+J7s:1 J8s:1 J9s:1 JTs:1 J6s:0.5 J5s:0.5 T7s:1 T8s:1 T9s:1 96s:1 97s:1 98s:1 86s:1 87s:1 75s:1 76s:1
+64s:0.5 65s:0.5 54s:1 53s:0.5 43s:0.5
+A2o:1 A3o:1 A4o:1 A5o:1 A6o:1 A7o:1 A8o:1 A9o:1 ATo:1 AJo:1 AQo:1 AKo:1
+K8o:1 K9o:1 KTo:1 KJo:1 KQo:1 K7o:0.5 K6o:0.5 K5o:0.5 Q9o:1 QTo:1 QJo:1 Q8o:0.5 J9o:1 JTo:1 J8o:0.5 T9o:1 T8o:0.5 98o:0.5
+```
+→ all 97 kept (654 combos, 49.3 %).
+
+`vsRfi.BTN_vs_CO.threebet` (16 entries):
+```
+TT:1 JJ:1 QQ:1 KK:1 AA:1 AJs:1 AQs:1 AKs:1 AKo:1 AQo:0.5 A5s:0.5 A4s:0.5 A3s:0.5 KQs:0.5 76s:0.25 65s:0.25
+```
+→ at min 0.4: 14 labels (drops `76s`, `65s`), 82 combos, 6.2 %.
+
+### 13.3 Notation helpers
+
+- `RANKS = 2 3 4 5 6 7 8 9 T J Q K A` (ascending), `RANKS_DESC` = reverse, `SUITS = c d h s`.
+- `labelAt(row, col)`: `hi = RANKS_DESC[min(row,col)]`, `lo = RANKS_DESC[max(row,col)]`; `row == col → "$hi$hi"`, `col > row → "$hi${lo}s"`, else `"$hi${lo}o"`.
+- `kindOf(label)`: length 2 → pair; ends with `s` → suited; else offsuit.
+- `comboCount(label)`: pair 6, suited 4, offsuit 12. `combosInSet(labels)` = sum. `TOTAL_COMBOS = 1326`.
+- `allLabels()`: row-major over the 13×13 grid (`AA AKs AQs … A2s AKo KK KQs … 22`).
+- `labelToCombos(label)` ordering (matters only for determinism of seeded sampling):
+  - pair: for `i < j` over SUITS: `[hi+SUITS[i], hi+SUITS[j]]` → `cd cH cs dh ds hs` (6).
+  - suited: for each suit `s`: `[hi+s, lo+s]` (4).
+  - offsuit: for `s1` in SUITS, `s2` in SUITS, `s1 != s2`: `[hi+s1, lo+s2]` (12).
+
+### 13.4 Card ints
+
+`cardToInt("Ah") = RANKS.indexOf('A') * 4 + SUITS.indexOf('h') = 12*4 + 2 = 50`. `rank = (i >> 2) + 2` (2..14), `suit = i & 3`.
+
+### 13.5 `evaluateInts(List<int> cards) → { category, score, name }`
+
+Best 5-card hand from 5–7 ints. `category` uses the enum `HighCard 0, Pair 1, TwoPair 2,
+Trips 3, Straight 4, Flush 5, FullHouse 6, Quads 7, StraightFlush 8`; `score` is a monotonic
+integer comparable across hands. Only `category` (breakdown) and `score` (equity) are used here.
+
+### 13.6 Equity functions
+
+```dart
+class EquityResult { double equity; int win, tie, lose, samples; double se; bool exact; }
+// equity = (win + tie/2) / samples  (or the pot-share sum / samples for equityVsField)
+// se = sqrt(max(equity*(1-equity), 1e-9) / samples) when sampled; 0 when exact
+// samples == 0 (no valid villain combos) → equity 0.5, se 0, exact false
+```
+
+- `equityVsRange(hero: [Card,Card], board, range: List<HandLabel>, iters = 1500, seed?)` — the UI-facing wrapper expands labels to combos, drops combos clashing with hero/board, then: if `board.length >= 4` **enumerate exactly** every (combo × runout) and return `exact: true`; else run `iters` Monte-Carlo trials, each picking a uniform villain combo and a uniform runout. The calculator calls it with `iters = 5000`.
+- `equityRangeVsRange(heroCombos, boardInts, villCombos, iters = 3000, seed?)` — always sampled (never exact). Each trial: pick a hero combo uniformly, pick a villain combo uniformly, re-pick villain up to 8 times if it shares a card with hero; if still clashing **skip the trial** (it is not counted in `samples`), else deal the runout and compare. The calculator calls it with `iters = 5000`, so `samples` may be < 5000 when ranges overlap heavily (e.g. AA vs AA).
+- `equityVsField(hero, board, numOpponents, iters = 1500, seed?)` — `n = clamp(floor(numOpponents), 1, 8)`; each trial deals `2n` opponent cards then the runout; hero's share is 1 if best, 0 if beaten, `1/(tied+1)` on a top tie; `equity` = mean share. The trainer calls it with `iters = 1200`.
+- RNG: `mulberry32(seed)` when a seed is provided, otherwise the platform RNG. The Study widgets never pass a seed, so their Monte-Carlo outputs are nondeterministic by design.
+- Backend routing (`engineClient`): native Rust under Tauri for `equityVsRange`/`equityVsField`; a Web Worker running the TS mirror otherwise; `equityRangeVsRange` has no Rust command and always runs in the worker. Results are asynchronous; the UI shows a busy state. For Flutter: run in an isolate (or FFI to `poker-core`); the Rust twin exposes `equity_vs_range(hero:[u32;2], board:&[u32], range:&[[u32;2]], iters:u32, seed:Option<u64>)` and `equity_vs_field(hero, board, num_opponents:u32, iters, seed)` with identical semantics.
+
+---
+
+## 14. Expected values to pin in Dart tests
+
+### 14.1 `topPercentRange` sets (strength order; size / combos / actual %)
+
+| pct | labels | combos | % | set |
+|---|---|---|---|---|
+| 10 | 23 | 138 | 10.4 | AA KK QQ JJ AKs AQs TT AJs KQs AKo 99 KJs QJs JTs AQo 88 ATs KTs QTs J9s T9s AJo KQo |
+| 14 | 35 | 188 | 14.2 | …(10 % set)… 98s 77 A9s A8s A7s A6s A5s A4s A3s A2s Q9s T8s |
+| 15 | 37 | 204 | 15.4 | …(14 % set)… 87s KJo |
+| 19 | 45 | 254 | 19.2 | …(15 % set)… QJo JTo 97s 76s 66 K9s J8s 86s |
+| 20 | 47 | 270 | 20.4 | …(19 % set)… 65s ATo |
+| 27 | 58 | 362 | 27.3 | …(20 % set)… KTo QTo J9o T9o 75s 54s 98o 55 44 33 22 |
+| 40 | 80 | 538 | 40.6 | …(27 % set)… K8s K7s K6s K5s K4s K3s K2s Q8s T7s 64s 43s A9o A8o A7o A6o A5o A4o A3o A2o Q9o T8o 87o |
+| 45 | 91 | 598 | 45.1 | …(40 % set)… 96s 53s 32s 97o 76o Q7s Q6s Q5s Q4s Q3s Q2s |
+| 55 | 110 | 738 | 55.7 | …(45 % set)… J7s 85s 42s K9o J8o 86o 65o 74s 75o 54o J6s J5s J4s J3s J2s T6s 63s K8o K7o |
+
+(Each set is a prefix of the ranked list in §13.1; "…" means the previous row's set.)
+Also: `topPercentRange(100).length == 169`; `combosInSet(allLabels()) == 1326`; `labelToCombos("AKs").length == 4`.
+
+### 14.2 `chartToSet` sets
+
+- `chartToSet(rfi.UTG)` → 35 labels, 206 combos (the whole chart, §13.2).
+- `chartToSet(rfi.BTN)` → 97 labels, 654 combos.
+- `chartToSet(vsRfi.BTN_vs_CO.threebet, 0.4)` → `TT JJ QQ KK AA AJs AQs AKs AKo AQo A5s A4s A3s KQs` (14 labels, 82 combos). With the default 0.5 it is the same set (no entries between 0.4 and 0.5 exist); with 0.25 it would add `76s 65s`.
+
+### 14.3 Quiz keys — `hashSeed(q)` for all 34 questions (curriculum order)
+
+```
+ 1  617105294   Which hand wins: a flush or a straight?
+ 2  2008304561  You hold A♦Q♣ on a board of A♠ K♦ 4♥ 9♣ 2♠. What's your hand?
+ 3  4116581697  A player is 45/7. What kind of opponent is this?
+ 4  1094179878  Can a player have a PFR higher than their VPIP?
+ 5  2239394530  You flop a flush draw (9 outs). Roughly what's your equity by the river?
+ 6  4216001583  On the turn you have a gutshot (4 outs). Your equity?
+ 7  2584359107  KK vs 99 all-in pre-flop — about how often does KK win?
+ 8  2891277353  AK vs QQ pre-flop — who's ahead?
+ 9  1568364613  The pot is 10 bb and your opponent bets 5 bb. What equity do you need to call?
+10  4138432920  A pot-sized bet always offers you what pot odds to call?
+11  3318780267  Implied odds are largest when…
+12  593661914   Which hand suffers most from reverse-implied odds?
+13  4018534960  A pot-sized bluff needs your opponent to fold roughly how often to break even?
+14  3147454345  With a polarized range (best possible hands or bluffs), you should bet…
+15  1591037257  The pot is 12 bb and your opponent bets 6 bb (half pot). Roughly how often must you continue so they can't bluff any two cards profitably?
+16  196823071   A Calling Station almost never bluffs. Which number should drive your call/fold decision vs their river bet?
+17  163546800   Bigger bets mean your MDF…
+18  2458647031  Which hand type makes the best check-raise BLUFF on a 8♠7♠3♦ flop?
+19  2186033529  Why is the check-raise strongest OUT of position?
+20  2736866688  How many combos of pocket Aces (AA) are there before any cards are dealt?
+21  4257061044  You hold A♠. How many combos of AA can your opponent now have?
+22  752656569   How many combos does an offsuit hand like KQo have?
+23  736915909   A call (rather than a raise) usually removes which hands from a range?
+24  3678871636  A tight player check-raises the river. Their range is best described as…
+25  3211098311  As more players enter the pot, your continuing range should get…
+26  3396015054  Multiway, should you bluff more or less than heads-up?
+27  4208627659  A high SPR means you should commit your stack with…
+28  2161957192  A 3-bet pot tends to create a…
+29  1658599676  In a 3-bet pot at SPR ~4 you hold A♥K♦ and flop K♠8♦3♣. Your default plan is…
+30  723546982   Which hand LOSES the most value moving from a single-raised pot to a 3-bet pot?
+31  2717033830  Which hand realizes its raw equity BEST?
+32  1260342208  You're getting exactly break-even pot odds out of position with a weak offsuit hand. The call is…
+33  878263801   You river a weak top pair. Your opponent (a Nit who never bluffs) bets the pot. Your hand beats bluffs but loses to all their value hands. Call or fold?
+34  3208885858  A flush draw (9 outs) on the TURN is worth roughly what equity?
+```
+(Suit glyphs are single UTF-16 code units U+2660–U+2666; "…" is U+2026; apostrophes are ASCII `'`.)
+
+### 14.4 `breakdownRange` / `drawFlags` / blockers
+
+`breakdownRange` (catCount shown as `{category: combos}`):
+
+| range | board | dead | total | catCount | flushDraws | oesds |
+|---|---|---|---|---|---|---|
+| chartToSet(rfi.UTG) | Ks 9d 4c | — | 183 | {Trips 9, Pair 102, HighCard 72} | 0 | 0 |
+| chartToSet(rfi.UTG) | Ks 9d 4c | Ah Kh | 149 | {Trips 7, Pair 85, HighCard 57} | 0 | 0 |
+| topPercentRange(15) | Jh Th 9s | — | 174 | {Straight 20, Trips 9, TwoPair 7, Pair 78, HighCard 60} | 14 | 67 |
+| {AKs, QQ} | Qh 7h 2s 3d 8c | — | 7 | {Trips 3, HighCard 4} | 0 (river: not computed) | 0 |
+
+Rendered example for row 1: header `183 combos on Ks 9d 4c`; rows `Three of a Kind 5%`
+(bar 9/102 of full width, green), `Pair 56%` (full width, gold), `High Card 39%` (72/102, grey); no draws line.
+
+`drawFlags(hole, board)`:
+
+| hole | board | flushDraw | oesd |
+|---|---|---|---|
+| Ah Kh | Qh 7h 2s | true | false |
+| As Kd | Qh 7h 2s | false | false |
+| 9s 8s | 7h Td 2c | false | true |
+| 9s 8s | 7h Jd 2c | false | false (gutshot only) |
+| Ah 2d | 3c 4s 9h | false | true (A-2-3-4 wheel run) |
+| Ad Kd | Qh Jh 9h | false (only 3 hearts, 2 diamonds) | true (A-K-Q-J) |
+| Ah Kd | Qh Jh Th | true (Ah + 3 hearts) | true (made straight) |
+| 9s 8s | 7h 6d Tc 5c | false | true (made straight) |
+
+Blocker counts (`expand`): `chartToSet(rfi.BTN)` on an empty board = 654 combos; with hero `Ah Kh` dead → 562 (removed 92 = 14 %).
+`chartToSet(rfi.UTG)` on `Ks 9d 4c` = 183; with hero `As Kd` dead → 149 (removed 34 = 19 %).
+
+### 14.5 Seeded equity references (TypeScript mirror, `mulberry32`; only reproducible if the Dart RNG and sampling order are ported bit-for-bit — otherwise assert tolerance bands)
+
+- `equityVsRange(AhKh, [], QQ combos, 5000, seed 7)` → equity 0.4555 (win 2269, tie 17, lose 2714, se 0.00704, exact false).
+- `equityVsRange(AhKh, [Qs 7d 2c 3h], {QQ, AA} combos, 5000, seed 7)` → exact: samples 264, win 0, tie 0, lose 264, equity 0, se 0, exact true (turn → enumeration: 2 unblocked QQ combos… actually 3 QQ + 3 AA = 6 combos × 44 rivers = 264).
+- `equityRangeVsRange(AKs combos, [], QQ combos, 5000, seed 7)` → equity 0.4652 (win 2317, tie 18, lose 2665).
+
+### 14.6 Existing script tests (Node) touching this subsystem
+
+- `scripts/multiway_test.ts` (`node --experimental-transform-types scripts/multiway_test.ts`), 8000-trial runs:
+  - `equityVsField(AhAd, [], 1)` ≈ 0.85 (±0.03); AA equity strictly decreases from 1 → 2 → 4 opponents.
+  - `equityVsField(AhKh, [Ad Kc 7s], 1) > 0.8` and `> equityVsField(…, 3)`.
+  - Results within [0, 1].
+  - `equityRangeVsRange(AA, [], all 1326 combos)` ≈ 0.85 (±0.03); `equityRangeVsRange(AKs, [], QQ)` ≈ 0.46 (±0.04).
+- `scripts/engine_test.ts`: `combosInSet(allLabels()) == 1326`; `labelToCombos("AKs").length == 4`; `rankedHands()[0].label == "AA"`; `topPercentRange(100).size == 169`.
+- `scripts/golden_test.ts` vs `scripts/golden/charts.json`: the 169-label `ranked` order and every `topPct[1..100]` set must match exactly (this is the guard that "every chart derives from").
+
+No script tests exist for `Quiz`, `studyStore`, `breakdownRange`, `drawFlags`, or the calculators; the values in §12 and §14.4 were produced by running the TypeScript for this document and should become the Dart unit tests.
+
+---
+
+## 15. Porting notes, invariants and open questions
+
+Invariants:
+
+1. `ALL_LESSON_IDS.length == 31`; ids are stable and referenced by onboarding and drill deep links (§1.2).
+2. Lesson completion is explicit ("Mark complete"); "Next lesson" and quizzes never change `completed`.
+3. Quizzes are optional; their only side effect is `recordQuiz`. Stored quiz results only influence question ordering and the "You missed N of these before" line.
+4. Widget state is per-visit (re-created when the lesson changes); only `completed` and `quizResults` persist.
+5. `GLOSSARY` is the single source of truth for hover definitions and the cheat-sheet glossary — do not duplicate the strings.
+6. Per TONE.md, text is beginner-first; keep the wording exactly as quoted (it was user-tested).
+
+Design decisions the mobile port must make:
+
+- **Hover → tap.** `Term` tooltips, the multiway bar tooltips and the "Hover a bot's HUD…" / "Hover the dotted terms…" sentences assume a pointer. Decide on tap-to-reveal and adjust those two sentences ("Tap") — a deliberate copy change, flag it.
+- **Two-pane layout.** The 310 px path nav + 760 px content does not fit a phone; a list → detail flow with the progress bar on the list and a "Next lesson" footer on the detail is the natural mapping.
+- **13×13 matrices at 320–440 px** with 2 px gaps and painting-by-drag need touch handling; the read-only 360 px diagrams in lessons must shrink to the viewport (the source caps at `maxWidth: 100%`).
+- **52-card pickers** (2 in the equity calculator) are 28 px buttons — too small for touch; regroup by suit or enlarge.
+- **Async equity.** `Calculate equity` (5000 trials) and the multiway trainer (5 × 1200 trials on every scenario tap) must run off the UI thread (isolate or FFI to `poker-core`). The Rust core has no range-vs-range command; either add one or port the TS sampler (§13.6).
+- **Number formatting** must mimic JS (`7 bb` vs `6.5 bb`, `toFixed(1)` → `23.0`, `toLocaleString` thousands separators in the trials line).
+- The `Level.blurb` strings are defined but never rendered in the current UI; the mobile list view may use them as subtitles.
+
+Open questions for the product owner:
+
+- The Opening Ranges diagram titles say "~15%" / "~45%" while the charts are 15.5 % / 49.3 % wide; the Range Explorer preset "UTG ~14%" uses the Chen-formula range while the drills use the authored chart (206 vs 188 combos). Keep as-is for parity or reconcile?
+- Equity calculator: should the board picker disable cards already chosen as hero's exact hand (currently only the reverse is enforced)?
+- Should stale `completed` ids (from renamed lessons) be filtered on load, and should `toggle` (un-complete) be exposed in the UI?
