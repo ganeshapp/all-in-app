@@ -311,7 +311,10 @@ class PotResult {
     required this.potLabel,
   });
   final List<int> winners; // player ids
-  final int amount;
+
+  /// Chips. `num` (desktop `number`) because imported real-money hands keep
+  /// fractional $ amounts; played hands are always ints.
+  final num amount;
   final String potLabel; // "Pot" / "Main pot" / "Side pot 1"
 }
 
@@ -615,9 +618,11 @@ class LeakSpot {
   final Position heroPos;
   final List<Card> hole;
   final List<Card> board;
-  final int pot; // chips
-  final int toCall; // chips
-  final int bb;
+  /// Coach leaks: chips with `bb` = table big blind. Hand-history import
+  /// leaks: already in big blinds with `bb = 1` (may be fractional).
+  final num pot;
+  final num toCall;
+  final num bb;
   final List<Position> oppActive;
   final List<DrillOption> options;
   final DrillAction best;
@@ -671,9 +676,9 @@ class LeakSpot {
     heroPos: Position.fromLabel(j['heroPos'] as String),
     hole: (j['hole'] as List).cast<String>(),
     board: (j['board'] as List).cast<String>(),
-    pot: (j['pot'] as num).toInt(),
-    toCall: (j['toCall'] as num).toInt(),
-    bb: (j['bb'] as num).toInt(),
+    pot: j['pot'] as num,
+    toCall: j['toCall'] as num,
+    bb: j['bb'] as num,
     oppActive:
         (j['oppActive'] as List)
             .map((p) => Position.fromLabel(p as String))

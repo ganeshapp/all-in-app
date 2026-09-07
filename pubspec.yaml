@@ -36,7 +36,6 @@ flutter:
 
   assets:
     - assets/icon/logo.svg
-    - assets/data/
 
   fonts:
     - family: Inter
