@@ -83,7 +83,7 @@ disposition table · 16 Implementation notes for engineers.
 | Tab | Icon | Root screen | Notes |
 |---|---|---|---|
 | Home | `sun`/chip | **Today** (§3) | The plan. Gear (top-right) → Settings. |
-| Play | `cards` | **Lobby** (§4.1) | Table setup + resume. If a session is live, the tab opens the **Table** route directly (lobby skipped). |
+| Play | `cards` | **Lobby** (§4.1) | Table setup + resume. A live session puts the Resume card at the top of the lobby; **the tab never auto-redirects to the table** (§2.1.1). |
 | Drills | `target` | **Drills** (§5) | Mode chips + current spot. Tab badge = Review due count. |
 | Study | `book` | **Study** (§6) | Continue card, 5 levels / 31 lessons, Tools, Quick reference. |
 | Stats | `stats` | **Progress** (§7) | KPIs, charts, coaching review, hands, heatmap. Gear → Settings. |
@@ -98,6 +98,30 @@ height; back restores it).
 tab while a session exists and the user is off-table: `● 12 hands · +4.5 bb      Resume ›`.
 Tap → Table. Swipe left → "End session" (→ Session summary). A session can never be lost.
 
+**Compact-height rule.** At 360×780 the bar (80) + gesture inset (24) + pill (56 + 8 gap) eat
+**168 pt — 21 %** of every tab. So the pill is height-gated: it renders only when
+`screenH ≥ 800` **and** `textScaler ≤ 1.15`. Below that the **Play tab item carries the
+session** instead — its label becomes `"Play · +4.5"` (mono net, good/bad coloured) with a 6 pt
+gold dot on the icon; tapping Play opens the lobby with the Resume card focused and ringed gold
+for 2 s. Home's Resume plan card (§3.2 card 2) is the other one-tap way back, so a session is
+never more than one tap away on any screen size. There is no 44-pt pill variant: a 44-pt row is
+below the §1 "pressed every few seconds" floor for the fastest path back to money — either the
+full 56 or nothing.
+
+#### 2.1.1 The Play tab never redirects
+
+`GoRouter` does **not** redirect `/play` → `/table`. A redirect keyed on `hasSession` makes the
+lobby's Resume card, the "Start a new table over a paused one" dialog (§4.1) and Recent sessions
+unreachable for exactly as long as a session exists, and bounces the user back onto the felt the
+instant they leave it with `‹`. Rules:
+
+- Tapping the Play tab always shows **P0**, with the Resume card first while a snapshot exists.
+- After leaving the table with `‹` / system back, the Play tab shows the lobby. Ways back in:
+  the Resume card, the Play-tab session dot, the Session pill, Home's Resume plan card.
+- **Cold start only**: if the app was killed while `/table` was the active location, the router
+  sets `initialLocation = '/table'` **once** (flag `allin.hints.v1.resumeOnLaunch`, cleared on
+  the first frame). Every later navigation follows the rules above.
+
 ### 2.2 Screen inventory (stable IDs; use these names in tickets and route names)
 
 | ID | Screen | Type | Opened from |
@@ -111,12 +135,12 @@ Tap → Table. Swipe left → "End session" (→ Session summary). A session can
 | P3 | Coach note | sheet M→L (blocking: M, no grabber, no scrim dismiss) | auto, coach chip, P4 row, H0 card (read-only) |
 | P4 | Coach notes list (this hand) | sheet M | P1 top-bar Coach badge |
 | P5 | Assumed range viewer (read-only 13×13) | push inside P3 | P3 "View range" |
-| P6 | Player sheet (archetype, HUD explained, actions) | sheet S/M | P1 plate tap, P8 reveal row |
+| P6 | Player sheet (archetype, HUD explained, actions) | sheet **M** (its content is ≈ 380 pt, taller than the S cap of 40 % — §4.3) | P1 plate tap, P8 reveal row |
 | P7 | Read range: Guess → Peek | full-screen modal | P1 seat eye, plate long-press, P6 "Read their range" |
 | P8 | Results overlay | in-place overlay on the lower felt | auto at hand-over |
 | P9 | All reveals (9-max overflow) | sheet L | P8 "All 8 hands ›" |
-| P10 | Session summary | full-screen modal | P2 "End session", bust, Resume pill swipe |
-| P11 | Hand replayer | push (tab bar hidden) | P10 row, T2 row, T0 recent hand, P2 Log hand row |
+| P10 | Session summary | full-screen modal over the table (`/table/summary`); **read-only** copies are branch pushes (`/home/session/:id`, `/play/session/:id`, `/stats/session/:id`) | P2 "End session", bust, Resume pill swipe; read-only from H0, P0 Recent, T0 |
+| P11 | Hand replayer | push (tab bar hidden); **two routes** — `/stats/hand/:startedAt` in the Stats branch and `/table/hand/:startedAt` inside the table modal (§16.1) | P10 row, T2 row, T0 recent hand, P2 Log hand row |
 | P12 | Hand note editor | sheet M (keyboard-aware) | P10, P11, T0/T2 note button |
 | P13 | Bet keypad | sheet S (auto-height) | P1 Raise label long-press / amount tap |
 | P14 | Leave table? | dialog | only when leaving mid-hand with an unsaved snapshot failure (§4.14) |
@@ -127,7 +151,7 @@ Tap → Table. Swipe left → "End session" (→ Session summary). A session can
 | D4 | Mode blurb | sheet S | D0 chip long-press, D0 ⓘ |
 | D5 | Placement test | full-screen modal | Onboarding, Settings "Run again" |
 | S0 | Study | tab root | tab |
-| S1 | Lesson reader | push (tab bar hidden) | S0 row, D1 lesson button (as modal over Drills), H0 continue card, placement result |
+| S1 | Lesson reader | **two routes**: `/study/lesson/:id` (branch push, tab bar hidden) and root-level `/lesson/:id` (`fullscreenDialog`, "Done" instead of `‹`) — §16.1 | S0 row + H0 continue card use the push; D1's lesson button uses the modal; the placement result uses the push (§5.8) |
 | S2 | Term popover | anchored popover | any dotted term |
 | S3 | Tool screens: Range explorer · Equity calculator · Pot-odds calculator · Bluff calculator · Multiway trainer · Hand rankings | push | S0 Tools row, lesson "Open full screen" |
 | S4 | Quick reference + Glossary (searchable) | push | S0 pinned row, S2 "Open glossary" |
@@ -136,7 +160,7 @@ Tap → Table. Swipe left → "End session" (→ Session summary). A session can
 | T0 | Progress | tab root | tab |
 | T1 | Stat explainer | sheet S | any ⓘ tile / dotted label |
 | T2 | All hands (filter by tag / source) | push | T0 "All hands ›" |
-| T3 | Import hands (picker → progress → result) | system picker + sheet M | T0/T2 "Import", X0 Data |
+| T3 | Import hands (picker → progress → result) | system picker + sheet **S** (progress and result alike, §7.8) | T0/T2 "Import", X0 Data |
 | T4 | Chart value | sheet S | scrub on the cumulative chart |
 | X0 | Settings | push | gear on H0 / T0 |
 | X1 | About | push | X0 row |
@@ -153,9 +177,10 @@ TabScaffold (StatefulShellRoute)
 │                             ├─ modal TABLE (P1)                (Resume / Play 20 hands)
 │                             ├─ tab-jump Drills (D0, mode=leaks | mixed …)
 │                             ├─ tab-jump Study → push Lesson (S1)
-│                             ├─ push  Session summary (P10, read-only, last session)
+│                             ├─ push  Session summary (P10 read-only) at /home/session/:id
+│                             │        ── push Replayer (P11) at /home/session/:id/hand/:startedAt
 │                             └─ sheet Coach's note (H1) · sheet Goal explainer (H2)
-├─ Play / Lobby (P0) ─────────┬─ modal TABLE (P1)  [tab bar hidden]
+├─ Play / Lobby (P0) ─────────┬─ modal TABLE (P1)  [tab bar hidden; root-level /table]
 │                             │    ├─ sheet  Session (P2: Log · Session · Options)
 │                             │    ├─ sheet  Coach note (P3) ── in-sheet push Assumed range (P5)
 │                             │    ├─ sheet  Coach notes list (P4) ── P3
@@ -164,8 +189,11 @@ TabScaffold (StatefulShellRoute)
 │                             │    ├─ overlay Results (P8) ── sheet All reveals (P9) · sheet Player (P6)
 │                             │    ├─ sheet  Bet keypad (P13)
 │                             │    ├─ sheet  Explainer (T1) for any ⓘ
-│                             │    └─ modal  SESSION SUMMARY (P10) ── push Replayer (P11) ── sheet Note (P12) · system Share
-│                             └─ push  Session summary (P10) of a past session (read-only)
+│                             │    ├─ push   Replayer (P11) at /table/hand/:startedAt  (from P2 Log)
+│                             │    └─ modal  SESSION SUMMARY (P10) at /table/summary
+│                             │             ── push Replayer (P11) at /table/summary/hand/:startedAt
+│                             │             ── sheet Note (P12) · system Share
+│                             └─ push  Session summary (P10 read-only) at /play/session/:id
 ├─ Drills (D0) ───────────────┬─ panel Feedback (D1) ── modal Lesson reader (S1, "Done" returns)
 │                             ├─ sheet Frame list (D2) · sheet Explainer (D3) · sheet Mode blurb (D4)
 │                             └─ modal PLACEMENT (D5)
@@ -179,7 +207,15 @@ TabScaffold (StatefulShellRoute)
                               ├─ system File picker → sheet Import result (T3)
                               └─ push Settings (X0) ── dialog Reset (X2) · dialog Restore (X3) · system Share
 Onboarding (O0 → D5), first run only, full-screen modal over everything.
+Lesson reader as a modal (/lesson/:id) is root-level and can be presented over Drills or the
+placement result without leaving the branch it was opened from.
 ```
+
+**Why the extra routes.** P10 and P11 are reachable from three places that live on different
+branches, and the table is a *root-level* modal. Pushing `/stats/hand/:startedAt` from inside
+the table modal would dismiss the table and switch tabs; pushing `/play/session/:id` from Home
+would switch tabs mid-gesture. So each host owns its own copy of the sub-route (same screen
+widget, same provider, different `parentNavigatorKey`). §16.1 lists them all.
 
 ### 2.4 Presentation types — the rule for choosing
 
@@ -208,20 +244,35 @@ to that modal. Everything is offline; there are no loading screens, only computa
 | Read range (P7) before Peek | Closes without scoring; a painted guess asks nothing (desktop parity: closing = `closeGuess`). |
 | Read range (P7) after Peek | Equals "Continue". |
 | Results overlay (P8) | Not dismissable by back (it is felt state); back leaves the table as above. |
-| Session summary (P10) | Equals ✕ (returns to the table; session continues). Busted: back does nothing (only "New session" continues — a subtle shake). |
+| Session summary (P10) | Equals ✕ (returns to the table; session continues). Busted: back does nothing (only "New session" continues — a *blocked-back* response). |
 | Drill feedback panel (D1) | Collapses to the compact detent; never dismisses the verdict. |
 | Drills root with an unanswered spot | Normal tab behaviour (nothing is lost). |
 | Lesson reader from a drill | Returns to the same answered spot with the panel still up. |
 | Range editor (S6) | Equals "Done" (keeps edits). |
-| Placement (D5) / Onboarding (O0) | Previous page; on the first page it does nothing (a subtle shake); ✕ is the only exit. |
+| Placement (D5) / Onboarding (O0) | Previous page; on the first page it does nothing (a *blocked-back* response); ✕ is the only exit. |
 | Replayer (P11) | Pops to where it came from. |
 | Reset dialog (X2) | Cancel. |
 
+**Blocked back** (P10-busted page 1, O0/D5 page 1): a 120 ms 4 pt horizontal shake of the page
+content + `selectionClick`. **Under reduced motion the shake is dropped entirely** — the haptic
+alone is the response, and if Settings → Haptics is also off nothing happens (the screen is
+already telling the user what the only exit is). Motion is never the sole channel for a refusal.
+
 ### 2.6 Internal deep links (go_router paths, §16.1)
 
-`/study/lesson/:id` (drill feedback, placement result, coach's note), `/drills?mode=leaks`
-(Home review card, Stats coaching review), `/stats/hand/:startedAt` (summary rows), `/settings/data`
-(import result). No external URL scheme in v1.
+| Deep link | Goes to | Used by |
+|---|---|---|
+| `/lesson/:id` | S1 as a root-level full-screen modal ("Done") | drill feedback (D1) |
+| `/study/lesson/:id` | S1 as a Study-branch push | Home continue card, coach's note, placement result |
+| `/drills?mode=leaks` | D0 in Review mode | Home review card, Stats coaching review |
+| `/stats/hand/:startedAt` | P11 in the Stats branch | T0 / T2 / P10-read-only rows |
+| `/table/hand/:startedAt` | P11 inside the table modal | P2 Log rows, P10-over-table rows |
+| `/study/glossary?term=:id` | S4 scrolled to and flashing that term | S2 "Open glossary" |
+| `/stats/settings?section=data` | X0 scrolled to and flashing the DATA group | import result, backup toasts |
+
+`/settings` and `/settings/data` are accepted as legacy aliases and **redirect** to
+`/stats/settings` and `/stats/settings?section=data` (§16.1). There is no URL-fragment route:
+`go_router` matches paths and queries, never `#fragments`. No external URL scheme in v1.
 
 ---
 

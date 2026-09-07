@@ -118,3 +118,16 @@ names them `allin-<version>-<abi>.apk`. CI (`.github/workflows/release.yml`) doe
 debug-signed APK. iOS builds from source (no signed distribution).
 
 Commits are authored as the user only — no Claude attribution trailers.
+
+## Deliberate copy changes from the desktop
+
+Lesson and coach text is ported verbatim, with three exceptions where the desktop copy describes a
+mouse the phone does not have. These are the only intentional wording changes:
+
+| Where | Desktop | Mobile |
+|---|---|---|
+| Lesson `position` | "(Hover the dotted terms for a definition…)" | "(Tap the dotted terms for a definition…)" |
+| Lesson `hud-reading` | "Hover a bot's HUD in the game…" | "Tap a bot's plate at the table…" |
+| Lesson `cheat-sheet` glossary | "Every term below is also hoverable wherever it appears in a lesson." | "Tap any dotted term wherever it appears in a lesson to see this definition." |
+
+Any further deviation from the desktop wording needs a row here.

@@ -1063,3 +1063,138 @@ Dart's default `String.compareTo` gives the same order for these ASCII labels.
   A straightforward Dart port handles this in well under a second on a phone;
   micro-optimise (fixed-size Int32Lists, no closures) only if profiling says so,
   and never in a way that changes draw order.
+
+---
+
+## 14. Addenda (gaps closed after the first pass)
+
+### 14.1 `ComboKind` — the named type behind `kindOf` (`notation.ts` line 12)
+
+Section 6.2 documents the three values `kindOf` returns but not the exported
+type alias they belong to. The full declaration is:
+
+```ts
+// src/engine/notation.ts:12
+export type ComboKind = "pair" | "suited" | "offsuit";
+```
+
+Facts a port needs:
+
+* It is a **closed union of exactly three string literals**, in that source
+  order: `"pair"`, `"suited"`, `"offsuit"`. There is no fourth member and no
+  `undefined`/`null` member — `kindOf` is total over the 169 labels.
+* It is the declared return type of `kindOf(label: HandLabel): ComboKind`
+  (line 22) and the only place the alias is used; `comboCount` (line 27)
+  consumes it via `const k = kindOf(label)` and switches on the same three
+  values (`pair -> 6`, `suited -> 4`, else `12`), and `labelToCombos`
+  (line 49) branches `k === "pair"` / `k === "suited"` / else-offsuit.
+* Nothing else in the repo imports `ComboKind` — it is exported for
+  documentation value only, never serialised, never compared against strings
+  coming from JSON, never persisted, and never shown to the user. (`HandLabel`
+  itself is just `type HandLabel = string`, `src/types/poker.ts:54` — it is not
+  a branded or literal-union type, so labels carry no compile-time validation
+  in TS either.)
+* Because the values are never serialised, a Dart port is free to use an enum
+  and does not have to preserve the string spellings on the wire. If you want
+  the strings anyway (for debug output or test fixtures), keep the exact
+  lowercase spellings above.
+
+Idiomatic Dart contract:
+
+```dart
+/// Mirrors TS `type ComboKind = "pair" | "suited" | "offsuit"`
+/// (src/engine/notation.ts:12). Total over all 169 grid labels.
+enum ComboKind {
+  pair,     // label.length == 2        -> 6 combos
+  suited,   // label endsWith 's'       -> 4 combos
+  offsuit;  // otherwise (endsWith 'o') -> 12 combos
+
+  /// Only needed if you emit the TS spellings in fixtures/debug text.
+  String get wire => name; // "pair" / "suited" / "offsuit" — names already match
+}
+
+ComboKind kindOf(String label) => label.length == 2
+    ? ComboKind.pair
+    : (label.endsWith('s') ? ComboKind.suited : ComboKind.offsuit);
+```
+
+Note the discrimination order is load-bearing and must not be reordered: the
+length check comes **first**, so a two-character label is a pair before the
+suffix test ever runs. The suffix test is `endsWith("s")`, not a check for
+`"o"`; any label that is neither length-2 nor `s`-suffixed falls through to
+`offsuit`. For the 169 legal labels this is exactly the `o` set, but the
+fallthrough means malformed input (there is no validation anywhere — see
+invariant 3 in section 10) is classified as offsuit rather than throwing.
+Preserve that: do not add an assertion that changes behaviour on bad input.
+
+### 14.2 Two different `iters` defaults for range-vs-range — 3000 vs 5000
+
+**Both numbers in this document are correct; they belong to two different
+layers.** A porter collapsing the two layers into a single Dart function must
+pick 5000, or study-module behaviour changes silently.
+
+| layer | symbol | default | source |
+|---|---|---|---|
+| engine core | `equityRangeVsRange(heroRange, board, villRange, iters = 3000, seed?)` | **3000** | `src/engine/equity.ts:255-259` (documented in section 5.5) |
+| engine client wrapper | `engine.equityRangeVsRange(heroCombos, boardInts, villCombos, iters = 5000, seed?)` | **5000** | `src/engine/engineClient.ts:224-230` (documented in section 9.2) |
+
+The wrapper never reads the core default. It always forwards an explicit
+`iters` into the job object it hands to `fallback()`:
+
+```ts
+// engineClient.ts:224-239 — iters is always bound (to 5000 if the caller omitted it)
+async equityRangeVsRange(heroCombos, boardInts, villCombos, iters = 5000, seed?) {
+  return fallback({ kind: "rangeVsRange", heroRange: heroCombos, board: boardInts,
+                    villRange: villCombos, iters, seed });
+}
+```
+
+`fallback()` then dispatches to the worker (`equityWorker.ts:41`, which calls
+`equityRangeVsRange(job.heroRange, job.board, job.villRange, job.iters, job.seed)`)
+or, as a last resort, straight to `tsEquityRangeVsRange(job.heroRange,
+job.board, job.villRange, job.iters)`. In both paths `job.iters` is a concrete
+number, so **the 3000 default in `equity.ts` is unreachable through the client
+and is in fact never exercised anywhere in the repo**: the only two call sites
+of the core function both pass `iters` explicitly (`equityWorker.ts:41` forwards
+`job.iters`; `scripts/multiway_test.ts:39-40` passes `8000`), and the only call
+site of the wrapper — `src/components/study/EquityCalculator.tsx:63` — passes
+`5000` explicitly too:
+
+```ts
+setResult(await math.equityRangeVsRange(heroCombos, boardInts, villCombos, 5000));
+```
+
+(Its sibling hand-vs-range branch, `EquityCalculator.tsx:57`, likewise passes
+`5000` explicitly, overriding that wrapper's own 1500 default.)
+
+Consequences for the port:
+
+* **A single merged Dart function must default `iters` to 5000**, not 3000.
+  Every real caller in the app runs 5000 trials; 3000 would quietly widen the
+  confidence interval on the study calculator (`se` scales as `1/sqrt(samples)`,
+  so 3000 trials gives about a 29% larger `se`, and the calculator renders
+  `±2·se` — see below).
+* If instead you mirror the two layers faithfully (core + client), keep both
+  defaults as-is so the pinned values in section 5.7 and any direct-core tests
+  stay reproducible. Nothing depends on the 3000 value, so either choice is
+  behaviour-preserving *provided* the app-facing entry point yields 5000.
+* This is the **only** default that diverges between `equity.ts` and
+  `engineClient.ts`. The other three agree exactly on both sides:
+  `equityVsRange` 1500 / 1500, `equityVsRandom` 1200 / 1200,
+  `equityVsField` 1500 / 1500. So 5.5-vs-9.2 is the one place the two tables
+  in this document disagree, and it is not an error in either.
+* `iters` is an upper bound, not the sample count: range-vs-range drops trials
+  where the sampled hero and villain combos still clash after 8 re-draws, so
+  `samples <= iters` (section 5.5, invariant 9). The user-visible footer in the
+  equity calculator prints `samples`, not `iters` — verbatim (`EquityCalculator.tsx:222-224`):
+
+  ```
+  `${result.samples.toLocaleString()} matchups · exact`
+  `${result.samples.toLocaleString()} trials · ±${(2 * result.se * 100).toFixed(1)}%`
+  ```
+
+  i.e. `"5,000 trials · ±1.4%"` — thousands separator, a space-padded middle
+  dot `·` separator, the `±` sign, `se` doubled and rendered as a percentage
+  with exactly one decimal. The `exact` branch says `matchups`, the sampled
+  branch says `trials`. Range-vs-range is never exact, so it always takes the
+  `trials` branch.

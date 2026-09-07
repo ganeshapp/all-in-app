@@ -81,7 +81,7 @@ const Lesson _cheatSheet = Lesson(
     ),
     HeadingBlock('Glossary'),
     ParagraphBlock(
-      'Every term below is also hoverable wherever it appears in a lesson.',
+      'Tap any dotted term wherever it appears in a lesson to see this definition.',
     ),
     ParagraphBlock(
       '**UTG** — Under the Gun — the first seat to act pre-flop, just left of the big blind. '

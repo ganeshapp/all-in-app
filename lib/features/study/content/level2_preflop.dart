@@ -144,7 +144,7 @@ const Level kLevel2Preflop = Level(
           kind: CalloutKind.key,
           title: 'Key idea',
           body:
-              "Hover a bot's HUD in the game to see these numbers and a reminder of what they mean.",
+              "Tap a bot's plate at the table to see these numbers and a reminder of what they mean.",
         ),
         QuizBlock([
           QuizQuestion(

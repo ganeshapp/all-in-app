@@ -62,12 +62,12 @@ const Level kLevel1 = Level(
           'Position is the single most undervalued edge for new players. Acting last means you make '
           'every decision with more information than your opponents.',
         ),
-        HeadingBlock('The six seats', level: 3),
+        HeadingBlock('The six seats'),
         ParagraphBlock(
           'Each seat has a name and acts in a fixed order. The dealer **button** is the best seat '
           'because it acts last in every betting round after the flop. Moving clockwise from it, the '
           '**small blind** and **big blind** post forced bets, then play runs through the early '
-          'and middle seats to the cutoff and back to the button. (Hover the dotted terms for a '
+          'and middle seats to the cutoff and back to the button. (Tap the dotted terms for a '
           'definition; the full glossary lives in Practice → Quick Reference.)',
         ),
         // Desktop renders these as a 2-column grid of six seat cards
@@ -117,7 +117,7 @@ const Level kLevel1 = Level(
           'afford to lose. In this trainer your stack auto-resets, so focus on decision quality, not '
           'the scoreboard.',
         ),
-        HeadingBlock('Win-rate: bb/100', level: 3),
+        HeadingBlock('Win-rate: bb/100'),
         ParagraphBlock(
           'Win-rate is measured in big blinds won per 100 hands ("bb/100"). It\'s stake-independent, so '
           'you can compare any games. A strong winner makes only a few bb/100; anything from −5 to +10 '

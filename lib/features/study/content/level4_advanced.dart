@@ -3,9 +3,24 @@
 /// minutes and order are a public contract: drills deep-link by lesson id
 /// (`exploits`, `spr`, `threebet-pots`, `turn-river`) and onboarding placement
 /// lands on `threebet-pots`.
+///
+/// Rendering notes for the lesson reader:
+///  * The first [ParagraphBlock] of every lesson is the desktop `Lead`
+///    (slightly larger, full text colour).
+///  * The combo grid and the SPR bands are stat rows on desktop, not tables:
+///    they are [TableBlock]s with an all-empty header, which the reader draws
+///    without a header row.
+///  * `hand-reading` shows three read-only 13x13 diagrams side by side on
+///    desktop (`topPercentRange(40 / 20 / 10)`); on mobile they stack.
+///  * `exploits` is a list of four archetype cards on desktop; each card title
+///    becomes a [HeadingBlock] and the mono `VPIP / PFR` line its own code
+///    paragraph. The card values come from `src/game/archetypes.ts`.
 library;
 
 import 'lesson_model.dart';
+
+/// Header used by the stat-row tables (no visible header row).
+const List<String> _kvHeader = ['', ''];
 
 const Level kLevel4Advanced = Level(
   id: 'advanced',
@@ -30,7 +45,7 @@ const Level kLevel4Advanced = Level(
           'A♠) — fewer of their bluffs and value hands exist, which makes your bluffs and calls work '
           'more often.',
         ),
-        HeadingBlock('Worked example', level: 3),
+        HeadingBlock('Worked example'),
         ParagraphBlock(
           'The board is K♠ 9♦ 4♣. How many combos of top pair (a King) can your opponent have? '
           'Normally KK = 6 and each non-paired King hand like KQ = 16 combos — but the K♠ on the '
@@ -40,7 +55,7 @@ const Level kLevel4Advanced = Level(
         // Desktop renders these as a 3-column grid of stat cells
         // (big mono number on top, small label underneath).
         TableBlock(
-          header: ['Hand type', 'Combos'],
+          header: _kvHeader,
           rows: [
             ['Any pocket pair', '6 combos'],
             ['Suited (e.g. AKs)', '4 combos'],
@@ -94,7 +109,7 @@ const Level kLevel4Advanced = Level(
           "Good players don't guess one hand — they track a whole range and shrink it street by "
           "street as the story unfolds. Here's the repeatable method.",
         ),
-        HeadingBlock('The four steps', level: 3),
+        HeadingBlock('The four steps'),
         ParagraphBlock(
           "1. **Start wide** from their position and type — a Nit's UTG range is tiny; a LAG's "
           'button range is huge. 2. **Subtract on every action**: a raise keeps value plus chosen '
@@ -161,22 +176,22 @@ const Level kLevel4Advanced = Level(
         // Desktop: four archetype cards in the order TAG, LAG, Nit, Station. Each has a
         // header line "{name} ({key})" with a faint mono "VPIP x / PFR y" (values from
         // game/archetypes.ts) and the advice text underneath. No callout, no quiz.
-        HeadingBlock('Tight-Aggressive (TAG)', level: 3),
+        HeadingBlock('Tight-Aggressive (TAG)'),
         ParagraphBlock('`VPIP 22 / PFR 18`'),
         ParagraphBlock(
           "Solid and balanced. Respect their raises; pick spots, don't bluff into strength.",
         ),
-        HeadingBlock('Loose-Aggressive (LAG)', level: 3),
+        HeadingBlock('Loose-Aggressive (LAG)'),
         ParagraphBlock('`VPIP 34 / PFR 27`'),
         ParagraphBlock(
           'Hyper-aggressive. Trap with strong hands and let them keep betting into you.',
         ),
-        HeadingBlock('Nit (Nit)', level: 3),
+        HeadingBlock('Nit (Nit)'),
         ParagraphBlock('`VPIP 12 / PFR 9`'),
         ParagraphBlock(
           'Folds too much. Steal relentlessly, but believe them when they finally raise.',
         ),
-        HeadingBlock('Calling Station (Station)', level: 3),
+        HeadingBlock('Calling Station (Station)'),
         ParagraphBlock('`VPIP 46 / PFR 7`'),
         ParagraphBlock(
           'Calls everything. Never bluff — value bet thin and bet big with strong hands.',
@@ -196,16 +211,13 @@ const Level kLevel4Advanced = Level(
           'Almost everything else assumes one opponent. Add players and the maths shifts — this is '
           'the piece most training tools skip.',
         ),
-        HeadingBlock('Your equity to win drops', level: 3),
+        HeadingBlock('Your equity to win drops'),
         ParagraphBlock(
           'A hand that wins ~55% heads-up might win only ~30% against three opponents — more '
           'players means more ways to be beaten. Drawing hands also get paid less reliably because '
           "someone may already have the made hand you're drawing to.",
         ),
-        HeadingBlock(
-          'Pot odds still hold, but realised equity is lower',
-          level: 3,
-        ),
+        HeadingBlock('Pot odds still hold, but realised equity is lower'),
         ParagraphBlock(
           'Break-even equity (call ÷ final pot) is unchanged, but your real chance of winning is '
           'lower multiway and players still to act can wake up with a hand. So continue with a '
@@ -213,7 +225,7 @@ const Level kLevel4Advanced = Level(
           'Speculative hands — suited connectors, small pairs — go up in value because implied odds '
           'are huge when you hit.',
         ),
-        HeadingBlock('See it for yourself', level: 3),
+        HeadingBlock('See it for yourself'),
         ParagraphBlock(
           'Pick a hand and slide the opponent count — watch equity fall as the field grows.',
         ),
@@ -262,7 +274,7 @@ const Level kLevel4Advanced = Level(
         ),
         // Desktop: three stat rows (mono SPR band on the left, guideline on the right).
         TableBlock(
-          header: ['SPR', 'Guideline'],
+          header: _kvHeader,
           rows: [
             [
               'SPR ≤ 3 (low)',
@@ -335,7 +347,7 @@ const Level kLevel4Advanced = Level(
           "stacks (small pairs hunting sets, suited connectors) lose value — there isn't enough "
           'money behind to pay off their big hits.',
         ),
-        HeadingBlock('Who has the range advantage?', level: 3),
+        HeadingBlock('Who has the range advantage?'),
         ParagraphBlock(
           "The 3-bettor's range is packed with big pairs and big cards, so A-high and K-high flops "
           "favor them massively — c-bet small and often. Low connected flops hit the CALLER's pairs "
@@ -395,7 +407,7 @@ const Level kLevel4Advanced = Level(
           'of position. As a rule: in position with a playable hand you realize 100%+ of raw '
           'equity; out of position with a weak offsuit hand you might realize only 70-80%.',
         ),
-        HeadingBlock('What this changes', level: 3),
+        HeadingBlock('What this changes'),
         ParagraphBlock(
           "It's the hidden reason behind chart shapes you've seen: suited and connected hands "
           'defend wide IN POSITION; offsuit junk folds even at "correct" pot odds OUT of position. '
@@ -454,7 +466,7 @@ const Level kLevel4Advanced = Level(
           'Each street, ranges get narrower and equities move toward the extremes. By the river '
           'there are no draws left — only value bets, bluffs, and bluff-catchers.',
         ),
-        HeadingBlock('The turn: the pressure street', level: 3),
+        HeadingBlock('The turn: the pressure street'),
         ParagraphBlock(
           'Calling the flop is cheap; calling the turn is not. Bet again on turns that improve your '
           'range or dent theirs (overcards to their pairs, completing YOUR draws). With one card to '
@@ -462,7 +474,7 @@ const Level kLevel4Advanced = Level(
           "chase gets worse exactly as the bets get bigger. That's why the coach's turn verdicts "
           'flip to fold more often than beginners expect.',
         ),
-        HeadingBlock('The river: pure decisions', level: 3),
+        HeadingBlock('The river: pure decisions'),
         ParagraphBlock(
           'River betting is binary: **value** (worse hands call) or **bluff** (better hands fold). '
           "Before betting, name the actual hands that call you while losing — if you can't, it "
