@@ -87,6 +87,16 @@ class ArchetypeConfig {
 class PlayerLastAction { String label; Street street; }
 // label ∈ "SB","BB","Fold","Check","Call","Bet","Raise","All-In"
 
+class Dials {                       // TS: dials?: { aggression, stickiness, cbetFlop }
+  double aggression;                // 0.05..0.95 after jitter
+  double stickiness;                // 0.05..0.95 after jitter
+  double cbetFlop;                  // PERCENT, 20..95 after jitter; fractional (not int)
+}
+// All three are plain `number` in TS and always present together (the whole
+// object is optional, never a partial). Built once per session in `newSession`
+// (§5.1) and read in botBrain as `{...ARCHETYPES[archetype], ...(dials ?? {})}`,
+// so a bot's dials override the archetype's aggression/stickiness/cbetFlop.
+
 class Player {
   int id;                 // seat index 0..n-1; seat 0 is ALWAYS the hero
   String name;            // "You" for hero, else botNameFor(seat)
@@ -494,7 +504,7 @@ const ARCHETYPES = {
 const ARCHETYPE_LIST = [TAG, LAG, Nit, Station];   // display order
 
 const BOT_NAMES = ["Ivey","Negreanu","Polk","Selbst","Hellmuth","Brunson","Antonius","Dwan","Galfond","Chidwick"];
-String botNameFor(int seat) => BOT_NAMES[(seat - 1 + 10) % 10];   // seat 1 → Ivey, seat 2 → Negreanu, … seat 9 → Chidwick? no: seat 9 → index 8 → Galfond
+String botNameFor(int seat) => BOT_NAMES[(seat - 1 + 10) % 10];   // seat n → BOT_NAMES[n-1]; only seats 1..8 (Ivey..Dwan) occur live — see Appendix A.1
 Archetype archetypeForSeat(int seat) => ["TAG","Station","LAG","Nit","TAG","LAG"][(seat - 1) % 6];
 ```
 
@@ -895,7 +905,7 @@ psHandName(hole, board) = PokerStars-style lower-case descriptor of evaluateCard
 | evaluator `name` | export descriptor |
 |---|---|
 | `Royal Flush` | `a royal flush` |
-| `Straight Flush, K high` | `a straight flush, King high` (prefix `a straight flush` + rest after 14 chars) |
+| `Straight Flush, King high` | `a straight flush, King high` (prefix `a straight flush` + `n.slice(14)`, i.e. `", King high"`) |
 | `Four of a Kind, Aces` | `four of a kind, Aces` |
 | `Full House, Aces full of Kings` | `a full house, Aces full of Kings` |
 | `Flush, Ace high` | `a flush, Ace high` |
@@ -938,7 +948,7 @@ actionLine(a, streetBet):
 11. For each `collected` entry with amount `> 0`, in insertion order (= potResults winner order): `` `${name} collected ${amt} from pot` ``.
 12. `*** SUMMARY ***`; `` `Total pot ${sum of collected} | Rake 0` ``; if `board` non-empty: `` `Board [${board.join(" ")}]` ``.
 13. One line per seat, in seat order, with `tag` = `" (small blind)"` if `seat == sbSeat`, else `" (big blind)"` if `seat == bbSeat`, else `" (button)"` if `seat == button`, else `""` (so in heads-up the button line reads `(small blind)`):
-    - folded: `` `Seat ${n}: ${name}${tag} folded ${FOLD_STREET_PHRASE[street]}` ``
+    - folded: `` `Seat ${n}: ${name}${tag} folded ${FOLD_STREET_PHRASE[street] ?? "before Flop"}` `` (the `?? "before Flop"` default is in the source; see Appendix A.3)
     - showdown and holes known: `` `Seat ${n}: ${name}${tag} showed [${c1} ${c2}] and won (${won}) with ${psHandName}` `` or `… and lost with ${psHandName}`
     - won without showdown: `` `Seat ${n}: ${name}${tag} collected (${won})` ``
     - otherwise: `` `Seat ${n}: ${name}${tag} mucked` ``

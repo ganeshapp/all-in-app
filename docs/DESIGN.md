@@ -331,8 +331,19 @@ launches with the saved options.
 Card anatomy (`PlanCard`, §10.4): 16 pt padding, radius `AllInRadius.lg`, icon 20 pt in a 32 pt
 gold-tinted square, title Inter 17 semibold, subtitle Inter 14 muted, time estimate mono 13
 right-aligned. The primary card carries a 44 pt gold button; every other card is tappable as a
-whole (whole card = one 72 pt target). At 360×780 the screen scrolls; the primary card is always
-above the fold (goal card 84 + primary 96 end at y ≈ 340).
+whole (whole card = one 72 pt target).
+
+**Home scrolls at every supported width** — 390 included. The wireframe above sums to ≈ 963 pt
+below the safe inset (title 44 + streak 20 + goal 84 + eyebrow 28 + primary 96 + three cards
+3 × 72 + coach 96 + eyebrow 28 + last-session 64 + eyebrow 28 + heatmap 102 + caption 18, plus
+8–12 pt gaps), against a viewport of 844 − 59 − 80 (tab bar) − 34 (inset) = **671 pt** at
+390×844 and 780 − 32 − 80 − 24 = **644 pt** at 360×780. What matters is not that it fits — it
+never does — but that the **goal card and the primary plan card are always above the fold**:
+they end at y ≈ 343 at 390 and y ≈ 316 at 360, roughly half a screen.
+
+Bottom content padding of the scroll view = `tabBarHeight + (pillVisible ? 64 : 0) + 16`, so the
+heatmap caption always clears both the bar and the Session pill: 80 + 64 + 16 = **160** at
+390×844 with a session, 80 + 0 + 16 = **96** at 360×780 (no pill there — §2.1).
 
 ### 3.2 Plan logic (deterministic; at most four cards; the first is styled primary)
 
