@@ -1,0 +1,5438 @@
+### seed=1 hands=25 seats=6 ante=0 stack=2000
+H1 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 fold
+  [preflop] Hand #1 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Ivey wins 80 (uncontested)
+  stacks=2000,2030,2000,2000,1990,1980 pot=80 hero=0
+  pots=1|80|Pot sd= board= net=0
+  |PokerStars Hand #175000000100001: Hold'em No Limit (10/20) - 2025/06/16 00:06:41 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (2000 in chips)
+  |Seat 2: Ivey (2000 in chips)
+  |Seat 3: Negreanu (2000 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (2000 in chips)
+  |Seat 6: Hellmuth (2000 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2c 8h]
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey collected (50)
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey raises to 2.5 bb||80|0|0
+  f preflop|Negreanu folds||80|0,2|0
+  f preflop|Polk folds||80|0,2,3|0
+  f preflop|Selbst folds||80|0,2,3,4|0
+  f preflop|Hellmuth folds||80|0,2,3,4,5|0
+  f preflop|Ivey win 4 bb.||80|0,2,3,4,5|1
+H2 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 raise 50
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 call 30
+  d0 check
+  d1 bet 36
+  d0 fold
+  [preflop] Hand #2 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You calls 30
+  [flop] Flop — 8h As 3c
+  [flop] You checks
+  [flop] Ivey bets 36
+  [flop] You folds
+  [flop] Ivey wins 146 (uncontested)
+  stacks=1950,2090,2000,2000,1990,1970 pot=146 hero=-50
+  pots=1|146|Pot sd= board=8hAs3c net=-50
+  |PokerStars Hand #175000000200002: Hold'em No Limit (10/20) - 2025/06/16 00:06:42 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (2000 in chips)
+  |Seat 2: Ivey (2030 in chips)
+  |Seat 3: Negreanu (2000 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (1990 in chips)
+  |Seat 6: Hellmuth (1980 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Jc Kh]
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: calls 30
+  |*** FLOP *** [8h As 3c]
+  |You: checks
+  |Ivey: bets 36
+  |You: folds
+  |Uncalled bet (36) returned to Ivey
+  |Ivey collected 110 from pot
+  |*** SUMMARY ***
+  |Total pot 110 | Rake 0
+  |Board [8h As 3c]
+  |Seat 1: You (big blind) folded on the Flop
+  |Seat 2: Ivey collected (110)
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||80||0
+  f preflop|Negreanu folds||80|2|0
+  f preflop|Polk folds||80|2,3|0
+  f preflop|Selbst folds||80|2,3,4|0
+  f preflop|Hellmuth folds||80|2,3,4,5|0
+  f preflop|You calls 1.5 bb||110|2,3,4,5|0
+  f flop|Flop: 8h As 3c|8hAs3c|110|2,3,4,5|0
+  f flop|You checks|8hAs3c|110|2,3,4,5|0
+  f flop|Ivey bets 1.8 bb|8hAs3c|146|2,3,4,5|0
+  f flop|You folds|8hAs3c|146|2,3,4,5,0|0
+  f flop|Ivey win 7.3 bb.|8hAs3c|146|2,3,4,5,0|1
+H3 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 fold
+  [preflop] Hand #3 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Polk wins 80 (uncontested)
+  stacks=1940,2070,2000,2030,1990,1970 pot=80 hero=-10
+  pots=3|80|Pot sd= board= net=-10
+  |PokerStars Hand #175000000300003: Hold'em No Limit (10/20) - 2025/06/16 00:06:43 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (1950 in chips)
+  |Seat 2: Ivey (2090 in chips)
+  |Seat 3: Negreanu (2000 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (1990 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Td Ks]
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Uncalled bet (30) returned to Polk
+  |Polk collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk collected (50)
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk raises to 2.5 bb||80|2|0
+  f preflop|Selbst folds||80|2,4|0
+  f preflop|Hellmuth folds||80|2,4,5|0
+  f preflop|You folds||80|2,4,5,0|0
+  f preflop|Ivey folds||80|2,4,5,0,1|0
+  f preflop|Polk win 4 bb.||80|2,4,5,0,1|1
+H4 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  [preflop] Hand #4 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] You wins 80 (uncontested)
+  stacks=1970,2060,1980,2030,1990,1970 pot=80 hero=30
+  pots=0|80|Pot sd= board= net=30
+  |PokerStars Hand #175000000400004: Hold'em No Limit (10/20) - 2025/06/16 00:06:44 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (1940 in chips)
+  |Seat 2: Ivey (2070 in chips)
+  |Seat 3: Negreanu (2000 in chips)
+  |Seat 4: Polk (2030 in chips)
+  |Seat 5: Selbst (1990 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kh Ks]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (30) returned to You
+  |You collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (button) collected (50)
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|You raises to 2.5 bb||80|3,4,5|0
+  f preflop|Ivey folds||80|3,4,5,1|0
+  f preflop|Negreanu folds||80|3,4,5,1,2|0
+  f preflop|You win 4 bb.||80|3,4,5,1,2|1
+H5 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 fold
+  [preflop] Hand #5 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Ivey wins 80 (uncontested)
+  stacks=1970,2090,1970,2010,1990,1970 pot=80 hero=0
+  pots=1|80|Pot sd= board= net=0
+  |PokerStars Hand #175000000500005: Hold'em No Limit (10/20) - 2025/06/16 00:06:45 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2060 in chips)
+  |Seat 3: Negreanu (1980 in chips)
+  |Seat 4: Polk (2030 in chips)
+  |Seat 5: Selbst (1990 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2s Kc]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) collected (50)
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You folds||30|4,5,0|0
+  f preflop|Ivey raises to 2.5 bb||80|4,5,0|0
+  f preflop|Negreanu folds||80|4,5,0,2|0
+  f preflop|Polk folds||80|4,5,0,2,3|0
+  f preflop|Ivey win 4 bb.||80|4,5,0,2,3|1
+H6 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 fold
+  d4 fold
+  [preflop] Hand #6 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Ivey wins 80 (uncontested)
+  stacks=1970,2120,1970,2000,1970,1970 pot=80 hero=0
+  pots=1|80|Pot sd= board= net=0
+  |PokerStars Hand #175000000600006: Hold'em No Limit (10/20) - 2025/06/16 00:06:46 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2090 in chips)
+  |Seat 3: Negreanu (1970 in chips)
+  |Seat 4: Polk (2010 in chips)
+  |Seat 5: Selbst (1990 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kd 7s]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey collected (50)
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey raises to 2.5 bb||80|5,0|0
+  f preflop|Negreanu folds||80|5,0,2|0
+  f preflop|Polk folds||80|5,0,2,3|0
+  f preflop|Selbst folds||80|5,0,2,3,4|0
+  f preflop|Ivey win 4 bb.||80|5,0,2,3,4|1
+H7 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  [preflop] Hand #7 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth wins 30 (uncontested)
+  stacks=1970,2120,1970,2000,1960,1980 pot=30 hero=0
+  pots=5|30|Pot sd= board= net=0
+  |PokerStars Hand #175000000700007: Hold'em No Limit (10/20) - 2025/06/16 00:06:47 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2120 in chips)
+  |Seat 3: Negreanu (1970 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (1970 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kc 8c]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Uncalled bet (10) returned to Hellmuth
+  |Hellmuth collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk folds||30|0,1,2,3|0
+  f preflop|Selbst folds||30|0,1,2,3,4|0
+  f preflop|Hellmuth win 1.5 bb.||30|0,1,2,3,4|1
+H8 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 fold
+  d0 fold
+  [preflop] Hand #8 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Polk wins 80 (uncontested)
+  stacks=1950,2120,1970,2030,1960,1970 pot=80 hero=-20
+  pots=3|80|Pot sd= board= net=-20
+  |PokerStars Hand #175000000800008: Hold'em No Limit (10/20) - 2025/06/16 00:06:48 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2120 in chips)
+  |Seat 3: Negreanu (1970 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (1960 in chips)
+  |Seat 6: Hellmuth (1980 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kd 5h]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Uncalled bet (30) returned to Polk
+  |Polk collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk collected (50)
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk raises to 2.5 bb||80|1,2|0
+  f preflop|Selbst folds||80|1,2,4|0
+  f preflop|Hellmuth folds||80|1,2,4,5|0
+  f preflop|You folds||80|1,2,4,5,0|0
+  f preflop|Polk win 4 bb.||80|1,2,4,5,0|1
+H9 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 raise 160
+  d5 fold
+  [preflop] Hand #9 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey raises to 160
+  [preflop] Hellmuth folds
+  [preflop] Ivey wins 220 (uncontested)
+  stacks=1940,2180,1970,2030,1960,1920 pot=220 hero=-10
+  pots=1|220|Pot sd= board= net=-10
+  |PokerStars Hand #175000000900009: Hold'em No Limit (10/20) - 2025/06/16 00:06:49 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (1950 in chips)
+  |Seat 2: Ivey (2120 in chips)
+  |Seat 3: Negreanu (1970 in chips)
+  |Seat 4: Polk (2030 in chips)
+  |Seat 5: Selbst (1960 in chips)
+  |Seat 6: Hellmuth (1970 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3s 6s]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: raises 110 to 160
+  |Hellmuth: folds
+  |Uncalled bet (110) returned to Ivey
+  |Ivey collected 110 from pot
+  |*** SUMMARY ***
+  |Total pot 110 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (110)
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst folds||30|2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|2,3,4|0
+  f preflop|You folds||80|2,3,4,0|0
+  f preflop|Ivey raises to 8 bb||220|2,3,4,0|0
+  f preflop|Hellmuth folds||220|2,3,4,0,5|0
+  f preflop|Ivey win 11 bb.||220|2,3,4,0,5|1
+H10 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  [preflop] Hand #10 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=1940,2200,1950,2030,1960,1920 pot=70 hero=0
+  pots=1|70|Pot sd= board= net=0
+  |PokerStars Hand #175000001000010: Hold'em No Limit (10/20) - 2025/06/16 00:06:50 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (1940 in chips)
+  |Seat 2: Ivey (2180 in chips)
+  |Seat 3: Negreanu (1970 in chips)
+  |Seat 4: Polk (2030 in chips)
+  |Seat 5: Selbst (1960 in chips)
+  |Seat 6: Hellmuth (1920 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4h Kd]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|You folds||30|3,4,5,0|0
+  f preflop|Ivey raises to 2.5 bb||70|3,4,5,0|0
+  f preflop|Negreanu folds||70|3,4,5,0,2|0
+  f preflop|Ivey win 3.5 bb.||70|3,4,5,0,2|1
+H11 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  d3 fold
+  [preflop] Hand #11 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] You wins 80 (uncontested)
+  stacks=1970,2200,1940,2010,1960,1920 pot=80 hero=30
+  pots=0|80|Pot sd= board= net=30
+  |PokerStars Hand #175000001100011: Hold'em No Limit (10/20) - 2025/06/16 00:06:51 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (1940 in chips)
+  |Seat 2: Ivey (2200 in chips)
+  |Seat 3: Negreanu (1950 in chips)
+  |Seat 4: Polk (2030 in chips)
+  |Seat 5: Selbst (1960 in chips)
+  |Seat 6: Hellmuth (1920 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ac Th]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Uncalled bet (30) returned to You
+  |You collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You collected (50)
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You raises to 2.5 bb||80|4,5|0
+  f preflop|Ivey folds||80|4,5,1|0
+  f preflop|Negreanu folds||80|4,5,1,2|0
+  f preflop|Polk folds||80|4,5,1,2,3|0
+  f preflop|You win 4 bb.||80|4,5,1,2,3|1
+H12 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 call 20
+  d3 fold
+  d4 check
+  d4 bet 28
+  d2 call 28
+  d4 bet 58
+  d2 call 58
+  d4 check
+  d2 check
+  [preflop] Hand #12 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk folds
+  [preflop] Selbst checks
+  [flop] Flop — 7c 2s 7d
+  [flop] Selbst bets 28
+  [flop] Negreanu calls 28
+  [turn] Turn — 7c 2s 7d 8d
+  [turn] Selbst bets 58
+  [turn] Negreanu calls 58
+  [river] River — 7c 2s 7d 8d Kh
+  [river] Selbst checks
+  [river] Negreanu checks
+  [showdown] Selbst wins 30 (Main pot)
+  [showdown] Selbst wins 192 (Side pot 1)
+  stacks=1970,2200,1834,2000,2076,1920 pot=222 hero=0
+  pots=4|30|Main pot;4|192|Side pot 1 sd=2:4d6d:1562720:Pair of Sevens;4:8s2h:2653440:Two Pair, Eights & Sevens board=7c2s7d8dKh net=0
+  |PokerStars Hand #175000001200012: Hold'em No Limit (10/20) - 2025/06/16 00:06:52 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2200 in chips)
+  |Seat 3: Negreanu (1940 in chips)
+  |Seat 4: Polk (2010 in chips)
+  |Seat 5: Selbst (1960 in chips)
+  |Seat 6: Hellmuth (1920 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [As 6h]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: folds
+  |Selbst: checks
+  |*** FLOP *** [7c 2s 7d]
+  |Selbst: bets 28
+  |Negreanu: calls 28
+  |*** TURN *** [7c 2s 7d] [8d]
+  |Selbst: bets 58
+  |Negreanu: calls 58
+  |*** RIVER *** [7c 2s 7d 8d] [Kh]
+  |Selbst: checks
+  |Negreanu: checks
+  |*** SHOW DOWN ***
+  |Negreanu: shows [4d 6d] (a pair of Sevens)
+  |Selbst: shows [8s 2h] (two pair, Eights and Sevens)
+  |Selbst collected 222 from pot
+  |*** SUMMARY ***
+  |Total pot 222 | Rake 0
+  |Board [7c 2s 7d 8d Kh]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) showed [4d 6d] and lost with a pair of Sevens
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) showed [8s 2h] and won (222) with two pair, Eights and Sevens
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey folds||30|5,0,1|0
+  f preflop|Negreanu calls 1 bb||50|5,0,1|0
+  f preflop|Polk folds||50|5,0,1,3|0
+  f preflop|Selbst checks||50|5,0,1,3|0
+  f flop|Flop: 7c 2s 7d|7c2s7d|50|5,0,1,3|0
+  f flop|Selbst bets 1.4 bb|7c2s7d|78|5,0,1,3|0
+  f flop|Negreanu calls 1.4 bb|7c2s7d|106|5,0,1,3|0
+  f turn|Turn: 7c 2s 7d 8d|7c2s7d8d|106|5,0,1,3|0
+  f turn|Selbst bets 2.9 bb|7c2s7d8d|164|5,0,1,3|0
+  f turn|Negreanu calls 2.9 bb|7c2s7d8d|222|5,0,1,3|0
+  f river|River: 7c 2s 7d 8d Kh|7c2s7d8dKh|222|5,0,1,3|0
+  f river|Selbst checks|7c2s7d8dKh|222|5,0,1,3|0
+  f river|Negreanu checks|7c2s7d8dKh|222|5,0,1,3|0
+  f showdown|Selbst win 11.1 bb.|7c2s7d8dKh|222|5,0,1,3|1
+H13 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 call 20
+  d3 raise 70
+  d4 fold
+  d5 call 50
+  d2 fold
+  d5 bet 56
+  d3 call 56
+  d5 check
+  d3 check
+  d5 check
+  d3 bet 282
+  d5 call 282
+  [preflop] Hand #13 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk raises to 70
+  [preflop] Selbst folds
+  [preflop] Hellmuth calls 50
+  [preflop] Negreanu folds
+  [flop] Flop — 5s Th Td
+  [flop] Hellmuth bets 56
+  [flop] Polk calls 56
+  [turn] Turn — 5s Th Td 6s
+  [turn] Hellmuth checks
+  [turn] Polk checks
+  [river] River — 5s Th Td 6s 7c
+  [river] Hellmuth checks
+  [river] Polk bets 282
+  [river] Hellmuth calls 282
+  [showdown] Polk wins 40 (Main pot)
+  [showdown] Polk wins 30 (Side pot 1)
+  [showdown] Polk wins 776 (Side pot 2)
+  stacks=1970,2200,1814,2438,2066,1512 pot=846 hero=0
+  pots=3|40|Main pot;3|30|Side pot 1;3|776|Side pot 2 sd=3:9s8s:4849664:Straight, Ten high;5:KsQs:1760368:Pair of Tens board=5sThTd6s7c net=0
+  |PokerStars Hand #175000001300013: Hold'em No Limit (10/20) - 2025/06/16 00:06:53 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2200 in chips)
+  |Seat 3: Negreanu (1834 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (2076 in chips)
+  |Seat 6: Hellmuth (1920 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [7d As]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: raises 50 to 70
+  |Selbst: folds
+  |Hellmuth: calls 50
+  |Negreanu: folds
+  |*** FLOP *** [5s Th Td]
+  |Hellmuth: bets 56
+  |Polk: calls 56
+  |*** TURN *** [5s Th Td] [6s]
+  |Hellmuth: checks
+  |Polk: checks
+  |*** RIVER *** [5s Th Td 6s] [7c]
+  |Hellmuth: checks
+  |Polk: bets 282
+  |Hellmuth: calls 282
+  |*** SHOW DOWN ***
+  |Polk: shows [9s 8s] (a straight, Ten high)
+  |Hellmuth: shows [Ks Qs] (a pair of Tens)
+  |Polk collected 846 from pot
+  |*** SUMMARY ***
+  |Total pot 846 | Rake 0
+  |Board [5s Th Td 6s 7c]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) showed [9s 8s] and won (846) with a straight, Ten high
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) showed [Ks Qs] and lost with a pair of Tens
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu calls 1 bb||50|0,1|0
+  f preflop|Polk raises to 3.5 bb||120|0,1|0
+  f preflop|Selbst folds||120|0,1,4|0
+  f preflop|Hellmuth calls 2.5 bb||170|0,1,4|0
+  f preflop|Negreanu folds||170|0,1,4,2|0
+  f flop|Flop: 5s Th Td|5sThTd|170|0,1,4,2|0
+  f flop|Hellmuth bets 2.8 bb|5sThTd|226|0,1,4,2|0
+  f flop|Polk calls 2.8 bb|5sThTd|282|0,1,4,2|0
+  f turn|Turn: 5s Th Td 6s|5sThTd6s|282|0,1,4,2|0
+  f turn|Hellmuth checks|5sThTd6s|282|0,1,4,2|0
+  f turn|Polk checks|5sThTd6s|282|0,1,4,2|0
+  f river|River: 5s Th Td 6s 7c|5sThTd6s7c|282|0,1,4,2|0
+  f river|Hellmuth checks|5sThTd6s7c|282|0,1,4,2|0
+  f river|Polk bets 14.1 bb|5sThTd6s7c|564|0,1,4,2|0
+  f river|Hellmuth calls 14.1 bb|5sThTd6s7c|846|0,1,4,2|0
+  f showdown|Polk win 42.3 bb.|5sThTd6s7c|846|0,1,4,2|1
+H14 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 raise 50
+  d2 fold
+  d3 fold
+  d4 call 50
+  d5 fold
+  d0 fold
+  d1 bet 72
+  d4 call 72
+  d1 check
+  d4 check
+  d1 check
+  d4 check
+  [preflop] Hand #14 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst calls 50
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [flop] Flop — 7d 9s Ks
+  [flop] Ivey bets 72
+  [flop] Selbst calls 72
+  [turn] Turn — 7d 9s Ks Js
+  [turn] Ivey checks
+  [turn] Selbst checks
+  [river] River — 7d 9s Ks Js 8c
+  [river] Ivey checks
+  [river] Selbst checks
+  [showdown] Ivey wins 40 (Main pot)
+  [showdown] Ivey wins 30 (Side pot 1)
+  [showdown] Ivey wins 204 (Side pot 2)
+  stacks=1950,2352,1814,2438,1944,1502 pot=274 hero=-20
+  pots=1|40|Main pot;1|30|Side pot 1;1|204|Side pot 2 sd=1:Ac9c:1699248:Pair of Nines;4:AsQc:974009:Ace High board=7d9sKsJs8c net=-20
+  |PokerStars Hand #175000001400014: Hold'em No Limit (10/20) - 2025/06/16 00:06:54 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (1970 in chips)
+  |Seat 2: Ivey (2200 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2438 in chips)
+  |Seat 5: Selbst (2066 in chips)
+  |Seat 6: Hellmuth (1512 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2c 4c]
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: calls 50
+  |Hellmuth: folds
+  |You: folds
+  |*** FLOP *** [7d 9s Ks]
+  |Ivey: bets 72
+  |Selbst: calls 72
+  |*** TURN *** [7d 9s Ks] [Js]
+  |Ivey: checks
+  |Selbst: checks
+  |*** RIVER *** [7d 9s Ks Js] [8c]
+  |Ivey: checks
+  |Selbst: checks
+  |*** SHOW DOWN ***
+  |Ivey: shows [Ac 9c] (a pair of Nines)
+  |Selbst: shows [As Qc] (high card Ace)
+  |Ivey collected 274 from pot
+  |*** SUMMARY ***
+  |Total pot 274 | Rake 0
+  |Board [7d 9s Ks Js 8c]
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey showed [Ac 9c] and won (274) with a pair of Nines
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) showed [As Qc] and lost with high card Ace
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||80||0
+  f preflop|Negreanu folds||80|2|0
+  f preflop|Polk folds||80|2,3|0
+  f preflop|Selbst calls 2.5 bb||130|2,3|0
+  f preflop|Hellmuth folds||130|2,3,5|0
+  f preflop|You folds||130|2,3,5,0|0
+  f flop|Flop: 7d 9s Ks|7d9sKs|130|2,3,5,0|0
+  f flop|Ivey bets 3.6 bb|7d9sKs|202|2,3,5,0|0
+  f flop|Selbst calls 3.6 bb|7d9sKs|274|2,3,5,0|0
+  f turn|Turn: 7d 9s Ks Js|7d9sKsJs|274|2,3,5,0|0
+  f turn|Ivey checks|7d9sKsJs|274|2,3,5,0|0
+  f turn|Selbst checks|7d9sKsJs|274|2,3,5,0|0
+  f river|River: 7d 9s Ks Js 8c|7d9sKsJs8c|274|2,3,5,0|0
+  f river|Ivey checks|7d9sKsJs8c|274|2,3,5,0|0
+  f river|Selbst checks|7d9sKsJs8c|274|2,3,5,0|0
+  f showdown|Ivey win 13.7 bb.|7d9sKsJs8c|274|2,3,5,0|1
+H15 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d0 call 40
+  d1 fold
+  d0 check
+  d4 bet 79
+  d0 call 79
+  d0 check
+  d4 bet 153
+  d0 call 153
+  d0 check
+  d4 check
+  [preflop] Hand #15 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You calls 40
+  [preflop] Ivey folds
+  [flop] Flop — 8s 4s Ad
+  [flop] You checks
+  [flop] Selbst bets 79
+  [flop] You calls 79
+  [turn] Turn — 8s 4s Ad Qd
+  [turn] You checks
+  [turn] Selbst bets 153
+  [turn] You calls 153
+  [river] River — 8s 4s Ad Qd 5c
+  [river] You checks
+  [river] Selbst checks
+  [showdown] Selbst wins 60 (Main pot)
+  [showdown] Selbst wins 524 (Side pot 1)
+  stacks=1668,2332,1814,2438,2246,1502 pot=584 hero=-282
+  pots=4|60|Main pot;4|524|Side pot 1 sd=0:KhJh:974008:Ace High;4:QcJs:1895296:Pair of Queens board=8s4sAdQd5c net=-282
+  |PokerStars Hand #175000001500015: Hold'em No Limit (10/20) - 2025/06/16 00:06:55 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (1950 in chips)
+  |Seat 2: Ivey (2352 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2438 in chips)
+  |Seat 5: Selbst (1944 in chips)
+  |Seat 6: Hellmuth (1502 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kh Jh]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: calls 40
+  |Ivey: folds
+  |*** FLOP *** [8s 4s Ad]
+  |You: checks
+  |Selbst: bets 79
+  |You: calls 79
+  |*** TURN *** [8s 4s Ad] [Qd]
+  |You: checks
+  |Selbst: bets 153
+  |You: calls 153
+  |*** RIVER *** [8s 4s Ad Qd] [5c]
+  |You: checks
+  |Selbst: checks
+  |*** SHOW DOWN ***
+  |You: shows [Kh Jh] (high card Ace)
+  |Selbst: shows [Qc Js] (a pair of Queens)
+  |Selbst collected 584 from pot
+  |*** SUMMARY ***
+  |Total pot 584 | Rake 0
+  |Board [8s 4s Ad Qd 5c]
+  |Seat 1: You (small blind) showed [Kh Jh] and lost with high card Ace
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst showed [Qc Js] and won (584) with a pair of Queens
+  |Seat 6: Hellmuth (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|2,3|0
+  f preflop|Hellmuth folds||80|2,3,5|0
+  f preflop|You calls 2 bb||120|2,3,5|0
+  f preflop|Ivey folds||120|2,3,5,1|0
+  f flop|Flop: 8s 4s Ad|8s4sAd|120|2,3,5,1|0
+  f flop|You checks|8s4sAd|120|2,3,5,1|0
+  f flop|Selbst bets 4.0 bb|8s4sAd|199|2,3,5,1|0
+  f flop|You calls 4.0 bb|8s4sAd|278|2,3,5,1|0
+  f turn|Turn: 8s 4s Ad Qd|8s4sAdQd|278|2,3,5,1|0
+  f turn|You checks|8s4sAdQd|278|2,3,5,1|0
+  f turn|Selbst bets 7.7 bb|8s4sAdQd|431|2,3,5,1|0
+  f turn|You calls 7.7 bb|8s4sAdQd|584|2,3,5,1|0
+  f river|River: 8s 4s Ad Qd 5c|8s4sAdQd5c|584|2,3,5,1|0
+  f river|You checks|8s4sAdQd5c|584|2,3,5,1|0
+  f river|Selbst checks|8s4sAdQd5c|584|2,3,5,1|0
+  f showdown|Selbst win 29.2 bb.|8s4sAdQd5c|584|2,3,5,1|1
+H16 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  [preflop] Hand #16 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Selbst wins 80 (uncontested)
+  stacks=1668,2322,1794,2438,2276,1502 pot=80 hero=0
+  pots=4|80|Pot sd= board= net=0
+  |PokerStars Hand #175000001600016: Hold'em No Limit (10/20) - 2025/06/16 00:06:56 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (1668 in chips)
+  |Seat 2: Ivey (2332 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2438 in chips)
+  |Seat 5: Selbst (2246 in chips)
+  |Seat 6: Hellmuth (1502 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kd 4s]
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (30) returned to Selbst
+  |Selbst collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst collected (50)
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst raises to 2.5 bb||80|3|0
+  f preflop|Hellmuth folds||80|3,5|0
+  f preflop|You folds||80|3,5,0|0
+  f preflop|Ivey folds||80|3,5,0,1|0
+  f preflop|Negreanu folds||80|3,5,0,1,2|0
+  f preflop|Selbst win 4 bb.||80|3,5,0,1,2|1
+H17 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 raise 50
+  d3 fold
+  [preflop] Hand #17 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu raises to 50
+  [preflop] Polk folds
+  [preflop] Negreanu wins 70 (uncontested)
+  stacks=1668,2322,1814,2418,2276,1502 pot=70 hero=0
+  pots=2|70|Pot sd= board= net=0
+  |PokerStars Hand #175000001700017: Hold'em No Limit (10/20) - 2025/06/16 00:06:57 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (1668 in chips)
+  |Seat 2: Ivey (2322 in chips)
+  |Seat 3: Negreanu (1794 in chips)
+  |Seat 4: Polk (2438 in chips)
+  |Seat 5: Selbst (2276 in chips)
+  |Seat 6: Hellmuth (1502 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Qs 6d]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: raises 30 to 50
+  |Polk: folds
+  |Uncalled bet (30) returned to Negreanu
+  |Negreanu collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) collected (40)
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You folds||30|4,5,0|0
+  f preflop|Ivey folds||30|4,5,0,1|0
+  f preflop|Negreanu raises to 2.5 bb||70|4,5,0,1|0
+  f preflop|Polk folds||70|4,5,0,1,3|0
+  f preflop|Negreanu win 3.5 bb.||70|4,5,0,1,3|1
+H18 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 call 30
+  d4 check
+  d0 bet 36
+  d4 call 36
+  d4 check
+  d0 check
+  d4 check
+  d0 bet 182
+  d4 fold
+  [preflop] Hand #18 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst calls 30
+  [flop] Flop — 5s Tc 4h
+  [flop] Selbst checks
+  [flop] You bets 36
+  [flop] Selbst calls 36
+  [turn] Turn — 5s Tc 4h 4c
+  [turn] Selbst checks
+  [turn] You checks
+  [river] River — 5s Tc 4h 4c As
+  [river] Selbst checks
+  [river] You bets 182
+  [river] Selbst folds
+  [river] You wins 364 (uncontested)
+  stacks=1764,2322,1814,2408,2190,1502 pot=364 hero=96
+  pots=0|364|Pot sd= board=5sTc4h4cAs net=96
+  |PokerStars Hand #175000001800018: Hold'em No Limit (10/20) - 2025/06/16 00:06:58 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (1668 in chips)
+  |Seat 2: Ivey (2322 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2418 in chips)
+  |Seat 5: Selbst (2276 in chips)
+  |Seat 6: Hellmuth (1502 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ah Ks]
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: calls 30
+  |*** FLOP *** [5s Tc 4h]
+  |Selbst: checks
+  |You: bets 36
+  |Selbst: calls 36
+  |*** TURN *** [5s Tc 4h] [4c]
+  |Selbst: checks
+  |You: checks
+  |*** RIVER *** [5s Tc 4h 4c] [As]
+  |Selbst: checks
+  |You: bets 182
+  |Selbst: folds
+  |Uncalled bet (182) returned to You
+  |You collected 182 from pot
+  |*** SUMMARY ***
+  |Total pot 182 | Rake 0
+  |Board [5s Tc 4h 4c As]
+  |Seat 1: You collected (182)
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) folded on the River
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You raises to 2.5 bb||80|5|0
+  f preflop|Ivey folds||80|5,1|0
+  f preflop|Negreanu folds||80|5,1,2|0
+  f preflop|Polk folds||80|5,1,2,3|0
+  f preflop|Selbst calls 1.5 bb||110|5,1,2,3|0
+  f flop|Flop: 5s Tc 4h|5sTc4h|110|5,1,2,3|0
+  f flop|Selbst checks|5sTc4h|110|5,1,2,3|0
+  f flop|You bets 1.8 bb|5sTc4h|146|5,1,2,3|0
+  f flop|Selbst calls 1.8 bb|5sTc4h|182|5,1,2,3|0
+  f turn|Turn: 5s Tc 4h 4c|5sTc4h4c|182|5,1,2,3|0
+  f turn|Selbst checks|5sTc4h4c|182|5,1,2,3|0
+  f turn|You checks|5sTc4h4c|182|5,1,2,3|0
+  f river|River: 5s Tc 4h 4c As|5sTc4h4cAs|182|5,1,2,3|0
+  f river|Selbst checks|5sTc4h4cAs|182|5,1,2,3|0
+  f river|You bets 9.1 bb|5sTc4h4cAs|364|5,1,2,3|0
+  f river|Selbst folds|5sTc4h4cAs|364|5,1,2,3,4|0
+  f showdown|You win 18.2 bb.|5sTc4h4cAs|364|5,1,2,3,4|1
+H19 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 raise 160
+  d4 fold
+  [preflop] Hand #19 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth raises to 160
+  [preflop] Selbst folds
+  [preflop] Hellmuth wins 210 (uncontested)
+  stacks=1764,2322,1814,2408,2140,1552 pot=210 hero=0
+  pots=5|210|Pot sd= board= net=0
+  |PokerStars Hand #175000001900019: Hold'em No Limit (10/20) - 2025/06/16 00:06:59 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (1764 in chips)
+  |Seat 2: Ivey (2322 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2408 in chips)
+  |Seat 5: Selbst (2190 in chips)
+  |Seat 6: Hellmuth (1502 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2d Tc]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: raises 110 to 160
+  |Selbst: folds
+  |Uncalled bet (110) returned to Hellmuth
+  |Hellmuth collected 100 from pot
+  |*** SUMMARY ***
+  |Total pot 100 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) collected (100)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk folds||30|0,1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||70|0,1,2,3|0
+  f preflop|Hellmuth raises to 8 bb||210|0,1,2,3|0
+  f preflop|Selbst folds||210|0,1,2,3,4|0
+  f preflop|Hellmuth win 10.5 bb.||210|0,1,2,3,4|1
+H20 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 call 20
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 check
+  d0 check
+  d2 bet 50
+  d0 call 50
+  d0 bet 113
+  d2 call 113
+  d0 check
+  d2 bet 376
+  d0 call 376
+  [preflop] Hand #20 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You checks
+  [flop] Flop — 7s 5s 8c
+  [flop] You checks
+  [flop] Negreanu bets 50
+  [flop] You calls 50
+  [turn] Turn — 7s 5s 8c Ah
+  [turn] You bets 113
+  [turn] Negreanu calls 113
+  [river] River — 7s 5s 8c Ah 3s
+  [river] You checks
+  [river] Negreanu bets 376
+  [river] You calls 376
+  [showdown] Negreanu wins 30 (Main pot)
+  [showdown] Negreanu wins 1098 (Side pot 1)
+  stacks=1205,2322,2383,2408,2140,1542 pot=1128 hero=-559
+  pots=2|30|Main pot;2|1098|Side pot 1 sd=0:4hAd:2000720:Pair of Aces;2:7c7d:3663872:Three of a Kind, Sevens board=7s5s8cAh3s net=-559
+  |PokerStars Hand #175000002000020: Hold'em No Limit (10/20) - 2025/06/16 00:07:00 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (1764 in chips)
+  |Seat 2: Ivey (2322 in chips)
+  |Seat 3: Negreanu (1814 in chips)
+  |Seat 4: Polk (2408 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (1552 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4h Ad]
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: checks
+  |*** FLOP *** [7s 5s 8c]
+  |You: checks
+  |Negreanu: bets 50
+  |You: calls 50
+  |*** TURN *** [7s 5s 8c] [Ah]
+  |You: bets 113
+  |Negreanu: calls 113
+  |*** RIVER *** [7s 5s 8c Ah] [3s]
+  |You: checks
+  |Negreanu: bets 376
+  |You: calls 376
+  |*** SHOW DOWN ***
+  |You: shows [4h Ad] (a pair of Aces)
+  |Negreanu: shows [7c 7d] (three of a kind, Sevens)
+  |Negreanu collected 1128 from pot
+  |*** SUMMARY ***
+  |Total pot 1128 | Rake 0
+  |Board [7s 5s 8c Ah 3s]
+  |Seat 1: You (big blind) showed [4h Ad] and lost with a pair of Aces
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu showed [7c 7d] and won (1128) with three of a kind, Sevens
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu calls 1 bb||50|1|0
+  f preflop|Polk folds||50|1,3|0
+  f preflop|Selbst folds||50|1,3,4|0
+  f preflop|Hellmuth folds||50|1,3,4,5|0
+  f preflop|You checks||50|1,3,4,5|0
+  f flop|Flop: 7s 5s 8c|7s5s8c|50|1,3,4,5|0
+  f flop|You checks|7s5s8c|50|1,3,4,5|0
+  f flop|Negreanu bets 2.5 bb|7s5s8c|100|1,3,4,5|0
+  f flop|You calls 2.5 bb|7s5s8c|150|1,3,4,5|0
+  f turn|Turn: 7s 5s 8c Ah|7s5s8cAh|150|1,3,4,5|0
+  f turn|You bets 5.7 bb|7s5s8cAh|263|1,3,4,5|0
+  f turn|Negreanu calls 5.7 bb|7s5s8cAh|376|1,3,4,5|0
+  f river|River: 7s 5s 8c Ah 3s|7s5s8cAh3s|376|1,3,4,5|0
+  f river|You checks|7s5s8cAh3s|376|1,3,4,5|0
+  f river|Negreanu bets 18.8 bb|7s5s8cAh3s|752|1,3,4,5|0
+  f river|You calls 18.8 bb|7s5s8cAh3s|1128|1,3,4,5|0
+  f showdown|Negreanu win 56.4 bb.|7s5s8cAh3s|1128|1,3,4,5|1
+H21 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 call 30
+  d1 bet 138
+  d5 call 138
+  d1 bet 290
+  d5 call 290
+  d1 check
+  d5 check
+  [preflop] Hand #21 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey calls 30
+  [flop] Flop — 4c Ts 5c
+  [flop] Ivey bets 138
+  [flop] Hellmuth calls 138
+  [turn] Turn — 4c Ts 5c 2d
+  [turn] Ivey bets 290
+  [turn] Hellmuth calls 290
+  [river] River — 4c Ts 5c 2d 6h
+  [river] Ivey checks
+  [river] Hellmuth checks
+  [showdown] Ivey wins 30 (Main pot)
+  [showdown] Ivey wins 936 (Side pot 1)
+  stacks=1195,2810,2383,2408,2140,1064 pot=966 hero=-10
+  pots=1|30|Main pot;1|936|Side pot 1 sd=1:Tc9c:1742416:Pair of Tens;5:5dKs:1432160:Pair of Fives board=4cTs5c2d6h net=-10
+  |PokerStars Hand #175000002100021: Hold'em No Limit (10/20) - 2025/06/16 00:07:01 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (1205 in chips)
+  |Seat 2: Ivey (2322 in chips)
+  |Seat 3: Negreanu (2383 in chips)
+  |Seat 4: Polk (2408 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (1542 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4d Kh]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: calls 30
+  |*** FLOP *** [4c Ts 5c]
+  |Ivey: bets 138
+  |Hellmuth: calls 138
+  |*** TURN *** [4c Ts 5c] [2d]
+  |Ivey: bets 290
+  |Hellmuth: calls 290
+  |*** RIVER *** [4c Ts 5c 2d] [6h]
+  |Ivey: checks
+  |Hellmuth: checks
+  |*** SHOW DOWN ***
+  |Ivey: shows [Tc 9c] (a pair of Tens)
+  |Hellmuth: shows [5d Ks] (a pair of Fives)
+  |Ivey collected 966 from pot
+  |*** SUMMARY ***
+  |Total pot 966 | Rake 0
+  |Board [4c Ts 5c 2d 6h]
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) showed [Tc 9c] and won (966) with a pair of Tens
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) showed [5d Ks] and lost with a pair of Fives
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst folds||30|2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|2,3,4|0
+  f preflop|You folds||80|2,3,4,0|0
+  f preflop|Ivey calls 1.5 bb||110|2,3,4,0|0
+  f flop|Flop: 4c Ts 5c|4cTs5c|110|2,3,4,0|0
+  f flop|Ivey bets 6.9 bb|4cTs5c|248|2,3,4,0|0
+  f flop|Hellmuth calls 6.9 bb|4cTs5c|386|2,3,4,0|0
+  f turn|Turn: 4c Ts 5c 2d|4cTs5c2d|386|2,3,4,0|0
+  f turn|Ivey bets 14.5 bb|4cTs5c2d|676|2,3,4,0|0
+  f turn|Hellmuth calls 14.5 bb|4cTs5c2d|966|2,3,4,0|0
+  f river|River: 4c Ts 5c 2d 6h|4cTs5c2d6h|966|2,3,4,0|0
+  f river|Ivey checks|4cTs5c2d6h|966|2,3,4,0|0
+  f river|Hellmuth checks|4cTs5c2d6h|966|2,3,4,0|0
+  f showdown|Ivey win 48.3 bb.|4cTs5c2d6h|966|2,3,4,0|1
+H22 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 fold
+  d2 fold
+  [preflop] Hand #22 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Hellmuth wins 80 (uncontested)
+  stacks=1195,2800,2363,2408,2140,1094 pot=80 hero=0
+  pots=5|80|Pot sd= board= net=0
+  |PokerStars Hand #175000002200022: Hold'em No Limit (10/20) - 2025/06/16 00:07:02 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (1195 in chips)
+  |Seat 2: Ivey (2810 in chips)
+  |Seat 3: Negreanu (2383 in chips)
+  |Seat 4: Polk (2408 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (1064 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [9c 8s]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (30) returned to Hellmuth
+  |Hellmuth collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth collected (50)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|3,4|0
+  f preflop|You folds||80|3,4,0|0
+  f preflop|Ivey folds||80|3,4,0,1|0
+  f preflop|Negreanu folds||80|3,4,0,1,2|0
+  f preflop|Hellmuth win 4 bb.||80|3,4,0,1,2|1
+H23 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 call 30
+  d3 bet 36
+  d5 call 36
+  d3 bet 182
+  d5 fold
+  [preflop] Hand #23 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk calls 30
+  [flop] Flop — 6h 7s 2h
+  [flop] Polk bets 36
+  [flop] Hellmuth calls 36
+  [turn] Turn — 6h 7s 2h Tc
+  [turn] Polk bets 182
+  [turn] Hellmuth folds
+  [turn] Polk wins 364 (uncontested)
+  stacks=1195,2800,2353,2504,2140,1008 pot=364 hero=0
+  pots=3|364|Pot sd= board=6h7s2hTc net=0
+  |PokerStars Hand #175000002300023: Hold'em No Limit (10/20) - 2025/06/16 00:07:03 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (1195 in chips)
+  |Seat 2: Ivey (2800 in chips)
+  |Seat 3: Negreanu (2363 in chips)
+  |Seat 4: Polk (2408 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (1094 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Td Qh]
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: calls 30
+  |*** FLOP *** [6h 7s 2h]
+  |Polk: bets 36
+  |Hellmuth: calls 36
+  |*** TURN *** [6h 7s 2h] [Tc]
+  |Polk: bets 182
+  |Hellmuth: folds
+  |Uncalled bet (182) returned to Polk
+  |Polk collected 182 from pot
+  |*** SUMMARY ***
+  |Total pot 182 | Rake 0
+  |Board [6h 7s 2h Tc]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) collected (182)
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded on the Turn
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|4|0
+  f preflop|You folds||80|4,0|0
+  f preflop|Ivey folds||80|4,0,1|0
+  f preflop|Negreanu folds||80|4,0,1,2|0
+  f preflop|Polk calls 1.5 bb||110|4,0,1,2|0
+  f flop|Flop: 6h 7s 2h|6h7s2h|110|4,0,1,2|0
+  f flop|Polk bets 1.8 bb|6h7s2h|146|4,0,1,2|0
+  f flop|Hellmuth calls 1.8 bb|6h7s2h|182|4,0,1,2|0
+  f turn|Turn: 6h 7s 2h Tc|6h7s2hTc|182|4,0,1,2|0
+  f turn|Polk bets 9.1 bb|6h7s2hTc|364|4,0,1,2|0
+  f turn|Hellmuth folds|6h7s2hTc|364|4,0,1,2,5|0
+  f turn|Polk win 18.2 bb.|6h7s2hTc|364|4,0,1,2,5|1
+H24 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 call 40
+  d4 fold
+  d3 check
+  d1 bet 79
+  d3 fold
+  [preflop] Hand #24 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk calls 40
+  [preflop] Selbst folds
+  [flop] Flop — Ad Jc Qh
+  [flop] Polk checks
+  [flop] Ivey bets 79
+  [flop] Polk folds
+  [flop] Ivey wins 199 (uncontested)
+  stacks=1195,2870,2353,2454,2120,1008 pot=199 hero=0
+  pots=1|199|Pot sd= board=AdJcQh net=0
+  |PokerStars Hand #175000002400024: Hold'em No Limit (10/20) - 2025/06/16 00:07:04 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (1195 in chips)
+  |Seat 2: Ivey (2800 in chips)
+  |Seat 3: Negreanu (2353 in chips)
+  |Seat 4: Polk (2504 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (1008 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2d 3d]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: calls 40
+  |Selbst: folds
+  |*** FLOP *** [Ad Jc Qh]
+  |Polk: checks
+  |Ivey: bets 79
+  |Polk: folds
+  |Uncalled bet (79) returned to Ivey
+  |Ivey collected 120 from pot
+  |*** SUMMARY ***
+  |Total pot 120 | Rake 0
+  |Board [Ad Jc Qh]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey collected (120)
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) folded on the Flop
+  |Seat 5: Selbst (big blind) folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey raises to 2.5 bb||80|5,0|0
+  f preflop|Negreanu folds||80|5,0,2|0
+  f preflop|Polk calls 2 bb||120|5,0,2|0
+  f preflop|Selbst folds||120|5,0,2,4|0
+  f flop|Flop: Ad Jc Qh|AdJcQh|120|5,0,2,4|0
+  f flop|Polk checks|AdJcQh|120|5,0,2,4|0
+  f flop|Ivey bets 4.0 bb|AdJcQh|199|5,0,2,4|0
+  f flop|Polk folds|AdJcQh|199|5,0,2,4,3|0
+  f flop|Ivey win 9.9 bb.|AdJcQh|199|5,0,2,4,3|1
+H25 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 call 30
+  d5 bet 73
+  d3 call 73
+  d5 check
+  d3 check
+  d5 check
+  d3 bet 141
+  d5 fold
+  [preflop] Hand #25 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth calls 30
+  [flop] Flop — Kh 2d 6c
+  [flop] Hellmuth bets 73
+  [flop] Polk calls 73
+  [turn] Turn — Kh 2d 6c 7c
+  [turn] Hellmuth checks
+  [turn] Polk checks
+  [river] River — Kh 2d 6c 7c 2h
+  [river] Hellmuth checks
+  [river] Polk bets 141
+  [river] Hellmuth folds
+  [river] Polk wins 397 (uncontested)
+  stacks=1195,2870,2353,2587,2110,885 pot=397 hero=0
+  pots=3|397|Pot sd= board=Kh2d6c7c2h net=0
+  |PokerStars Hand #175000002500025: Hold'em No Limit (10/20) - 2025/06/16 00:07:05 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (1195 in chips)
+  |Seat 2: Ivey (2870 in chips)
+  |Seat 3: Negreanu (2353 in chips)
+  |Seat 4: Polk (2454 in chips)
+  |Seat 5: Selbst (2120 in chips)
+  |Seat 6: Hellmuth (1008 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Js 5c]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: calls 30
+  |*** FLOP *** [Kh 2d 6c]
+  |Hellmuth: bets 73
+  |Polk: calls 73
+  |*** TURN *** [Kh 2d 6c] [7c]
+  |Hellmuth: checks
+  |Polk: checks
+  |*** RIVER *** [Kh 2d 6c 7c] [2h]
+  |Hellmuth: checks
+  |Polk: bets 141
+  |Hellmuth: folds
+  |Uncalled bet (141) returned to Polk
+  |Polk collected 256 from pot
+  |*** SUMMARY ***
+  |Total pot 256 | Rake 0
+  |Board [Kh 2d 6c 7c 2h]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) collected (256)
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) folded on the River
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk raises to 2.5 bb||80|0,1,2|0
+  f preflop|Selbst folds||80|0,1,2,4|0
+  f preflop|Hellmuth calls 1.5 bb||110|0,1,2,4|0
+  f flop|Flop: Kh 2d 6c|Kh2d6c|110|0,1,2,4|0
+  f flop|Hellmuth bets 3.6 bb|Kh2d6c|183|0,1,2,4|0
+  f flop|Polk calls 3.6 bb|Kh2d6c|256|0,1,2,4|0
+  f turn|Turn: Kh 2d 6c 7c|Kh2d6c7c|256|0,1,2,4|0
+  f turn|Hellmuth checks|Kh2d6c7c|256|0,1,2,4|0
+  f turn|Polk checks|Kh2d6c7c|256|0,1,2,4|0
+  f river|River: Kh 2d 6c 7c 2h|Kh2d6c7c2h|256|0,1,2,4|0
+  f river|Hellmuth checks|Kh2d6c7c2h|256|0,1,2,4|0
+  f river|Polk bets 7.0 bb|Kh2d6c7c2h|397|0,1,2,4|0
+  f river|Hellmuth folds|Kh2d6c7c2h|397|0,1,2,4,5|0
+  f showdown|Polk win 19.9 bb.|Kh2d6c7c2h|397|0,1,2,4,5|1
+### seed=11 hands=25 seats=6 ante=0 stack=150
+H1 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 call 20
+  d1 raise 70
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 fold
+  [preflop] Hand #1 · blinds 10/20
+  [preflop] You calls 20
+  [preflop] Ivey raises to 70
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey wins 120 (uncontested)
+  stacks=130,200,150,150,140,130 pot=120 hero=-20
+  pots=1|120|Pot sd= board= net=-20
+  |PokerStars Hand #175000000100001: Hold'em No Limit (10/20) - 2025/06/16 00:06:41 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (150 in chips)
+  |Seat 3: Negreanu (150 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (150 in chips)
+  |Seat 6: Hellmuth (150 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [8s 9s]
+  |You: calls 20
+  |Ivey: raises 50 to 70
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Uncalled bet (50) returned to Ivey
+  |Ivey collected 70 from pot
+  |*** SUMMARY ***
+  |Total pot 70 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey collected (70)
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You calls 1 bb||50||0
+  f preflop|Ivey raises to 3.5 bb||120||0
+  f preflop|Negreanu folds||120|2|0
+  f preflop|Polk folds||120|2,3|0
+  f preflop|Selbst folds||120|2,3,4|0
+  f preflop|Hellmuth folds||120|2,3,4,5|0
+  f preflop|You folds||120|2,3,4,5,0|0
+  f preflop|Ivey win 6 bb.||120|2,3,4,5,0|1
+H2 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 fold
+  [preflop] Hand #2 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You wins 30 (uncontested)
+  stacks=140,200,150,150,140,120 pot=30 hero=10
+  pots=0|30|Pot sd= board= net=10
+  |PokerStars Hand #175000000200002: Hold'em No Limit (10/20) - 2025/06/16 00:06:42 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (130 in chips)
+  |Seat 2: Ivey (200 in chips)
+  |Seat 3: Negreanu (150 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (130 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [7h 7s]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |Uncalled bet (10) returned to You
+  |You collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (big blind) collected (20)
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk folds||30|1,2,3|0
+  f preflop|Selbst folds||30|1,2,3,4|0
+  f preflop|Hellmuth folds||30|1,2,3,4,5|0
+  f preflop|You win 1.5 bb.||30|1,2,3,4,5|1
+H3 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 fold
+  [preflop] Hand #3 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Hellmuth wins 80 (uncontested)
+  stacks=130,180,150,150,140,150 pot=80 hero=-10
+  pots=5|80|Pot sd= board= net=-10
+  |PokerStars Hand #175000000300003: Hold'em No Limit (10/20) - 2025/06/16 00:06:43 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (140 in chips)
+  |Seat 2: Ivey (200 in chips)
+  |Seat 3: Negreanu (150 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (120 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6s Jh]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: folds
+  |Uncalled bet (30) returned to Hellmuth
+  |Hellmuth collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) collected (50)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst folds||30|2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|2,3,4|0
+  f preflop|You folds||80|2,3,4,0|0
+  f preflop|Ivey folds||80|2,3,4,0,1|0
+  f preflop|Hellmuth win 4 bb.||80|2,3,4,0,1|1
+H4 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  [preflop] Hand #4 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=130,200,130,150,140,150 pot=70 hero=0
+  pots=1|70|Pot sd= board= net=0
+  |PokerStars Hand #175000000400004: Hold'em No Limit (10/20) - 2025/06/16 00:06:44 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (130 in chips)
+  |Seat 2: Ivey (180 in chips)
+  |Seat 3: Negreanu (150 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (150 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ts 6c]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|You folds||30|3,4,5,0|0
+  f preflop|Ivey raises to 2.5 bb||70|3,4,5,0|0
+  f preflop|Negreanu folds||70|3,4,5,0,2|0
+  f preflop|Ivey win 3.5 bb.||70|3,4,5,0,2|1
+H5 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 call 20
+  d1 raise 70
+  d2 fold
+  d3 fold
+  d0 fold
+  [preflop] Hand #5 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You calls 20
+  [preflop] Ivey raises to 70
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] You folds
+  [preflop] Ivey wins 120 (uncontested)
+  stacks=110,250,120,130,140,150 pot=120 hero=-20
+  pots=1|120|Pot sd= board= net=-20
+  |PokerStars Hand #175000000500005: Hold'em No Limit (10/20) - 2025/06/16 00:06:45 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (130 in chips)
+  |Seat 2: Ivey (200 in chips)
+  |Seat 3: Negreanu (130 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (150 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ac 9c]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: calls 20
+  |Ivey: raises 50 to 70
+  |Negreanu: folds
+  |Polk: folds
+  |You: folds
+  |Uncalled bet (50) returned to Ivey
+  |Ivey collected 70 from pot
+  |*** SUMMARY ***
+  |Total pot 70 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) collected (70)
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You calls 1 bb||50|4,5|0
+  f preflop|Ivey raises to 3.5 bb||120|4,5|0
+  f preflop|Negreanu folds||120|4,5,2|0
+  f preflop|Polk folds||120|4,5,2,3|0
+  f preflop|You folds||120|4,5,2,3,0|0
+  f preflop|Ivey win 6 bb.||120|4,5,2,3,0|1
+H6 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 call 20
+  d1 fold
+  d2 call 20
+  d3 fold
+  d4 check
+  d4 check
+  d0 bet 23
+  d2 call 23
+  d4 call 23
+  d4 check
+  d0 check
+  d2 bet 77
+  d4 call 77
+  d0 call 67
+  [preflop] Hand #6 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You calls 20
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk folds
+  [preflop] Selbst checks
+  [flop] Flop — 9c 3c 2s
+  [flop] Selbst checks
+  [flop] You bets 23
+  [flop] Negreanu calls 23
+  [flop] Selbst calls 23
+  [turn] Turn — 9c 3c 2s 2c
+  [turn] Selbst checks
+  [turn] You checks
+  [turn] Negreanu bets 77 (all-in)
+  [turn] Selbst calls 77
+  [turn] You calls 67 (all-in)
+  [river] River — 9c 3c 2s 2c 4c
+  [showdown] Negreanu wins 40 (Main pot)
+  [showdown] Negreanu wins 300 (Side pot 1)
+  [showdown] Negreanu wins 20 (Side pot 2)
+  stacks=0,250,360,120,20,150 pot=360 hero=-110
+  pots=2|40|Main pot;2|300|Side pot 1;2|20|Side pot 2 sd=0:Ah7h:1239408:Pair of Twos;2:ThTd:2763008:Two Pair, Tens & Twos;4:3d6h:2304256:Two Pair, Threes & Twos board=9c3c2s2c4c net=-110
+  |PokerStars Hand #175000000600006: Hold'em No Limit (10/20) - 2025/06/16 00:06:46 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (110 in chips)
+  |Seat 2: Ivey (250 in chips)
+  |Seat 3: Negreanu (120 in chips)
+  |Seat 4: Polk (130 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (150 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ah 7h]
+  |Hellmuth: folds
+  |You: calls 20
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: folds
+  |Selbst: checks
+  |*** FLOP *** [9c 3c 2s]
+  |Selbst: checks
+  |You: bets 23
+  |Negreanu: calls 23
+  |Selbst: calls 23
+  |*** TURN *** [9c 3c 2s] [2c]
+  |Selbst: checks
+  |You: checks
+  |Negreanu: bets 77 and is all-in
+  |Selbst: calls 77
+  |You: calls 67 and is all-in
+  |*** RIVER *** [9c 3c 2s 2c] [4c]
+  |*** SHOW DOWN ***
+  |You: shows [Ah 7h] (a pair of Twos)
+  |Negreanu: shows [Th Td] (two pair, Tens and Twos)
+  |Selbst: shows [3d 6h] (two pair, Threes and Twos)
+  |Negreanu collected 360 from pot
+  |*** SUMMARY ***
+  |Total pot 360 | Rake 0
+  |Board [9c 3c 2s 2c 4c]
+  |Seat 1: You showed [Ah 7h] and lost with a pair of Twos
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) showed [Th Td] and won (360) with two pair, Tens and Twos
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) showed [3d 6h] and lost with two pair, Threes and Twos
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You calls 1 bb||50|5|0
+  f preflop|Ivey folds||50|5,1|0
+  f preflop|Negreanu calls 1 bb||70|5,1|0
+  f preflop|Polk folds||70|5,1,3|0
+  f preflop|Selbst checks||70|5,1,3|0
+  f flop|Flop: 9c 3c 2s|9c3c2s|70|5,1,3|0
+  f flop|Selbst checks|9c3c2s|70|5,1,3|0
+  f flop|You bets 1.1 bb|9c3c2s|93|5,1,3|0
+  f flop|Negreanu calls 1.1 bb|9c3c2s|116|5,1,3|0
+  f flop|Selbst calls 1.1 bb|9c3c2s|139|5,1,3|0
+  f turn|Turn: 9c 3c 2s 2c|9c3c2s2c|139|5,1,3|0
+  f turn|Selbst checks|9c3c2s2c|139|5,1,3|0
+  f turn|You checks|9c3c2s2c|139|5,1,3|0
+  f turn|Negreanu bets 3.9 bb (all-in)|9c3c2s2c|216|5,1,3|0
+  f turn|Selbst calls 3.9 bb|9c3c2s2c|293|5,1,3|0
+  f turn|You calls 3.4 bb (all-in)|9c3c2s2c|360|5,1,3|0
+  f river|River: 9c 3c 2s 2c 4c|9c3c2s2c4c|360|5,1,3|0
+  f showdown|Negreanu win 18 bb.|9c3c2s2c4c|360|5,1,3|1
+H7 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  [preflop] Hand #7 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth wins 30 (uncontested)
+  stacks=150,250,360,120,10,160 pot=30 hero=0
+  pots=5|30|Pot sd= board= net=0
+  |PokerStars Hand #175000000700007: Hold'em No Limit (10/20) - 2025/06/16 00:06:47 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (250 in chips)
+  |Seat 3: Negreanu (360 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (20 in chips)
+  |Seat 6: Hellmuth (150 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3h 6s]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Uncalled bet (10) returned to Hellmuth
+  |Hellmuth collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk folds||30|0,1,2,3|0
+  f preflop|Selbst folds||30|0,1,2,3,4|0
+  f preflop|Hellmuth win 1.5 bb.||30|0,1,2,3,4|1
+H8 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 call 30
+  d5 check
+  d0 bet 33
+  d5 call 33
+  d5 bet 77
+  d0 call 67
+  [preflop] Hand #8 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You calls 30
+  [flop] Flop — 8h 4s 9c
+  [flop] Hellmuth checks
+  [flop] You bets 33
+  [flop] Hellmuth calls 33
+  [turn] Turn — 8h 4s 9c Qd
+  [turn] Hellmuth bets 77 (all-in)
+  [turn] You calls 67 (all-in)
+  [river] River — 8h 4s 9c Qd 9d
+  [showdown] Hellmuth wins 300 (Main pot)
+  [showdown] Hellmuth wins 10 (Side pot 1)
+  stacks=0,250,360,120,10,310 pot=310 hero=-150
+  pots=5|300|Main pot;5|10|Side pot 1 sd=0:5d5s:2710528:Two Pair, Nines & Fives;5:JcQs:2923264:Two Pair, Queens & Nines board=8h4s9cQd9d net=-150
+  |PokerStars Hand #175000000800008: Hold'em No Limit (10/20) - 2025/06/16 00:06:48 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (250 in chips)
+  |Seat 3: Negreanu (360 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (10 in chips)
+  |Seat 6: Hellmuth (160 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [5d 5s]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: calls 30
+  |*** FLOP *** [8h 4s 9c]
+  |Hellmuth: checks
+  |You: bets 33
+  |Hellmuth: calls 33
+  |*** TURN *** [8h 4s 9c] [Qd]
+  |Hellmuth: bets 77 and is all-in
+  |You: calls 67 and is all-in
+  |*** RIVER *** [8h 4s 9c Qd] [9d]
+  |Uncalled bet (10) returned to Hellmuth
+  |*** SHOW DOWN ***
+  |You: shows [5d 5s] (two pair, Nines and Fives)
+  |Hellmuth: shows [Jc Qs] (two pair, Queens and Nines)
+  |Hellmuth collected 300 from pot
+  |*** SUMMARY ***
+  |Total pot 300 | Rake 0
+  |Board [8h 4s 9c Qd 9d]
+  |Seat 1: You (big blind) showed [5d 5s] and lost with two pair, Nines and Fives
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) showed [Jc Qs] and won (300) with two pair, Queens and Nines
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk folds||30|1,2,3|0
+  f preflop|Selbst folds||30|1,2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||70|1,2,3,4|0
+  f preflop|You calls 1.5 bb||100|1,2,3,4|0
+  f flop|Flop: 8h 4s 9c|8h4s9c|100|1,2,3,4|0
+  f flop|Hellmuth checks|8h4s9c|100|1,2,3,4|0
+  f flop|You bets 1.6 bb|8h4s9c|133|1,2,3,4|0
+  f flop|Hellmuth calls 1.6 bb|8h4s9c|166|1,2,3,4|0
+  f turn|Turn: 8h 4s 9c Qd|8h4s9cQd|166|1,2,3,4|0
+  f turn|Hellmuth bets 3.9 bb (all-in)|8h4s9cQd|243|1,2,3,4|0
+  f turn|You calls 3.4 bb (all-in)|8h4s9cQd|310|1,2,3,4|0
+  f river|River: 8h 4s 9c Qd 9d|8h4s9cQd9d|310|1,2,3,4|0
+  f showdown|Hellmuth win 15.5 bb.|8h4s9cQd9d|310|1,2,3,4|1
+H9 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 call 40
+  d1 fold
+  d0 bet 66
+  d5 call 66
+  d0 check
+  d5 check
+  d0 check
+  d5 bet 189
+  d0 call 34
+  [preflop] Hand #9 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You calls 40
+  [preflop] Ivey folds
+  [flop] Flop — 3h Jh Qc
+  [flop] You bets 66
+  [flop] Hellmuth calls 66
+  [turn] Turn — 3h Jh Qc 5d
+  [turn] You checks
+  [turn] Hellmuth checks
+  [river] River — 3h Jh Qc 5d Ks
+  [river] You checks
+  [river] Hellmuth bets 189
+  [river] You calls 34 (all-in)
+  [showdown] Hellmuth wins 60 (Main pot)
+  [showdown] Hellmuth wins 260 (Side pot 1)
+  [showdown] Hellmuth wins 155 (Side pot 2)
+  stacks=0,230,360,120,10,480 pot=475 hero=-150
+  pots=5|60|Main pot;5|260|Side pot 1;5|155|Side pot 2 sd=0:Js9s:1825936:Pair of Jacks;5:AcJc:1830336:Pair of Jacks board=3hJhQc5dKs net=-150
+  |PokerStars Hand #175000000900009: Hold'em No Limit (10/20) - 2025/06/16 00:06:49 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (250 in chips)
+  |Seat 3: Negreanu (360 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (10 in chips)
+  |Seat 6: Hellmuth (310 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Js 9s]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: calls 40
+  |Ivey: folds
+  |*** FLOP *** [3h Jh Qc]
+  |You: bets 66
+  |Hellmuth: calls 66
+  |*** TURN *** [3h Jh Qc] [5d]
+  |You: checks
+  |Hellmuth: checks
+  |*** RIVER *** [3h Jh Qc 5d] [Ks]
+  |You: checks
+  |Hellmuth: bets 189
+  |You: calls 34 and is all-in
+  |Uncalled bet (155) returned to Hellmuth
+  |*** SHOW DOWN ***
+  |You: shows [Js 9s] (a pair of Jacks)
+  |Hellmuth: shows [Ac Jc] (a pair of Jacks)
+  |Hellmuth collected 320 from pot
+  |*** SUMMARY ***
+  |Total pot 320 | Rake 0
+  |Board [3h Jh Qc 5d Ks]
+  |Seat 1: You (small blind) showed [Js 9s] and lost with a pair of Jacks
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) showed [Ac Jc] and won (320) with a pair of Jacks
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst folds||30|2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|2,3,4|0
+  f preflop|You calls 2 bb||120|2,3,4|0
+  f preflop|Ivey folds||120|2,3,4,1|0
+  f flop|Flop: 3h Jh Qc|3hJhQc|120|2,3,4,1|0
+  f flop|You bets 3.3 bb|3hJhQc|186|2,3,4,1|0
+  f flop|Hellmuth calls 3.3 bb|3hJhQc|252|2,3,4,1|0
+  f turn|Turn: 3h Jh Qc 5d|3hJhQc5d|252|2,3,4,1|0
+  f turn|You checks|3hJhQc5d|252|2,3,4,1|0
+  f turn|Hellmuth checks|3hJhQc5d|252|2,3,4,1|0
+  f river|River: 3h Jh Qc 5d Ks|3hJhQc5dKs|252|2,3,4,1|0
+  f river|You checks|3hJhQc5dKs|252|2,3,4,1|0
+  f river|Hellmuth bets 9.4 bb|3hJhQc5dKs|441|2,3,4,1|0
+  f river|You calls 1.7 bb (all-in)|3hJhQc5dKs|475|2,3,4,1|0
+  f showdown|Hellmuth win 23.8 bb.|3hJhQc5dKs|475|2,3,4,1|1
+H10 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d0 fold
+  d1 fold
+  d2 call 30
+  d2 check
+  d5 check
+  d2 check
+  d5 check
+  d2 check
+  d5 check
+  [preflop] Hand #10 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 30
+  [flop] Flop — Ks Qs 4h
+  [flop] Negreanu checks
+  [flop] Hellmuth checks
+  [turn] Turn — Ks Qs 4h Ts
+  [turn] Negreanu checks
+  [turn] Hellmuth checks
+  [river] River — Ks Qs 4h Ts Js
+  [river] Negreanu checks
+  [river] Hellmuth checks
+  [showdown] Negreanu wins 30 (Main pot)
+  [showdown] Negreanu wins 80 (Side pot 1)
+  stacks=150,220,420,120,10,430 pot=110 hero=0
+  pots=2|30|Main pot;2|80|Side pot 1 sd=2:6h6c:1498288:Pair of Sixes;5:7d8d:904104:King High board=KsQs4hTsJs net=0
+  |PokerStars Hand #175000001000010: Hold'em No Limit (10/20) - 2025/06/16 00:06:50 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (230 in chips)
+  |Seat 3: Negreanu (360 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (10 in chips)
+  |Seat 6: Hellmuth (480 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6s Jd]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 30
+  |*** FLOP *** [Ks Qs 4h]
+  |Negreanu: checks
+  |Hellmuth: checks
+  |*** TURN *** [Ks Qs 4h] [Ts]
+  |Negreanu: checks
+  |Hellmuth: checks
+  |*** RIVER *** [Ks Qs 4h Ts] [Js]
+  |Negreanu: checks
+  |Hellmuth: checks
+  |*** SHOW DOWN ***
+  |Negreanu: shows [6h 6c] (a pair of Sixes)
+  |Hellmuth: shows [7d 8d] (high card King)
+  |Negreanu collected 110 from pot
+  |*** SUMMARY ***
+  |Total pot 110 | Rake 0
+  |Board [Ks Qs 4h Ts Js]
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) showed [6h 6c] and won (110) with a pair of Sixes
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth showed [7d 8d] and lost with high card King
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|3,4|0
+  f preflop|You folds||80|3,4,0|0
+  f preflop|Ivey folds||80|3,4,0,1|0
+  f preflop|Negreanu calls 1.5 bb||110|3,4,0,1|0
+  f flop|Flop: Ks Qs 4h|KsQs4h|110|3,4,0,1|0
+  f flop|Negreanu checks|KsQs4h|110|3,4,0,1|0
+  f flop|Hellmuth checks|KsQs4h|110|3,4,0,1|0
+  f turn|Turn: Ks Qs 4h Ts|KsQs4hTs|110|3,4,0,1|0
+  f turn|Negreanu checks|KsQs4hTs|110|3,4,0,1|0
+  f turn|Hellmuth checks|KsQs4hTs|110|3,4,0,1|0
+  f river|River: Ks Qs 4h Ts Js|KsQs4hTsJs|110|3,4,0,1|0
+  f river|Negreanu checks|KsQs4hTsJs|110|3,4,0,1|0
+  f river|Hellmuth checks|KsQs4hTsJs|110|3,4,0,1|0
+  f showdown|Negreanu win 5.5 bb.|KsQs4hTsJs|110|3,4,0,1|1
+H11 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 call 40
+  d3 fold
+  d2 bet 66
+  d0 call 66
+  d2 bet 139
+  d0 call 34
+  [preflop] Hand #11 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 40
+  [preflop] Polk folds
+  [flop] Flop — 4h Ts 4s
+  [flop] Negreanu bets 66
+  [flop] You calls 66
+  [turn] Turn — 4h Ts 4s 9d
+  [turn] Negreanu bets 139
+  [turn] You calls 34 (all-in)
+  [river] River — 4h Ts 4s 9d 7s
+  [showdown] You wins 60 (Main pot)
+  [showdown] You wins 260 (Side pot 1)
+  [showdown] Negreanu wins 105 (Side pot 2)
+  stacks=320,220,270,100,10,430 pot=425 hero=170
+  pots=0|60|Main pot;0|260|Side pot 1;2|105|Side pot 2 sd=0:ThAh:2772480:Two Pair, Tens & Fours;2:KdTd:2772224:Two Pair, Tens & Fours board=4hTs4s9d7s net=170
+  |PokerStars Hand #175000001100011: Hold'em No Limit (10/20) - 2025/06/16 00:06:51 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (220 in chips)
+  |Seat 3: Negreanu (420 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (10 in chips)
+  |Seat 6: Hellmuth (430 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Th Ah]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: calls 40
+  |Polk: folds
+  |*** FLOP *** [4h Ts 4s]
+  |Negreanu: bets 66
+  |You: calls 66
+  |*** TURN *** [4h Ts 4s] [9d]
+  |Negreanu: bets 139
+  |You: calls 34 and is all-in
+  |*** RIVER *** [4h Ts 4s 9d] [7s]
+  |Uncalled bet (105) returned to Negreanu
+  |*** SHOW DOWN ***
+  |You: shows [Th Ah] (two pair, Tens and Fours)
+  |Negreanu: shows [Kd Td] (two pair, Tens and Fours)
+  |You collected 320 from pot
+  |*** SUMMARY ***
+  |Total pot 320 | Rake 0
+  |Board [4h Ts 4s 9d 7s]
+  |Seat 1: You showed [Th Ah] and won (320) with two pair, Tens and Fours
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) showed [Kd Td] and lost with two pair, Tens and Fours
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You raises to 2.5 bb||80|4,5|0
+  f preflop|Ivey folds||80|4,5,1|0
+  f preflop|Negreanu calls 2 bb||120|4,5,1|0
+  f preflop|Polk folds||120|4,5,1,3|0
+  f flop|Flop: 4h Ts 4s|4hTs4s|120|4,5,1,3|0
+  f flop|Negreanu bets 3.3 bb|4hTs4s|186|4,5,1,3|0
+  f flop|You calls 3.3 bb|4hTs4s|252|4,5,1,3|0
+  f turn|Turn: 4h Ts 4s 9d|4hTs4s9d|252|4,5,1,3|0
+  f turn|Negreanu bets 7.0 bb|4hTs4s9d|391|4,5,1,3|0
+  f turn|You calls 1.7 bb (all-in)|4hTs4s9d|425|4,5,1,3|0
+  f river|River: 4h Ts 4s 9d 7s|4hTs4s9d7s|425|4,5,1,3|0
+  f showdown|You, Negreanu win 21.3 bb.|4hTs4s9d7s|425|4,5,1,3|1
+H12 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 call 20
+  d3 fold
+  [preflop] Hand #12 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk folds
+  [flop] Flop — Td 2s 6h
+  [turn] Turn — Td 2s 6h 5c
+  [river] River — Td 2s 6h 5c Kd
+  [showdown] Negreanu wins 30 (Main pot)
+  [showdown] Negreanu wins 10 (Side pot 1)
+  stacks=320,220,290,90,0,430 pot=40 hero=0
+  pots=2|30|Main pot;2|10|Side pot 1 sd=2:9cQd:903830:King High;4:7hJh:899702:King High board=Td2s6h5cKd net=0
+  |PokerStars Hand #175000001200012: Hold'em No Limit (10/20) - 2025/06/16 00:06:52 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (320 in chips)
+  |Seat 2: Ivey (220 in chips)
+  |Seat 3: Negreanu (270 in chips)
+  |Seat 4: Polk (100 in chips)
+  |Seat 5: Selbst (10 in chips)
+  |Seat 6: Hellmuth (430 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ks 8s]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: folds
+  |*** FLOP *** [Td 2s 6h]
+  |*** TURN *** [Td 2s 6h] [5c]
+  |*** RIVER *** [Td 2s 6h 5c] [Kd]
+  |Negreanu collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Board [Td 2s 6h 5c Kd]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) collected (40)
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey folds||30|5,0,1|0
+  f preflop|Negreanu calls 1 bb||50|5,0,1|0
+  f preflop|Polk folds||50|5,0,1,3|0
+  f flop|Flop: Td 2s 6h|Td2s6h|50|5,0,1,3|0
+  f turn|Turn: Td 2s 6h 5c|Td2s6h5c|50|5,0,1,3|0
+  f river|River: Td 2s 6h 5c Kd|Td2s6h5cKd|50|5,0,1,3|0
+  f showdown|Negreanu win 2 bb.|Td2s6h5cKd|50|5,0,1,3|1
+H13 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 call 50
+  d4 fold
+  d5 fold
+  d1 bet 98
+  d3 call 40
+  [preflop] Hand #13 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk calls 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [flop] Flop — 8d Qh 9s
+  [flop] Ivey bets 98
+  [flop] Polk calls 40 (all-in)
+  [turn] Turn — 8d Qh 9s 2c
+  [river] River — 8d Qh 9s 2c 7h
+  [showdown] Ivey wins 40 (Main pot)
+  [showdown] Ivey wins 30 (Side pot 1)
+  [showdown] Ivey wins 140 (Side pot 2)
+  [showdown] Ivey wins 58 (Side pot 3)
+  stacks=320,340,290,0,140,410 pot=268 hero=0
+  pots=1|40|Main pot;1|30|Side pot 1;1|140|Side pot 2;1|58|Side pot 3 sd=1:QcAc:1894784:Pair of Queens;3:TdTc:1755520:Pair of Tens board=8dQh9s2c7h net=0
+  |PokerStars Hand #175000001300013: Hold'em No Limit (10/20) - 2025/06/16 00:06:53 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (320 in chips)
+  |Seat 2: Ivey (220 in chips)
+  |Seat 3: Negreanu (290 in chips)
+  |Seat 4: Polk (90 in chips)
+  |Seat 5: Selbst (150 in chips)
+  |Seat 6: Hellmuth (430 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kc Jh]
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: calls 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |*** FLOP *** [8d Qh 9s]
+  |Ivey: bets 98
+  |Polk: calls 40 and is all-in
+  |*** TURN *** [8d Qh 9s] [2c]
+  |*** RIVER *** [8d Qh 9s 2c] [7h]
+  |Uncalled bet (58) returned to Ivey
+  |*** SHOW DOWN ***
+  |Ivey: shows [Qc Ac] (a pair of Queens)
+  |Polk: shows [Td Tc] (a pair of Tens)
+  |Ivey collected 210 from pot
+  |*** SUMMARY ***
+  |Total pot 210 | Rake 0
+  |Board [8d Qh 9s 2c 7h]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey showed [Qc Ac] and won (210) with a pair of Queens
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) showed [Td Tc] and lost with a pair of Tens
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey raises to 2.5 bb||80|0|0
+  f preflop|Negreanu folds||80|0,2|0
+  f preflop|Polk calls 2.5 bb||130|0,2|0
+  f preflop|Selbst folds||130|0,2,4|0
+  f preflop|Hellmuth folds||130|0,2,4,5|0
+  f flop|Flop: 8d Qh 9s|8dQh9s|130|0,2,4,5|0
+  f flop|Ivey bets 4.9 bb|8dQh9s|228|0,2,4,5|0
+  f flop|Polk calls 2 bb (all-in)|8dQh9s|268|0,2,4,5|0
+  f turn|Turn: 8d Qh 9s 2c|8dQh9s2c|268|0,2,4,5|0
+  f river|River: 8d Qh 9s 2c 7h|8dQh9s2c7h|268|0,2,4,5|0
+  f showdown|Ivey win 13.4 bb.|8dQh9s2c7h|268|0,2,4,5|1
+H14 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d0 call 30
+  d0 check
+  d4 bet 36
+  d0 call 36
+  d0 check
+  d4 check
+  d0 check
+  d4 check
+  [preflop] Hand #14 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You calls 30
+  [flop] Flop — 5c 8c 3h
+  [flop] You checks
+  [flop] Selbst bets 36
+  [flop] You calls 36
+  [turn] Turn — 5c 8c 3h 8s
+  [turn] You checks
+  [turn] Selbst checks
+  [river] River — 5c 8c 3h 8s 9h
+  [river] You checks
+  [river] Selbst checks
+  [showdown] Selbst wins 30 (Main pot)
+  [showdown] Selbst wins 152 (Side pot 1)
+  stacks=234,340,290,150,236,400 pot=182 hero=-86
+  pots=4|30|Main pot;4|152|Side pot 1 sd=0:Ah6c:1632608:Pair of Eights;4:AsJd:1633168:Pair of Eights board=5c8c3h8s9h net=-86
+  |PokerStars Hand #175000001400014: Hold'em No Limit (10/20) - 2025/06/16 00:06:54 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (320 in chips)
+  |Seat 2: Ivey (340 in chips)
+  |Seat 3: Negreanu (290 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (410 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ah 6c]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: calls 30
+  |*** FLOP *** [5c 8c 3h]
+  |You: checks
+  |Selbst: bets 36
+  |You: calls 36
+  |*** TURN *** [5c 8c 3h] [8s]
+  |You: checks
+  |Selbst: checks
+  |*** RIVER *** [5c 8c 3h 8s] [9h]
+  |You: checks
+  |Selbst: checks
+  |*** SHOW DOWN ***
+  |You: shows [Ah 6c] (a pair of Eights)
+  |Selbst: shows [As Jd] (a pair of Eights)
+  |Selbst collected 182 from pot
+  |*** SUMMARY ***
+  |Total pot 182 | Rake 0
+  |Board [5c 8c 3h 8s 9h]
+  |Seat 1: You (big blind) showed [Ah 6c] and lost with a pair of Eights
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) showed [As Jd] and won (182) with a pair of Eights
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk folds||30|1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|1,2,3|0
+  f preflop|Hellmuth folds||80|1,2,3,5|0
+  f preflop|You calls 1.5 bb||110|1,2,3,5|0
+  f flop|Flop: 5c 8c 3h|5c8c3h|110|1,2,3,5|0
+  f flop|You checks|5c8c3h|110|1,2,3,5|0
+  f flop|Selbst bets 1.8 bb|5c8c3h|146|1,2,3,5|0
+  f flop|You calls 1.8 bb|5c8c3h|182|1,2,3,5|0
+  f turn|Turn: 5c 8c 3h 8s|5c8c3h8s|182|1,2,3,5|0
+  f turn|You checks|5c8c3h8s|182|1,2,3,5|0
+  f turn|Selbst checks|5c8c3h8s|182|1,2,3,5|0
+  f river|River: 5c 8c 3h 8s 9h|5c8c3h8s9h|182|1,2,3,5|0
+  f river|You checks|5c8c3h8s9h|182|1,2,3,5|0
+  f river|Selbst checks|5c8c3h8s9h|182|1,2,3,5|0
+  f showdown|Selbst win 9.1 bb.|5c8c3h8s9h|182|1,2,3,5|1
+H15 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d0 fold
+  d1 fold
+  [preflop] Hand #15 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Selbst wins 80 (uncontested)
+  stacks=224,320,290,150,266,400 pot=80 hero=-10
+  pots=4|80|Pot sd= board= net=-10
+  |PokerStars Hand #175000001500015: Hold'em No Limit (10/20) - 2025/06/16 00:06:55 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (234 in chips)
+  |Seat 2: Ivey (340 in chips)
+  |Seat 3: Negreanu (290 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (236 in chips)
+  |Seat 6: Hellmuth (400 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [As 9s]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Uncalled bet (30) returned to Selbst
+  |Selbst collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst collected (50)
+  |Seat 6: Hellmuth (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|2,3|0
+  f preflop|Hellmuth folds||80|2,3,5|0
+  f preflop|You folds||80|2,3,5,0|0
+  f preflop|Ivey folds||80|2,3,5,0,1|0
+  f preflop|Selbst win 4 bb.||80|2,3,5,0,1|1
+H16 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 call 30
+  d2 bet 83
+  d0 call 83
+  d2 check
+  d0 check
+  d2 bet 157
+  d0 call 91
+  [preflop] Hand #16 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 30
+  [flop] Flop — 5d 2d 6s
+  [flop] Negreanu bets 83
+  [flop] You calls 83
+  [turn] Turn — 5d 2d 6s 9d
+  [turn] Negreanu checks
+  [turn] You checks
+  [river] River — 5d 2d 6s 9d 6c
+  [river] Negreanu bets 157 (all-in)
+  [river] You calls 91 (all-in)
+  [showdown] Negreanu wins 30 (Main pot)
+  [showdown] Negreanu wins 428 (Side pot 1)
+  [showdown] Negreanu wins 66 (Side pot 2)
+  stacks=0,310,524,150,266,400 pot=524 hero=-224
+  pots=2|30|Main pot;2|428|Side pot 1;2|66|Side pot 2 sd=0:AcJd:1502096:Pair of Sixes;2:9s9h:6905856:Full House, Nines full of Sixes board=5d2d6s9d6c net=-224
+  |PokerStars Hand #175000001600016: Hold'em No Limit (10/20) - 2025/06/16 00:06:56 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (224 in chips)
+  |Seat 2: Ivey (320 in chips)
+  |Seat 3: Negreanu (290 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (266 in chips)
+  |Seat 6: Hellmuth (400 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ac Jd]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: calls 30
+  |*** FLOP *** [5d 2d 6s]
+  |Negreanu: bets 83
+  |You: calls 83
+  |*** TURN *** [5d 2d 6s] [9d]
+  |Negreanu: checks
+  |You: checks
+  |*** RIVER *** [5d 2d 6s 9d] [6c]
+  |Negreanu: bets 157 and is all-in
+  |You: calls 91 and is all-in
+  |Uncalled bet (66) returned to Negreanu
+  |*** SHOW DOWN ***
+  |You: shows [Ac Jd] (a pair of Sixes)
+  |Negreanu: shows [9s 9h] (a full house, Nines full of Sixes)
+  |Negreanu collected 458 from pot
+  |*** SUMMARY ***
+  |Total pot 458 | Rake 0
+  |Board [5d 2d 6s 9d 6c]
+  |Seat 1: You (button) showed [Ac Jd] and lost with a pair of Sixes
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) showed [9s 9h] and won (458) with a full house, Nines full of Sixes
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|You raises to 2.5 bb||80|3,4,5|0
+  f preflop|Ivey folds||80|3,4,5,1|0
+  f preflop|Negreanu calls 1.5 bb||110|3,4,5,1|0
+  f flop|Flop: 5d 2d 6s|5d2d6s|110|3,4,5,1|0
+  f flop|Negreanu bets 4.2 bb|5d2d6s|193|3,4,5,1|0
+  f flop|You calls 4.2 bb|5d2d6s|276|3,4,5,1|0
+  f turn|Turn: 5d 2d 6s 9d|5d2d6s9d|276|3,4,5,1|0
+  f turn|Negreanu checks|5d2d6s9d|276|3,4,5,1|0
+  f turn|You checks|5d2d6s9d|276|3,4,5,1|0
+  f river|River: 5d 2d 6s 9d 6c|5d2d6s9d6c|276|3,4,5,1|0
+  f river|Negreanu bets 7.8 bb (all-in)|5d2d6s9d6c|433|3,4,5,1|0
+  f river|You calls 4.5 bb (all-in)|5d2d6s9d6c|524|3,4,5,1|0
+  f showdown|Negreanu win 26.2 bb.|5d2d6s9d6c|524|3,4,5,1|1
+H17 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 raise 50
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  [preflop] Hand #17 · blinds 10/20
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst wins 80 (uncontested)
+  stacks=150,310,514,130,296,400 pot=80 hero=0
+  pots=4|80|Pot sd= board= net=0
+  |PokerStars Hand #175000001700017: Hold'em No Limit (10/20) - 2025/06/16 00:06:57 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (310 in chips)
+  |Seat 3: Negreanu (524 in chips)
+  |Seat 4: Polk (150 in chips)
+  |Seat 5: Selbst (266 in chips)
+  |Seat 6: Hellmuth (400 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3h 7d]
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Uncalled bet (30) returned to Selbst
+  |Selbst collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst collected (50)
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst raises to 2.5 bb||80||0
+  f preflop|Hellmuth folds||80|5|0
+  f preflop|You folds||80|5,0|0
+  f preflop|Ivey folds||80|5,0,1|0
+  f preflop|Negreanu folds||80|5,0,1,2|0
+  f preflop|Polk folds||80|5,0,1,2,3|0
+  f preflop|Selbst win 4 bb.||80|5,0,1,2,3|1
+H18 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 fold
+  d3 fold
+  d4 call 30
+  d4 bet 61
+  d1 call 61
+  d4 check
+  d1 bet 153
+  d4 call 153
+  d4 check
+  d1 bet 46
+  d4 call 32
+  [preflop] Hand #18 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst calls 30
+  [flop] Flop — 7h Ts 5h
+  [flop] Selbst bets 61
+  [flop] Ivey calls 61
+  [turn] Turn — 7h Ts 5h 2h
+  [turn] Selbst checks
+  [turn] Ivey bets 153
+  [turn] Selbst calls 153
+  [river] River — 7h Ts 5h 2h 6h
+  [river] Selbst checks
+  [river] Ivey bets 46 (all-in)
+  [river] Selbst calls 32 (all-in)
+  [showdown] Ivey wins 30 (Main pot)
+  [showdown] Ivey wins 572 (Side pot 1)
+  [showdown] Ivey wins 14 (Side pot 2)
+  stacks=150,616,514,120,0,400 pot=616 hero=0
+  pots=1|30|Main pot;1|572|Side pot 1;1|14|Side pot 2 sd=1:9hAs:5862994:Flush, Nine high;4:8s8c:1615712:Pair of Eights board=7hTs5h2h6h net=0
+  |PokerStars Hand #175000001800018: Hold'em No Limit (10/20) - 2025/06/16 00:06:58 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (310 in chips)
+  |Seat 3: Negreanu (514 in chips)
+  |Seat 4: Polk (130 in chips)
+  |Seat 5: Selbst (296 in chips)
+  |Seat 6: Hellmuth (400 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Tc 7d]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: calls 30
+  |*** FLOP *** [7h Ts 5h]
+  |Selbst: bets 61
+  |Ivey: calls 61
+  |*** TURN *** [7h Ts 5h] [2h]
+  |Selbst: checks
+  |Ivey: bets 153
+  |Selbst: calls 153
+  |*** RIVER *** [7h Ts 5h 2h] [6h]
+  |Selbst: checks
+  |Ivey: bets 46 and is all-in
+  |Selbst: calls 32 and is all-in
+  |Uncalled bet (14) returned to Ivey
+  |*** SHOW DOWN ***
+  |Ivey: shows [9h As] (a flush, Nine high)
+  |Selbst: shows [8s 8c] (a pair of Eights)
+  |Ivey collected 602 from pot
+  |*** SUMMARY ***
+  |Total pot 602 | Rake 0
+  |Board [7h Ts 5h 2h 6h]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey showed [9h As] and won (602) with a flush, Nine high
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) showed [8s 8c] and lost with a pair of Eights
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey raises to 2.5 bb||80|5,0|0
+  f preflop|Negreanu folds||80|5,0,2|0
+  f preflop|Polk folds||80|5,0,2,3|0
+  f preflop|Selbst calls 1.5 bb||110|5,0,2,3|0
+  f flop|Flop: 7h Ts 5h|7hTs5h|110|5,0,2,3|0
+  f flop|Selbst bets 3.0 bb|7hTs5h|171|5,0,2,3|0
+  f flop|Ivey calls 3.0 bb|7hTs5h|232|5,0,2,3|0
+  f turn|Turn: 7h Ts 5h 2h|7hTs5h2h|232|5,0,2,3|0
+  f turn|Selbst checks|7hTs5h2h|232|5,0,2,3|0
+  f turn|Ivey bets 7.7 bb|7hTs5h2h|385|5,0,2,3|0
+  f turn|Selbst calls 7.7 bb|7hTs5h2h|538|5,0,2,3|0
+  f river|River: 7h Ts 5h 2h 6h|7hTs5h2h6h|538|5,0,2,3|0
+  f river|Selbst checks|7hTs5h2h6h|538|5,0,2,3|0
+  f river|Ivey bets 2.3 bb (all-in)|7hTs5h2h6h|584|5,0,2,3|0
+  f river|Selbst calls 1.6 bb (all-in)|7hTs5h2h6h|616|5,0,2,3|0
+  f showdown|Ivey win 30.8 bb.|7hTs5h2h6h|616|5,0,2,3|1
+H19 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 call 30
+  d5 check
+  d3 check
+  d5 check
+  d3 check
+  d5 check
+  d3 bet 70
+  d5 call 70
+  [preflop] Hand #19 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth calls 30
+  [flop] Flop — Ac 3s 7c
+  [flop] Hellmuth checks
+  [flop] Polk checks
+  [turn] Turn — Ac 3s 7c 3h
+  [turn] Hellmuth checks
+  [turn] Polk checks
+  [river] River — Ac 3s 7c 3h Js
+  [river] Hellmuth checks
+  [river] Polk bets 70 (all-in)
+  [river] Hellmuth calls 70
+  [showdown] Polk wins 30 (Main pot)
+  [showdown] Polk wins 220 (Side pot 1)
+  stacks=150,616,514,250,140,280 pot=250 hero=0
+  pots=3|30|Main pot;3|220|Side pot 1 sd=3:8dJh:2833920:Two Pair, Jacks & Threes;5:QdKd:1306048:Pair of Threes board=Ac3s7c3hJs net=0
+  |PokerStars Hand #175000001900019: Hold'em No Limit (10/20) - 2025/06/16 00:06:59 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (616 in chips)
+  |Seat 3: Negreanu (514 in chips)
+  |Seat 4: Polk (120 in chips)
+  |Seat 5: Selbst (150 in chips)
+  |Seat 6: Hellmuth (400 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Td 2h]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: calls 30
+  |*** FLOP *** [Ac 3s 7c]
+  |Hellmuth: checks
+  |Polk: checks
+  |*** TURN *** [Ac 3s 7c] [3h]
+  |Hellmuth: checks
+  |Polk: checks
+  |*** RIVER *** [Ac 3s 7c 3h] [Js]
+  |Hellmuth: checks
+  |Polk: bets 70 and is all-in
+  |Hellmuth: calls 70
+  |*** SHOW DOWN ***
+  |Polk: shows [8d Jh] (two pair, Jacks and Threes)
+  |Hellmuth: shows [Qd Kd] (a pair of Threes)
+  |Polk collected 250 from pot
+  |*** SUMMARY ***
+  |Total pot 250 | Rake 0
+  |Board [Ac 3s 7c 3h Js]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) showed [8d Jh] and won (250) with two pair, Jacks and Threes
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) showed [Qd Kd] and lost with a pair of Threes
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk raises to 2.5 bb||80|0,1,2|0
+  f preflop|Selbst folds||80|0,1,2,4|0
+  f preflop|Hellmuth calls 1.5 bb||110|0,1,2,4|0
+  f flop|Flop: Ac 3s 7c|Ac3s7c|110|0,1,2,4|0
+  f flop|Hellmuth checks|Ac3s7c|110|0,1,2,4|0
+  f flop|Polk checks|Ac3s7c|110|0,1,2,4|0
+  f turn|Turn: Ac 3s 7c 3h|Ac3s7c3h|110|0,1,2,4|0
+  f turn|Hellmuth checks|Ac3s7c3h|110|0,1,2,4|0
+  f turn|Polk checks|Ac3s7c3h|110|0,1,2,4|0
+  f river|River: Ac 3s 7c 3h Js|Ac3s7c3hJs|110|0,1,2,4|0
+  f river|Hellmuth checks|Ac3s7c3hJs|110|0,1,2,4|0
+  f river|Polk bets 3.5 bb (all-in)|Ac3s7c3hJs|180|0,1,2,4|0
+  f river|Hellmuth calls 3.5 bb|Ac3s7c3hJs|250|0,1,2,4|0
+  f showdown|Polk win 12.5 bb.|Ac3s7c3hJs|250|0,1,2,4|1
+H20 btn=4 pos=BB,UTG,MP,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d0 raise 150
+  d4 fold
+  [preflop] Hand #20 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] You raises to 150 (all-in)
+  [preflop] Selbst folds
+  [preflop] You wins 210 (uncontested)
+  stacks=210,616,514,250,90,270 pot=210 hero=60
+  pots=0|210|Pot sd= board= net=60
+  |PokerStars Hand #175000002000020: Hold'em No Limit (10/20) - 2025/06/16 00:07:00 ET
+  |Table 'All-In Dojo' 6-max Seat #5 is the button
+  |Seat 1: You (150 in chips)
+  |Seat 2: Ivey (616 in chips)
+  |Seat 3: Negreanu (514 in chips)
+  |Seat 4: Polk (250 in chips)
+  |Seat 5: Selbst (140 in chips)
+  |Seat 6: Hellmuth (280 in chips)
+  |Hellmuth: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ad Ac]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |You: raises 100 to 150 and is all-in
+  |Selbst: folds
+  |Uncalled bet (100) returned to You
+  |You collected 110 from pot
+  |*** SUMMARY ***
+  |Total pot 110 | Rake 0
+  |Seat 1: You (big blind) collected (110)
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk folds||30|1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|1,2,3|0
+  f preflop|Hellmuth folds||80|1,2,3,5|0
+  f preflop|You raises to 7.5 bb (all-in)||210|1,2,3,5|0
+  f preflop|Selbst folds||210|1,2,3,5,4|0
+  f preflop|You win 10.5 bb.||210|1,2,3,5,4|1
+H21 btn=5 pos=SB,BB,UTG,MP,CO,BTN
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 call 30
+  d0 check
+  d1 check
+  d0 check
+  d1 check
+  d0 check
+  d1 check
+  [preflop] Hand #21 · blinds 10/20
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey calls 30
+  [flop] Flop — 3d Ah Qh
+  [flop] You checks
+  [flop] Ivey checks
+  [turn] Turn — 3d Ah Qh As
+  [turn] You checks
+  [turn] Ivey checks
+  [river] River — 3d Ah Qh As Jc
+  [river] You checks
+  [river] Ivey checks
+  [showdown] You wins 100 (Pot)
+  stacks=260,566,514,250,90,270 pot=100 hero=50
+  pots=0|100|Pot sd=0:Ts9c:2018208:Pair of Aces;1:7h5h:2018160:Pair of Aces board=3dAhQhAsJc net=50
+  |PokerStars Hand #175000002100021: Hold'em No Limit (10/20) - 2025/06/16 00:07:01 ET
+  |Table 'All-In Dojo' 6-max Seat #6 is the button
+  |Seat 1: You (210 in chips)
+  |Seat 2: Ivey (616 in chips)
+  |Seat 3: Negreanu (514 in chips)
+  |Seat 4: Polk (250 in chips)
+  |Seat 5: Selbst (90 in chips)
+  |Seat 6: Hellmuth (270 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ts 9c]
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: calls 30
+  |*** FLOP *** [3d Ah Qh]
+  |You: checks
+  |Ivey: checks
+  |*** TURN *** [3d Ah Qh] [As]
+  |You: checks
+  |Ivey: checks
+  |*** RIVER *** [3d Ah Qh As] [Jc]
+  |You: checks
+  |Ivey: checks
+  |*** SHOW DOWN ***
+  |You: shows [Ts 9c] (a pair of Aces)
+  |Ivey: shows [7h 5h] (a pair of Aces)
+  |You collected 100 from pot
+  |*** SUMMARY ***
+  |Total pot 100 | Rake 0
+  |Board [3d Ah Qh As Jc]
+  |Seat 1: You (small blind) showed [Ts 9c] and won (100) with a pair of Aces
+  |Seat 2: Ivey (big blind) showed [7h 5h] and lost with a pair of Aces
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk folds||30|2,3|0
+  f preflop|Selbst folds||30|2,3,4|0
+  f preflop|Hellmuth folds||30|2,3,4,5|0
+  f preflop|You raises to 2.5 bb||70|2,3,4,5|0
+  f preflop|Ivey calls 1.5 bb||100|2,3,4,5|0
+  f flop|Flop: 3d Ah Qh|3dAhQh|100|2,3,4,5|0
+  f flop|You checks|3dAhQh|100|2,3,4,5|0
+  f flop|Ivey checks|3dAhQh|100|2,3,4,5|0
+  f turn|Turn: 3d Ah Qh As|3dAhQhAs|100|2,3,4,5|0
+  f turn|You checks|3dAhQhAs|100|2,3,4,5|0
+  f turn|Ivey checks|3dAhQhAs|100|2,3,4,5|0
+  f river|River: 3d Ah Qh As Jc|3dAhQhAsJc|100|2,3,4,5|0
+  f river|You checks|3dAhQhAsJc|100|2,3,4,5|0
+  f river|Ivey checks|3dAhQhAsJc|100|2,3,4,5|0
+  f showdown|You win 5 bb.|3dAhQhAsJc|100|2,3,4,5|1
+H22 btn=0 pos=BTN,SB,BB,UTG,MP,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  [preflop] Hand #22 · blinds 10/20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] You wins 80 (uncontested)
+  stacks=290,556,494,250,90,270 pot=80 hero=30
+  pots=0|80|Pot sd= board= net=30
+  |PokerStars Hand #175000002200022: Hold'em No Limit (10/20) - 2025/06/16 00:07:02 ET
+  |Table 'All-In Dojo' 6-max Seat #1 is the button
+  |Seat 1: You (260 in chips)
+  |Seat 2: Ivey (566 in chips)
+  |Seat 3: Negreanu (514 in chips)
+  |Seat 4: Polk (250 in chips)
+  |Seat 5: Selbst (90 in chips)
+  |Seat 6: Hellmuth (270 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ts Kh]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (30) returned to You
+  |You collected 50 from pot
+  |*** SUMMARY ***
+  |Total pot 50 | Rake 0
+  |Seat 1: You (button) collected (50)
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|You raises to 2.5 bb||80|3,4,5|0
+  f preflop|Ivey folds||80|3,4,5,1|0
+  f preflop|Negreanu folds||80|3,4,5,1,2|0
+  f preflop|You win 4 bb.||80|3,4,5,1,2|1
+H23 btn=1 pos=CO,BTN,SB,BB,UTG,MP
+  d4 fold
+  d5 fold
+  d0 fold
+  d1 raise 50
+  d2 call 40
+  d3 call 30
+  d2 check
+  d3 bet 150
+  d1 call 150
+  d2 call 150
+  d2 bet 294
+  d3 call 50
+  d1 call 294
+  [preflop] Hand #23 · blinds 10/20
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey raises to 50
+  [preflop] Negreanu calls 40
+  [preflop] Polk calls 30
+  [flop] Flop — 9s Tc Qh
+  [flop] Negreanu checks
+  [flop] Polk bets 150
+  [flop] Ivey calls 150
+  [flop] Negreanu calls 150
+  [turn] Turn — 9s Tc Qh 8c
+  [turn] Negreanu bets 294 (all-in)
+  [turn] Polk calls 50 (all-in)
+  [turn] Ivey calls 294
+  [river] River — 9s Tc Qh 8c 4s
+  [showdown] Polk wins 750 (Main pot)
+  [showdown] Negreanu wins 488 (Side pot 1)
+  stacks=290,62,488,750,90,270 pot=1238 hero=0
+  pots=3|750|Main pot;2|488|Side pot 1 sd=1:KdQd:1890960:Pair of Queens;2:8d8h:3721728:Three of a Kind, Eights;3:JcKs:5046272:Straight, King high board=9sTcQh8c4s net=0
+  |PokerStars Hand #175000002300023: Hold'em No Limit (10/20) - 2025/06/16 00:07:03 ET
+  |Table 'All-In Dojo' 6-max Seat #2 is the button
+  |Seat 1: You (290 in chips)
+  |Seat 2: Ivey (556 in chips)
+  |Seat 3: Negreanu (494 in chips)
+  |Seat 4: Polk (250 in chips)
+  |Seat 5: Selbst (90 in chips)
+  |Seat 6: Hellmuth (270 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3h Qc]
+  |Selbst: folds
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: raises 30 to 50
+  |Negreanu: calls 40
+  |Polk: calls 30
+  |*** FLOP *** [9s Tc Qh]
+  |Negreanu: checks
+  |Polk: bets 150
+  |Ivey: calls 150
+  |Negreanu: calls 150
+  |*** TURN *** [9s Tc Qh] [8c]
+  |Negreanu: bets 294 and is all-in
+  |Polk: calls 50 and is all-in
+  |Ivey: calls 294
+  |*** RIVER *** [9s Tc Qh 8c] [4s]
+  |*** SHOW DOWN ***
+  |Ivey: shows [Kd Qd] (a pair of Queens)
+  |Negreanu: shows [8d 8h] (three of a kind, Eights)
+  |Polk: shows [Jc Ks] (a straight, King high)
+  |Polk collected 750 from pot
+  |Negreanu collected 488 from pot
+  |*** SUMMARY ***
+  |Total pot 1238 | Rake 0
+  |Board [9s Tc Qh 8c 4s]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) showed [Kd Qd] and lost with a pair of Queens
+  |Seat 3: Negreanu (small blind) showed [8d 8h] and won (488) with three of a kind, Eights
+  |Seat 4: Polk (big blind) showed [Jc Ks] and won (750) with a straight, King high
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth folds||30|4,5|0
+  f preflop|You folds||30|4,5,0|0
+  f preflop|Ivey raises to 2.5 bb||80|4,5,0|0
+  f preflop|Negreanu calls 2 bb||120|4,5,0|0
+  f preflop|Polk calls 1.5 bb||150|4,5,0|0
+  f flop|Flop: 9s Tc Qh|9sTcQh|150|4,5,0|0
+  f flop|Negreanu checks|9sTcQh|150|4,5,0|0
+  f flop|Polk bets 7.5 bb|9sTcQh|300|4,5,0|0
+  f flop|Ivey calls 7.5 bb|9sTcQh|450|4,5,0|0
+  f flop|Negreanu calls 7.5 bb|9sTcQh|600|4,5,0|0
+  f turn|Turn: 9s Tc Qh 8c|9sTcQh8c|600|4,5,0|0
+  f turn|Negreanu bets 14.7 bb (all-in)|9sTcQh8c|894|4,5,0|0
+  f turn|Polk calls 2.5 bb (all-in)|9sTcQh8c|944|4,5,0|0
+  f turn|Ivey calls 14.7 bb|9sTcQh8c|1238|4,5,0|0
+  f river|River: 9s Tc Qh 8c 4s|9sTcQh8c4s|1238|4,5,0|0
+  f showdown|Polk, Negreanu win 61.9 bb.|9sTcQh8c4s|1238|4,5,0|1
+H24 btn=2 pos=MP,CO,BTN,SB,BB,UTG
+  d5 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  [preflop] Hand #24 · blinds 10/20
+  [preflop] Hellmuth folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Polk wins 70 (uncontested)
+  stacks=290,62,488,770,70,270 pot=70 hero=0
+  pots=3|70|Pot sd= board= net=0
+  |PokerStars Hand #175000002400024: Hold'em No Limit (10/20) - 2025/06/16 00:07:04 ET
+  |Table 'All-In Dojo' 6-max Seat #3 is the button
+  |Seat 1: You (290 in chips)
+  |Seat 2: Ivey (62 in chips)
+  |Seat 3: Negreanu (488 in chips)
+  |Seat 4: Polk (750 in chips)
+  |Seat 5: Selbst (90 in chips)
+  |Seat 6: Hellmuth (270 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kh 4h]
+  |Hellmuth: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Uncalled bet (30) returned to Polk
+  |Polk collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) collected (40)
+  |Seat 5: Selbst (big blind) folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|You folds||30|5,0|0
+  f preflop|Ivey folds||30|5,0,1|0
+  f preflop|Negreanu folds||30|5,0,1,2|0
+  f preflop|Polk raises to 2.5 bb||70|5,0,1,2|0
+  f preflop|Selbst folds||70|5,0,1,2,4|0
+  f preflop|Polk win 3.5 bb.||70|5,0,1,2,4|1
+H25 btn=3 pos=UTG,MP,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 call 20
+  d3 raise 70
+  d4 fold
+  d5 fold
+  d2 fold
+  [preflop] Hand #25 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk raises to 70
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Negreanu folds
+  [preflop] Polk wins 120 (uncontested)
+  stacks=290,62,468,820,60,250 pot=120 hero=0
+  pots=3|120|Pot sd= board= net=0
+  |PokerStars Hand #175000002500025: Hold'em No Limit (10/20) - 2025/06/16 00:07:05 ET
+  |Table 'All-In Dojo' 6-max Seat #4 is the button
+  |Seat 1: You (290 in chips)
+  |Seat 2: Ivey (62 in chips)
+  |Seat 3: Negreanu (488 in chips)
+  |Seat 4: Polk (770 in chips)
+  |Seat 5: Selbst (70 in chips)
+  |Seat 6: Hellmuth (270 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Qh 8c]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: raises 50 to 70
+  |Selbst: folds
+  |Hellmuth: folds
+  |Negreanu: folds
+  |Uncalled bet (50) returned to Polk
+  |Polk collected 70 from pot
+  |*** SUMMARY ***
+  |Total pot 70 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) collected (70)
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu calls 1 bb||50|0,1|0
+  f preflop|Polk raises to 3.5 bb||120|0,1|0
+  f preflop|Selbst folds||120|0,1,4|0
+  f preflop|Hellmuth folds||120|0,1,4,5|0
+  f preflop|Negreanu folds||120|0,1,4,5,2|0
+  f preflop|Polk win 6 bb.||120|0,1,4,5,2|1
+### seed=9 hands=20 seats=2 ante=0 stack=400
+H1 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #1 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=390,410 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000000100001: Hold'em No Limit (10/20) - 2025/06/16 00:06:41 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (400 in chips)
+  |Seat 2: Ivey (400 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kc 3s]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H2 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 fold
+  [preflop] Hand #2 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=370,430 pot=70 hero=-20
+  pots=1|70|Pot sd= board= net=-20
+  |PokerStars Hand #175000000200002: Hold'em No Limit (10/20) - 2025/06/16 00:06:42 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (390 in chips)
+  |Seat 2: Ivey (410 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4d Ks]
+  |Ivey: raises 30 to 50
+  |You: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You folds||70|0|0
+  f preflop|Ivey win 3.5 bb.||70|0|1
+H3 btn=0 pos=BTN,BB
+  d0 raise 50
+  d1 call 30
+  d1 check
+  d0 check
+  d1 check
+  d0 check
+  d1 bet 66
+  d0 call 66
+  [preflop] Hand #3 · blinds 10/20
+  [preflop] You raises to 50
+  [preflop] Ivey calls 30
+  [flop] Flop — Jh 3h Kh
+  [flop] Ivey checks
+  [flop] You checks
+  [turn] Turn — Jh 3h Kh Ts
+  [turn] Ivey checks
+  [turn] You checks
+  [river] River — Jh 3h Kh Ts Kc
+  [river] Ivey bets 66
+  [river] You calls 66
+  [showdown] You wins 232 (Pot)
+  stacks=486,314 pot=232 hero=116
+  pots=0|232|Pot sd=0:4d3d:2964224:Two Pair, Kings & Threes;1:4cAs:1960864:Pair of Kings board=Jh3hKhTsKc net=116
+  |PokerStars Hand #175000000300003: Hold'em No Limit (10/20) - 2025/06/16 00:06:43 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (370 in chips)
+  |Seat 2: Ivey (430 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4d 3d]
+  |You: raises 30 to 50
+  |Ivey: calls 30
+  |*** FLOP *** [Jh 3h Kh]
+  |Ivey: checks
+  |You: checks
+  |*** TURN *** [Jh 3h Kh] [Ts]
+  |Ivey: checks
+  |You: checks
+  |*** RIVER *** [Jh 3h Kh Ts] [Kc]
+  |Ivey: bets 66
+  |You: calls 66
+  |*** SHOW DOWN ***
+  |You: shows [4d 3d] (two pair, Kings and Threes)
+  |Ivey: shows [4c As] (a pair of Kings)
+  |You collected 232 from pot
+  |*** SUMMARY ***
+  |Total pot 232 | Rake 0
+  |Board [Jh 3h Kh Ts Kc]
+  |Seat 1: You (small blind) showed [4d 3d] and won (232) with two pair, Kings and Threes
+  |Seat 2: Ivey (big blind) showed [4c As] and lost with a pair of Kings
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You raises to 2.5 bb||70||0
+  f preflop|Ivey calls 1.5 bb||100||0
+  f flop|Flop: Jh 3h Kh|Jh3hKh|100||0
+  f flop|Ivey checks|Jh3hKh|100||0
+  f flop|You checks|Jh3hKh|100||0
+  f turn|Turn: Jh 3h Kh Ts|Jh3hKhTs|100||0
+  f turn|Ivey checks|Jh3hKhTs|100||0
+  f turn|You checks|Jh3hKhTs|100||0
+  f river|River: Jh 3h Kh Ts Kc|Jh3hKhTsKc|100||0
+  f river|Ivey bets 3.3 bb|Jh3hKhTsKc|166||0
+  f river|You calls 3.3 bb|Jh3hKhTsKc|232||0
+  f showdown|You win 11.6 bb.|Jh3hKhTsKc|232||1
+H4 btn=1 pos=BB,BTN
+  d1 fold
+  [preflop] Hand #4 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] You wins 30 (uncontested)
+  stacks=496,304 pot=30 hero=10
+  pots=0|30|Pot sd= board= net=10
+  |PokerStars Hand #175000000400004: Hold'em No Limit (10/20) - 2025/06/16 00:06:44 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (486 in chips)
+  |Seat 2: Ivey (314 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3h 8h]
+  |Ivey: folds
+  |Uncalled bet (10) returned to You
+  |You collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (big blind) collected (20)
+  |Seat 2: Ivey (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|You win 1.5 bb.||30|1|1
+H5 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #5 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=486,314 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000000500005: Hold'em No Limit (10/20) - 2025/06/16 00:06:45 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (496 in chips)
+  |Seat 2: Ivey (304 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [8c 7s]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H6 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 fold
+  [preflop] Hand #6 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=466,334 pot=70 hero=-20
+  pots=1|70|Pot sd= board= net=-20
+  |PokerStars Hand #175000000600006: Hold'em No Limit (10/20) - 2025/06/16 00:06:46 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (486 in chips)
+  |Seat 2: Ivey (314 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6s 8d]
+  |Ivey: raises 30 to 50
+  |You: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You folds||70|0|0
+  f preflop|Ivey win 3.5 bb.||70|0|1
+H7 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #7 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=456,344 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000000700007: Hold'em No Limit (10/20) - 2025/06/16 00:06:47 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (466 in chips)
+  |Seat 2: Ivey (334 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [7c 9h]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H8 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 fold
+  [preflop] Hand #8 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=436,364 pot=70 hero=-20
+  pots=1|70|Pot sd= board= net=-20
+  |PokerStars Hand #175000000800008: Hold'em No Limit (10/20) - 2025/06/16 00:06:48 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (456 in chips)
+  |Seat 2: Ivey (344 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Js 2c]
+  |Ivey: raises 30 to 50
+  |You: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You folds||70|0|0
+  f preflop|Ivey win 3.5 bb.||70|0|1
+H9 btn=0 pos=BTN,BB
+  d0 raise 50
+  d1 fold
+  [preflop] Hand #9 · blinds 10/20
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] You wins 70 (uncontested)
+  stacks=456,344 pot=70 hero=20
+  pots=0|70|Pot sd= board= net=20
+  |PokerStars Hand #175000000900009: Hold'em No Limit (10/20) - 2025/06/16 00:06:49 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (436 in chips)
+  |Seat 2: Ivey (364 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6s 8s]
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Uncalled bet (30) returned to You
+  |You collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (small blind) collected (40)
+  |Seat 2: Ivey (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You raises to 2.5 bb||70||0
+  f preflop|Ivey folds||70|1|0
+  f preflop|You win 3.5 bb.||70|1|1
+H10 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 call 30
+  d0 bet 66
+  d1 call 66
+  d0 check
+  d1 check
+  d0 check
+  d1 bet 174
+  d0 fold
+  [preflop] Hand #10 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You calls 30
+  [flop] Flop — 5h Qh Jc
+  [flop] You bets 66
+  [flop] Ivey calls 66
+  [turn] Turn — 5h Qh Jc 7d
+  [turn] You checks
+  [turn] Ivey checks
+  [river] River — 5h Qh Jc 7d Td
+  [river] You checks
+  [river] Ivey bets 174
+  [river] You folds
+  [river] Ivey wins 406 (uncontested)
+  stacks=340,460 pot=406 hero=-116
+  pots=1|406|Pot sd= board=5hQhJc7dTd net=-116
+  |PokerStars Hand #175000001000010: Hold'em No Limit (10/20) - 2025/06/16 00:06:50 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (456 in chips)
+  |Seat 2: Ivey (344 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6h Ad]
+  |Ivey: raises 30 to 50
+  |You: calls 30
+  |*** FLOP *** [5h Qh Jc]
+  |You: bets 66
+  |Ivey: calls 66
+  |*** TURN *** [5h Qh Jc] [7d]
+  |You: checks
+  |Ivey: checks
+  |*** RIVER *** [5h Qh Jc 7d] [Td]
+  |You: checks
+  |Ivey: bets 174
+  |You: folds
+  |Uncalled bet (174) returned to Ivey
+  |Ivey collected 232 from pot
+  |*** SUMMARY ***
+  |Total pot 232 | Rake 0
+  |Board [5h Qh Jc 7d Td]
+  |Seat 1: You (big blind) folded on the River
+  |Seat 2: Ivey (small blind) collected (232)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You calls 1.5 bb||100||0
+  f flop|Flop: 5h Qh Jc|5hQhJc|100||0
+  f flop|You bets 3.3 bb|5hQhJc|166||0
+  f flop|Ivey calls 3.3 bb|5hQhJc|232||0
+  f turn|Turn: 5h Qh Jc 7d|5hQhJc7d|232||0
+  f turn|You checks|5hQhJc7d|232||0
+  f turn|Ivey checks|5hQhJc7d|232||0
+  f river|River: 5h Qh Jc 7d Td|5hQhJc7dTd|232||0
+  f river|You checks|5hQhJc7dTd|232||0
+  f river|Ivey bets 8.7 bb|5hQhJc7dTd|406||0
+  f river|You folds|5hQhJc7dTd|406|0|0
+  f showdown|Ivey win 20.3 bb.|5hQhJc7dTd|406|0|1
+H11 btn=0 pos=BTN,BB
+  d0 raise 50
+  d1 fold
+  [preflop] Hand #11 · blinds 10/20
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] You wins 70 (uncontested)
+  stacks=360,440 pot=70 hero=20
+  pots=0|70|Pot sd= board= net=20
+  |PokerStars Hand #175000001100011: Hold'em No Limit (10/20) - 2025/06/16 00:06:51 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (340 in chips)
+  |Seat 2: Ivey (460 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ac Kh]
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Uncalled bet (30) returned to You
+  |You collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (small blind) collected (40)
+  |Seat 2: Ivey (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You raises to 2.5 bb||70||0
+  f preflop|Ivey folds||70|1|0
+  f preflop|You win 3.5 bb.||70|1|1
+H12 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 call 30
+  d0 check
+  d1 bet 100
+  d0 fold
+  [preflop] Hand #12 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You calls 30
+  [flop] Flop — Kc As Tc
+  [flop] You checks
+  [flop] Ivey bets 100
+  [flop] You folds
+  [flop] Ivey wins 200 (uncontested)
+  stacks=310,490 pot=200 hero=-50
+  pots=1|200|Pot sd= board=KcAsTc net=-50
+  |PokerStars Hand #175000001200012: Hold'em No Limit (10/20) - 2025/06/16 00:06:52 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (360 in chips)
+  |Seat 2: Ivey (440 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [9h 8h]
+  |Ivey: raises 30 to 50
+  |You: calls 30
+  |*** FLOP *** [Kc As Tc]
+  |You: checks
+  |Ivey: bets 100
+  |You: folds
+  |Uncalled bet (100) returned to Ivey
+  |Ivey collected 100 from pot
+  |*** SUMMARY ***
+  |Total pot 100 | Rake 0
+  |Board [Kc As Tc]
+  |Seat 1: You (big blind) folded on the Flop
+  |Seat 2: Ivey (small blind) collected (100)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You calls 1.5 bb||100||0
+  f flop|Flop: Kc As Tc|KcAsTc|100||0
+  f flop|You checks|KcAsTc|100||0
+  f flop|Ivey bets 5 bb|KcAsTc|200||0
+  f flop|You folds|KcAsTc|200|0|0
+  f flop|Ivey win 10 bb.|KcAsTc|200|0|1
+H13 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #13 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=300,500 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000001300013: Hold'em No Limit (10/20) - 2025/06/16 00:06:53 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (310 in chips)
+  |Seat 2: Ivey (490 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4c 3h]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H14 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 fold
+  [preflop] Hand #14 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=280,520 pot=70 hero=-20
+  pots=1|70|Pot sd= board= net=-20
+  |PokerStars Hand #175000001400014: Hold'em No Limit (10/20) - 2025/06/16 00:06:54 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (300 in chips)
+  |Seat 2: Ivey (500 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [9h 7s]
+  |Ivey: raises 30 to 50
+  |You: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You folds||70|0|0
+  f preflop|Ivey win 3.5 bb.||70|0|1
+H15 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #15 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=270,530 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000001500015: Hold'em No Limit (10/20) - 2025/06/16 00:06:55 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (280 in chips)
+  |Seat 2: Ivey (520 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [3s 9c]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H16 btn=1 pos=BB,BTN
+  d1 fold
+  [preflop] Hand #16 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] You wins 30 (uncontested)
+  stacks=280,520 pot=30 hero=10
+  pots=0|30|Pot sd= board= net=10
+  |PokerStars Hand #175000001600016: Hold'em No Limit (10/20) - 2025/06/16 00:06:56 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (270 in chips)
+  |Seat 2: Ivey (530 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4s 7s]
+  |Ivey: folds
+  |Uncalled bet (10) returned to You
+  |You collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (big blind) collected (20)
+  |Seat 2: Ivey (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|You win 1.5 bb.||30|1|1
+H17 btn=0 pos=BTN,BB
+  d0 raise 50
+  d1 fold
+  [preflop] Hand #17 · blinds 10/20
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] You wins 70 (uncontested)
+  stacks=300,500 pot=70 hero=20
+  pots=0|70|Pot sd= board= net=20
+  |PokerStars Hand #175000001700017: Hold'em No Limit (10/20) - 2025/06/16 00:06:57 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (280 in chips)
+  |Seat 2: Ivey (520 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Jd 7d]
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Uncalled bet (30) returned to You
+  |You collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (small blind) collected (40)
+  |Seat 2: Ivey (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You raises to 2.5 bb||70||0
+  f preflop|Ivey folds||70|1|0
+  f preflop|You win 3.5 bb.||70|1|1
+H18 btn=1 pos=BB,BTN
+  d1 fold
+  [preflop] Hand #18 · blinds 10/20
+  [preflop] Ivey folds
+  [preflop] You wins 30 (uncontested)
+  stacks=310,490 pot=30 hero=10
+  pots=0|30|Pot sd= board= net=10
+  |PokerStars Hand #175000001800018: Hold'em No Limit (10/20) - 2025/06/16 00:06:58 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (300 in chips)
+  |Seat 2: Ivey (500 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Qd 4c]
+  |Ivey: folds
+  |Uncalled bet (10) returned to You
+  |You collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (big blind) collected (20)
+  |Seat 2: Ivey (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|You win 1.5 bb.||30|1|1
+H19 btn=0 pos=BTN,BB
+  d0 fold
+  [preflop] Hand #19 · blinds 10/20
+  [preflop] You folds
+  [preflop] Ivey wins 30 (uncontested)
+  stacks=300,500 pot=30 hero=-10
+  pots=1|30|Pot sd= board= net=-10
+  |PokerStars Hand #175000001900019: Hold'em No Limit (10/20) - 2025/06/16 00:06:59 ET
+  |Table 'All-In Dojo' 2-max Seat #1 is the button
+  |Seat 1: You (310 in chips)
+  |Seat 2: Ivey (490 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Qd 4s]
+  |You: folds
+  |Uncalled bet (10) returned to Ivey
+  |Ivey collected 20 from pot
+  |*** SUMMARY ***
+  |Total pot 20 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) collected (20)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey win 1.5 bb.||30|0|1
+H20 btn=1 pos=BB,BTN
+  d1 raise 50
+  d0 fold
+  [preflop] Hand #20 · blinds 10/20
+  [preflop] Ivey raises to 50
+  [preflop] You folds
+  [preflop] Ivey wins 70 (uncontested)
+  stacks=280,520 pot=70 hero=-20
+  pots=1|70|Pot sd= board= net=-20
+  |PokerStars Hand #175000002000020: Hold'em No Limit (10/20) - 2025/06/16 00:07:00 ET
+  |Table 'All-In Dojo' 2-max Seat #2 is the button
+  |Seat 1: You (300 in chips)
+  |Seat 2: Ivey (500 in chips)
+  |Ivey: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6h 2h]
+  |Ivey: raises 30 to 50
+  |You: folds
+  |Uncalled bet (30) returned to Ivey
+  |Ivey collected 40 from pot
+  |*** SUMMARY ***
+  |Total pot 40 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey (small blind) collected (40)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey raises to 2.5 bb||70||0
+  f preflop|You folds||70|0|0
+  f preflop|Ivey win 3.5 bb.||70|0|1
+### seed=10 hands=15 seats=9 ante=5 stack=2000
+H1 btn=4 pos=MP,MP,CO,CO,BTN,SB,BB,UTG,UTG
+  d7 fold
+  d8 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  d3 call 50
+  d4 call 50
+  d5 fold
+  d6 fold
+  d0 check
+  d3 check
+  d4 check
+  d0 check
+  d3 check
+  d4 check
+  d0 check
+  d3 check
+  d4 check
+  [preflop] Hand #1 · blinds 10/20 · ante 5
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk calls 50
+  [preflop] Selbst calls 50
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [flop] Flop — 5c Ac Ad
+  [flop] You checks
+  [flop] Polk checks
+  [flop] Selbst checks
+  [turn] Turn — 5c Ac Ad 4c
+  [turn] You checks
+  [turn] Polk checks
+  [turn] Selbst checks
+  [river] River — 5c Ac Ad 4c Jc
+  [river] You checks
+  [river] Polk checks
+  [river] Selbst checks
+  [showdown] Selbst wins 45 (Main pot)
+  [showdown] Selbst wins 50 (Side pot 1)
+  [showdown] Selbst wins 40 (Side pot 2)
+  [showdown] Selbst wins 90 (Side pot 3)
+  stacks=1945,1995,1995,1945,2170,1985,1975,1995,1995 pot=225 hero=-55
+  pots=4|45|Main pot;4|50|Side pot 1;4|40|Side pot 2;4|90|Side pot 3 sd=0:KsTs:2022304:Pair of Aces;3:2s2d:3025664:Two Pair, Aces & Twos;4:QsJs:3062784:Two Pair, Aces & Jacks board=5cAcAd4cJc net=-55
+  |PokerStars Hand #175000000100001: Hold'em No Limit (10/20) - 2025/06/16 00:06:41 ET
+  |Table 'All-In Dojo' 9-max Seat #5 is the button
+  |Seat 1: You (2000 in chips)
+  |Seat 2: Ivey (2000 in chips)
+  |Seat 3: Negreanu (2000 in chips)
+  |Seat 4: Polk (2000 in chips)
+  |Seat 5: Selbst (2000 in chips)
+  |Seat 6: Hellmuth (2000 in chips)
+  |Seat 7: Brunson (2000 in chips)
+  |Seat 8: Antonius (2000 in chips)
+  |Seat 9: Dwan (2000 in chips)
+  |Hellmuth: posts small blind 10
+  |Brunson: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ks Ts]
+  |Antonius: folds
+  |Dwan: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: calls 50
+  |Selbst: calls 50
+  |Hellmuth: folds
+  |Brunson: folds
+  |*** FLOP *** [5c Ac Ad]
+  |You: checks
+  |Polk: checks
+  |Selbst: checks
+  |*** TURN *** [5c Ac Ad] [4c]
+  |You: checks
+  |Polk: checks
+  |Selbst: checks
+  |*** RIVER *** [5c Ac Ad 4c] [Jc]
+  |You: checks
+  |Polk: checks
+  |Selbst: checks
+  |*** SHOW DOWN ***
+  |You: shows [Ks Ts] (a pair of Aces)
+  |Polk: shows [2s 2d] (two pair, Aces and Twos)
+  |Selbst: shows [Qs Js] (two pair, Aces and Jacks)
+  |Selbst collected 225 from pot
+  |*** SUMMARY ***
+  |Total pot 225 | Rake 0
+  |Board [5c Ac Ad 4c Jc]
+  |Seat 1: You showed [Ks Ts] and lost with a pair of Aces
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk showed [2s 2d] and lost with two pair, Aces and Twos
+  |Seat 5: Selbst (button) showed [Qs Js] and won (225) with two pair, Aces and Jacks
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  |Seat 7: Brunson (big blind) folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Antonius folds||30|7|0
+  f preflop|Dwan folds||30|7,8|0
+  f preflop|You raises to 2.5 bb||80|7,8|0
+  f preflop|Ivey folds||80|7,8,1|0
+  f preflop|Negreanu folds||80|7,8,1,2|0
+  f preflop|Polk calls 2.5 bb||130|7,8,1,2|0
+  f preflop|Selbst calls 2.5 bb||180|7,8,1,2|0
+  f preflop|Hellmuth folds||180|7,8,1,2,5|0
+  f preflop|Brunson folds||180|7,8,1,2,5,6|0
+  f flop|Flop: 5c Ac Ad|5cAcAd|180|7,8,1,2,5,6|0
+  f flop|You checks|5cAcAd|180|7,8,1,2,5,6|0
+  f flop|Polk checks|5cAcAd|180|7,8,1,2,5,6|0
+  f flop|Selbst checks|5cAcAd|180|7,8,1,2,5,6|0
+  f turn|Turn: 5c Ac Ad 4c|5cAcAd4c|180|7,8,1,2,5,6|0
+  f turn|You checks|5cAcAd4c|180|7,8,1,2,5,6|0
+  f turn|Polk checks|5cAcAd4c|180|7,8,1,2,5,6|0
+  f turn|Selbst checks|5cAcAd4c|180|7,8,1,2,5,6|0
+  f river|River: 5c Ac Ad 4c Jc|5cAcAd4cJc|180|7,8,1,2,5,6|0
+  f river|You checks|5cAcAd4cJc|180|7,8,1,2,5,6|0
+  f river|Polk checks|5cAcAd4cJc|180|7,8,1,2,5,6|0
+  f river|Selbst checks|5cAcAd4cJc|180|7,8,1,2,5,6|0
+  f showdown|Selbst win 11.3 bb.|5cAcAd4cJc|180|7,8,1,2,5,6|1
+H2 btn=5 pos=UTG,MP,MP,CO,CO,BTN,SB,BB,UTG
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  d5 raise 50
+  d6 fold
+  d7 fold
+  [preflop] Hand #2 · blinds 10/20 · ante 5
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Hellmuth wins 125 (uncontested)
+  stacks=1940,1990,1990,1940,2165,2055,1960,1970,1990 pot=125 hero=-5
+  pots=5|125|Pot sd= board= net=-5
+  |PokerStars Hand #175000000200002: Hold'em No Limit (10/20) - 2025/06/16 00:06:42 ET
+  |Table 'All-In Dojo' 9-max Seat #6 is the button
+  |Seat 1: You (1945 in chips)
+  |Seat 2: Ivey (1995 in chips)
+  |Seat 3: Negreanu (1995 in chips)
+  |Seat 4: Polk (1945 in chips)
+  |Seat 5: Selbst (2170 in chips)
+  |Seat 6: Hellmuth (1985 in chips)
+  |Seat 7: Brunson (1975 in chips)
+  |Seat 8: Antonius (1995 in chips)
+  |Seat 9: Dwan (1995 in chips)
+  |Brunson: posts small blind 10
+  |Antonius: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [2d 5h]
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |Brunson: folds
+  |Antonius: folds
+  |Uncalled bet (30) returned to Hellmuth
+  |Hellmuth collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) collected (95)
+  |Seat 7: Brunson (small blind) folded before Flop
+  |Seat 8: Antonius (big blind) folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Dwan folds||30|8|0
+  f preflop|You folds||30|8,0|0
+  f preflop|Ivey folds||30|8,0,1|0
+  f preflop|Negreanu folds||30|8,0,1,2|0
+  f preflop|Polk folds||30|8,0,1,2,3|0
+  f preflop|Selbst folds||30|8,0,1,2,3,4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|8,0,1,2,3,4|0
+  f preflop|Brunson folds||80|8,0,1,2,3,4,6|0
+  f preflop|Antonius folds||80|8,0,1,2,3,4,6,7|0
+  f preflop|Hellmuth win 6.3 bb.||80|8,0,1,2,3,4,6,7|1
+H3 btn=6 pos=UTG,UTG,MP,MP,CO,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d6 fold
+  d7 raise 160
+  d8 fold
+  d4 fold
+  [preflop] Hand #3 · blinds 10/20 · ante 5
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius raises to 160
+  [preflop] Dwan folds
+  [preflop] Selbst folds
+  [preflop] Antonius wins 275 (uncontested)
+  stacks=1935,1985,1985,1935,2110,2050,1955,2080,1965 pot=275 hero=-5
+  pots=7|275|Pot sd= board= net=-5
+  |PokerStars Hand #175000000300003: Hold'em No Limit (10/20) - 2025/06/16 00:06:43 ET
+  |Table 'All-In Dojo' 9-max Seat #7 is the button
+  |Seat 1: You (1940 in chips)
+  |Seat 2: Ivey (1990 in chips)
+  |Seat 3: Negreanu (1990 in chips)
+  |Seat 4: Polk (1940 in chips)
+  |Seat 5: Selbst (2165 in chips)
+  |Seat 6: Hellmuth (2055 in chips)
+  |Seat 7: Brunson (1960 in chips)
+  |Seat 8: Antonius (1970 in chips)
+  |Seat 9: Dwan (1990 in chips)
+  |Antonius: posts small blind 10
+  |Dwan: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Kd 6c]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: raises 110 to 160
+  |Dwan: folds
+  |Selbst: folds
+  |Uncalled bet (110) returned to Antonius
+  |Antonius collected 165 from pot
+  |*** SUMMARY ***
+  |Total pot 165 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson (button) folded before Flop
+  |Seat 8: Antonius (small blind) collected (165)
+  |Seat 9: Dwan (big blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu folds||30|0,1,2|0
+  f preflop|Polk folds||30|0,1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|0,1,2,3|0
+  f preflop|Hellmuth folds||80|0,1,2,3,5|0
+  f preflop|Brunson folds||80|0,1,2,3,5,6|0
+  f preflop|Antonius raises to 8 bb||230|0,1,2,3,5,6|0
+  f preflop|Dwan folds||230|0,1,2,3,5,6,8|0
+  f preflop|Selbst folds||230|0,1,2,3,5,6,8,4|0
+  f preflop|Antonius win 13.8 bb.||230|0,1,2,3,5,6,8,4|1
+H4 btn=7 pos=BB,UTG,UTG,MP,MP,CO,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 fold
+  [preflop] Hand #4 · blinds 10/20 · ante 5
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Selbst wins 125 (uncontested)
+  stacks=1910,1980,1980,1930,2180,2045,1950,2075,1950 pot=125 hero=-25
+  pots=4|125|Pot sd= board= net=-25
+  |PokerStars Hand #175000000400004: Hold'em No Limit (10/20) - 2025/06/16 00:06:44 ET
+  |Table 'All-In Dojo' 9-max Seat #8 is the button
+  |Seat 1: You (1935 in chips)
+  |Seat 2: Ivey (1985 in chips)
+  |Seat 3: Negreanu (1985 in chips)
+  |Seat 4: Polk (1935 in chips)
+  |Seat 5: Selbst (2110 in chips)
+  |Seat 6: Hellmuth (2050 in chips)
+  |Seat 7: Brunson (1955 in chips)
+  |Seat 8: Antonius (2080 in chips)
+  |Seat 9: Dwan (1965 in chips)
+  |Dwan: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6s 3c]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Uncalled bet (30) returned to Selbst
+  |Selbst collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You (big blind) folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst collected (95)
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius (button) folded before Flop
+  |Seat 9: Dwan (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk folds||30|1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|1,2,3|0
+  f preflop|Hellmuth folds||80|1,2,3,5|0
+  f preflop|Brunson folds||80|1,2,3,5,6|0
+  f preflop|Antonius folds||80|1,2,3,5,6,7|0
+  f preflop|Dwan folds||80|1,2,3,5,6,7,8|0
+  f preflop|You folds||80|1,2,3,5,6,7,8,0|0
+  f preflop|Selbst win 6.3 bb.||80|1,2,3,5,6,7,8,0|1
+H5 btn=8 pos=SB,BB,UTG,UTG,MP,MP,CO,CO,BTN
+  d2 call 20
+  d3 raise 70
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  [preflop] Hand #5 · blinds 10/20 · ante 5
+  [preflop] Negreanu calls 20
+  [preflop] Polk raises to 70
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk wins 165 (uncontested)
+  stacks=1895,1955,1955,2020,2175,2040,1945,2070,1945 pot=165 hero=-15
+  pots=3|165|Pot sd= board= net=-15
+  |PokerStars Hand #175000000500005: Hold'em No Limit (10/20) - 2025/06/16 00:06:45 ET
+  |Table 'All-In Dojo' 9-max Seat #9 is the button
+  |Seat 1: You (1910 in chips)
+  |Seat 2: Ivey (1980 in chips)
+  |Seat 3: Negreanu (1980 in chips)
+  |Seat 4: Polk (1930 in chips)
+  |Seat 5: Selbst (2180 in chips)
+  |Seat 6: Hellmuth (2045 in chips)
+  |Seat 7: Brunson (1950 in chips)
+  |Seat 8: Antonius (2075 in chips)
+  |Seat 9: Dwan (1950 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [9s Qh]
+  |Negreanu: calls 20
+  |Polk: raises 50 to 70
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (50) returned to Polk
+  |Polk collected 115 from pot
+  |*** SUMMARY ***
+  |Total pot 115 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk collected (115)
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu calls 1 bb||50||0
+  f preflop|Polk raises to 3.5 bb||120||0
+  f preflop|Selbst folds||120|4|0
+  f preflop|Hellmuth folds||120|4,5|0
+  f preflop|Brunson folds||120|4,5,6|0
+  f preflop|Antonius folds||120|4,5,6,7|0
+  f preflop|Dwan folds||120|4,5,6,7,8|0
+  f preflop|You folds||120|4,5,6,7,8,0|0
+  f preflop|Ivey folds||120|4,5,6,7,8,0,1|0
+  f preflop|Negreanu folds||120|4,5,6,7,8,0,1,2|0
+  f preflop|Polk win 8.3 bb.||120|4,5,6,7,8,0,1,2|1
+H6 btn=0 pos=BTN,SB,BB,UTG,UTG,MP,MP,CO,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 raise 50
+  d0 fold
+  d1 fold
+  d2 fold
+  [preflop] Hand #6 · blinds 10/20 · ante 5
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan raises to 50
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Dwan wins 125 (uncontested)
+  stacks=1890,1940,1930,2015,2170,2035,1940,2065,2015 pot=125 hero=-5
+  pots=8|125|Pot sd= board= net=-5
+  |PokerStars Hand #175000000600006: Hold'em No Limit (10/20) - 2025/06/16 00:06:46 ET
+  |Table 'All-In Dojo' 9-max Seat #1 is the button
+  |Seat 1: You (1895 in chips)
+  |Seat 2: Ivey (1955 in chips)
+  |Seat 3: Negreanu (1955 in chips)
+  |Seat 4: Polk (2020 in chips)
+  |Seat 5: Selbst (2175 in chips)
+  |Seat 6: Hellmuth (2040 in chips)
+  |Seat 7: Brunson (1945 in chips)
+  |Seat 8: Antonius (2070 in chips)
+  |Seat 9: Dwan (1945 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6h 7c]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: raises 30 to 50
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Uncalled bet (30) returned to Dwan
+  |Dwan collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You (button) folded before Flop
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan collected (95)
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|Brunson folds||30|3,4,5,6|0
+  f preflop|Antonius folds||30|3,4,5,6,7|0
+  f preflop|Dwan raises to 2.5 bb||80|3,4,5,6,7|0
+  f preflop|You folds||80|3,4,5,6,7,0|0
+  f preflop|Ivey folds||80|3,4,5,6,7,0,1|0
+  f preflop|Negreanu folds||80|3,4,5,6,7,0,1,2|0
+  f preflop|Dwan win 6.3 bb.||80|3,4,5,6,7,0,1,2|1
+H7 btn=1 pos=CO,BTN,SB,BB,UTG,UTG,MP,MP,CO
+  d4 fold
+  d5 raise 50
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  [preflop] Hand #7 · blinds 10/20 · ante 5
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 50
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Hellmuth wins 125 (uncontested)
+  stacks=1885,1935,1915,1990,2165,2105,1935,2060,2010 pot=125 hero=-5
+  pots=5|125|Pot sd= board= net=-5
+  |PokerStars Hand #175000000700007: Hold'em No Limit (10/20) - 2025/06/16 00:06:47 ET
+  |Table 'All-In Dojo' 9-max Seat #2 is the button
+  |Seat 1: You (1890 in chips)
+  |Seat 2: Ivey (1940 in chips)
+  |Seat 3: Negreanu (1930 in chips)
+  |Seat 4: Polk (2015 in chips)
+  |Seat 5: Selbst (2170 in chips)
+  |Seat 6: Hellmuth (2035 in chips)
+  |Seat 7: Brunson (1940 in chips)
+  |Seat 8: Antonius (2065 in chips)
+  |Seat 9: Dwan (2015 in chips)
+  |Negreanu: posts small blind 10
+  |Polk: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [7c Kd]
+  |Selbst: folds
+  |Hellmuth: raises 30 to 50
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Uncalled bet (30) returned to Hellmuth
+  |Hellmuth collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey (button) folded before Flop
+  |Seat 3: Negreanu (small blind) folded before Flop
+  |Seat 4: Polk (big blind) folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth collected (95)
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Selbst folds||30|4|0
+  f preflop|Hellmuth raises to 2.5 bb||80|4|0
+  f preflop|Brunson folds||80|4,6|0
+  f preflop|Antonius folds||80|4,6,7|0
+  f preflop|Dwan folds||80|4,6,7,8|0
+  f preflop|You folds||80|4,6,7,8,0|0
+  f preflop|Ivey folds||80|4,6,7,8,0,1|0
+  f preflop|Negreanu folds||80|4,6,7,8,0,1,2|0
+  f preflop|Polk folds||80|4,6,7,8,0,1,2,3|0
+  f preflop|Hellmuth win 6.3 bb.||80|4,6,7,8,0,1,2,3|1
+H8 btn=2 pos=CO,CO,BTN,SB,BB,UTG,UTG,MP,MP
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 raise 50
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 fold
+  [preflop] Hand #8 · blinds 10/20 · ante 5
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] You wins 125 (uncontested)
+  stacks=1955,1930,1910,1975,2140,2100,1930,2055,2005 pot=125 hero=70
+  pots=0|125|Pot sd= board= net=70
+  |PokerStars Hand #175000000800008: Hold'em No Limit (10/20) - 2025/06/16 00:06:48 ET
+  |Table 'All-In Dojo' 9-max Seat #3 is the button
+  |Seat 1: You (1885 in chips)
+  |Seat 2: Ivey (1935 in chips)
+  |Seat 3: Negreanu (1915 in chips)
+  |Seat 4: Polk (1990 in chips)
+  |Seat 5: Selbst (2165 in chips)
+  |Seat 6: Hellmuth (2105 in chips)
+  |Seat 7: Brunson (1935 in chips)
+  |Seat 8: Antonius (2060 in chips)
+  |Seat 9: Dwan (2010 in chips)
+  |Polk: posts small blind 10
+  |Selbst: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [8c 8h]
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: folds
+  |Uncalled bet (30) returned to You
+  |You collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You collected (95)
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu (button) folded before Flop
+  |Seat 4: Polk (small blind) folded before Flop
+  |Seat 5: Selbst (big blind) folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Hellmuth folds||30|5|0
+  f preflop|Brunson folds||30|5,6|0
+  f preflop|Antonius folds||30|5,6,7|0
+  f preflop|Dwan folds||30|5,6,7,8|0
+  f preflop|You raises to 2.5 bb||80|5,6,7,8|0
+  f preflop|Ivey folds||80|5,6,7,8,1|0
+  f preflop|Negreanu folds||80|5,6,7,8,1,2|0
+  f preflop|Polk folds||80|5,6,7,8,1,2,3|0
+  f preflop|Selbst folds||80|5,6,7,8,1,2,3,4|0
+  f preflop|You win 6.3 bb.||80|5,6,7,8,1,2,3,4|1
+H9 btn=3 pos=MP,CO,CO,BTN,SB,BB,UTG,UTG,MP
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 raise 160
+  d3 fold
+  [preflop] Hand #9 · blinds 10/20 · ante 5
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth raises to 160
+  [preflop] Polk folds
+  [preflop] Hellmuth wins 265 (uncontested)
+  stacks=1950,1925,1905,1920,2125,2200,1925,2050,2000 pot=265 hero=-5
+  pots=5|265|Pot sd= board= net=-5
+  |PokerStars Hand #175000000900009: Hold'em No Limit (10/20) - 2025/06/16 00:06:49 ET
+  |Table 'All-In Dojo' 9-max Seat #4 is the button
+  |Seat 1: You (1955 in chips)
+  |Seat 2: Ivey (1930 in chips)
+  |Seat 3: Negreanu (1910 in chips)
+  |Seat 4: Polk (1975 in chips)
+  |Seat 5: Selbst (2140 in chips)
+  |Seat 6: Hellmuth (2100 in chips)
+  |Seat 7: Brunson (1930 in chips)
+  |Seat 8: Antonius (2055 in chips)
+  |Seat 9: Dwan (2005 in chips)
+  |Selbst: posts small blind 10
+  |Hellmuth: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Ks 2d]
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: raises 110 to 160
+  |Polk: folds
+  |Uncalled bet (110) returned to Hellmuth
+  |Hellmuth collected 155 from pot
+  |*** SUMMARY ***
+  |Total pot 155 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk (button) folded before Flop
+  |Seat 5: Selbst (small blind) folded before Flop
+  |Seat 6: Hellmuth (big blind) collected (155)
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Brunson folds||30|6|0
+  f preflop|Antonius folds||30|6,7|0
+  f preflop|Dwan folds||30|6,7,8|0
+  f preflop|You folds||30|6,7,8,0|0
+  f preflop|Ivey folds||30|6,7,8,0,1|0
+  f preflop|Negreanu folds||30|6,7,8,0,1,2|0
+  f preflop|Polk raises to 2.5 bb||80|6,7,8,0,1,2|0
+  f preflop|Selbst folds||80|6,7,8,0,1,2,4|0
+  f preflop|Hellmuth raises to 8 bb||220|6,7,8,0,1,2,4|0
+  f preflop|Polk folds||220|6,7,8,0,1,2,4,3|0
+  f preflop|Hellmuth win 13.3 bb.||220|6,7,8,0,1,2,4,3|1
+H10 btn=4 pos=MP,MP,CO,CO,BTN,SB,BB,UTG,UTG
+  d7 fold
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 fold
+  d4 raise 50
+  d5 raise 160
+  d6 raise 416
+  d4 fold
+  d5 fold
+  [preflop] Hand #10 · blinds 10/20 · ante 5
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk folds
+  [preflop] Selbst raises to 50
+  [preflop] Hellmuth raises to 160
+  [preflop] Brunson raises to 416
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson wins 671 (uncontested)
+  stacks=1945,1920,1900,1915,2070,2035,2175,2045,1995 pot=671 hero=-5
+  pots=6|671|Pot sd= board= net=-5
+  |PokerStars Hand #175000001000010: Hold'em No Limit (10/20) - 2025/06/16 00:06:50 ET
+  |Table 'All-In Dojo' 9-max Seat #5 is the button
+  |Seat 1: You (1950 in chips)
+  |Seat 2: Ivey (1925 in chips)
+  |Seat 3: Negreanu (1905 in chips)
+  |Seat 4: Polk (1920 in chips)
+  |Seat 5: Selbst (2125 in chips)
+  |Seat 6: Hellmuth (2200 in chips)
+  |Seat 7: Brunson (1925 in chips)
+  |Seat 8: Antonius (2050 in chips)
+  |Seat 9: Dwan (2000 in chips)
+  |Hellmuth: posts small blind 10
+  |Brunson: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Jc 8c]
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: folds
+  |Selbst: raises 30 to 50
+  |Hellmuth: raises 110 to 160
+  |Brunson: raises 256 to 416
+  |Selbst: folds
+  |Hellmuth: folds
+  |Uncalled bet (256) returned to Brunson
+  |Brunson collected 415 from pot
+  |*** SUMMARY ***
+  |Total pot 415 | Rake 0
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst (button) folded before Flop
+  |Seat 6: Hellmuth (small blind) folded before Flop
+  |Seat 7: Brunson (big blind) collected (415)
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Antonius folds||30|7|0
+  f preflop|Dwan folds||30|7,8|0
+  f preflop|You folds||30|7,8,0|0
+  f preflop|Ivey folds||30|7,8,0,1|0
+  f preflop|Negreanu folds||30|7,8,0,1,2|0
+  f preflop|Polk folds||30|7,8,0,1,2,3|0
+  f preflop|Selbst raises to 2.5 bb||80|7,8,0,1,2,3|0
+  f preflop|Hellmuth raises to 8 bb||230|7,8,0,1,2,3|0
+  f preflop|Brunson raises to 20.8 bb||626|7,8,0,1,2,3|0
+  f preflop|Selbst folds||626|7,8,0,1,2,3,4|0
+  f preflop|Hellmuth folds||626|7,8,0,1,2,3,4,5|0
+  f preflop|Brunson win 33.5 bb.||626|7,8,0,1,2,3,4,5|1
+H11 btn=5 pos=UTG,MP,MP,CO,CO,BTN,SB,BB,UTG
+  d8 fold
+  d0 fold
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 call 30
+  d7 check
+  d3 check
+  d7 check
+  d3 bet 102
+  d7 fold
+  [preflop] Hand #11 · blinds 10/20 · ante 5
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius calls 30
+  [flop] Flop — 4s 2d 6s
+  [flop] Antonius checks
+  [flop] Polk checks
+  [turn] Turn — 4s 2d 6s Qd
+  [turn] Antonius checks
+  [turn] Polk bets 102
+  [turn] Antonius folds
+  [turn] Polk wins 257 (uncontested)
+  stacks=1940,1915,1895,2015,2065,2030,2160,1990,1990 pot=257 hero=-5
+  pots=3|257|Pot sd= board=4s2d6sQd net=-5
+  |PokerStars Hand #175000001100011: Hold'em No Limit (10/20) - 2025/06/16 00:06:51 ET
+  |Table 'All-In Dojo' 9-max Seat #6 is the button
+  |Seat 1: You (1945 in chips)
+  |Seat 2: Ivey (1920 in chips)
+  |Seat 3: Negreanu (1900 in chips)
+  |Seat 4: Polk (1915 in chips)
+  |Seat 5: Selbst (2070 in chips)
+  |Seat 6: Hellmuth (2035 in chips)
+  |Seat 7: Brunson (2175 in chips)
+  |Seat 8: Antonius (2045 in chips)
+  |Seat 9: Dwan (1995 in chips)
+  |Brunson: posts small blind 10
+  |Antonius: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [4d Jh]
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: calls 30
+  |*** FLOP *** [4s 2d 6s]
+  |Antonius: checks
+  |Polk: checks
+  |*** TURN *** [4s 2d 6s] [Qd]
+  |Antonius: checks
+  |Polk: bets 102
+  |Antonius: folds
+  |Uncalled bet (102) returned to Polk
+  |Polk collected 155 from pot
+  |*** SUMMARY ***
+  |Total pot 155 | Rake 0
+  |Board [4s 2d 6s Qd]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk collected (155)
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth (button) folded before Flop
+  |Seat 7: Brunson (small blind) folded before Flop
+  |Seat 8: Antonius (big blind) folded on the Turn
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Dwan folds||30|8|0
+  f preflop|You folds||30|8,0|0
+  f preflop|Ivey folds||30|8,0,1|0
+  f preflop|Negreanu folds||30|8,0,1,2|0
+  f preflop|Polk raises to 2.5 bb||80|8,0,1,2|0
+  f preflop|Selbst folds||80|8,0,1,2,4|0
+  f preflop|Hellmuth folds||80|8,0,1,2,4,5|0
+  f preflop|Brunson folds||80|8,0,1,2,4,5,6|0
+  f preflop|Antonius calls 1.5 bb||110|8,0,1,2,4,5,6|0
+  f flop|Flop: 4s 2d 6s|4s2d6s|110|8,0,1,2,4,5,6|0
+  f flop|Antonius checks|4s2d6s|110|8,0,1,2,4,5,6|0
+  f flop|Polk checks|4s2d6s|110|8,0,1,2,4,5,6|0
+  f turn|Turn: 4s 2d 6s Qd|4s2d6sQd|110|8,0,1,2,4,5,6|0
+  f turn|Antonius checks|4s2d6sQd|110|8,0,1,2,4,5,6|0
+  f turn|Polk bets 5.1 bb|4s2d6sQd|212|8,0,1,2,4,5,6|0
+  f turn|Antonius folds|4s2d6sQd|212|8,0,1,2,4,5,6,7|0
+  f turn|Polk win 12.8 bb.|4s2d6sQd|212|8,0,1,2,4,5,6,7|1
+H12 btn=6 pos=UTG,UTG,MP,MP,CO,CO,BTN,SB,BB
+  d0 fold
+  d1 fold
+  d2 call 20
+  d3 fold
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 raise 70
+  d8 call 50
+  d2 fold
+  d7 bet 68
+  d8 call 68
+  d7 bet 341
+  d8 call 341
+  d7 bet 767
+  d8 call 767
+  [preflop] Hand #12 · blinds 10/20 · ante 5
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 20
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius raises to 70
+  [preflop] Dwan calls 50
+  [preflop] Negreanu folds
+  [flop] Flop — 4h 6h Th
+  [flop] Antonius bets 68
+  [flop] Dwan calls 68
+  [turn] Turn — 4h 6h Th 6c
+  [turn] Antonius bets 341
+  [turn] Dwan calls 341
+  [river] River — 4h 6h Th 6c 9h
+  [river] Antonius bets 767
+  [river] Dwan calls 767
+  [showdown] Antonius wins 45 (Main pot)
+  [showdown] Antonius wins 60 (Side pot 1)
+  [showdown] Antonius wins 2452 (Side pot 2)
+  stacks=1935,1910,1870,2010,2060,2025,2155,3296,739 pot=2557 hero=-5
+  pots=7|45|Main pot;7|60|Side pot 1;7|2452|Side pot 2 sd=7:6sKs:3594752:Three of a Kind, Sixes;8:8dTd:2779392:Two Pair, Tens & Sixes board=4h6hTh6c9h net=-5
+  |PokerStars Hand #175000001200012: Hold'em No Limit (10/20) - 2025/06/16 00:06:52 ET
+  |Table 'All-In Dojo' 9-max Seat #7 is the button
+  |Seat 1: You (1940 in chips)
+  |Seat 2: Ivey (1915 in chips)
+  |Seat 3: Negreanu (1895 in chips)
+  |Seat 4: Polk (2015 in chips)
+  |Seat 5: Selbst (2065 in chips)
+  |Seat 6: Hellmuth (2030 in chips)
+  |Seat 7: Brunson (2160 in chips)
+  |Seat 8: Antonius (1990 in chips)
+  |Seat 9: Dwan (1990 in chips)
+  |Antonius: posts small blind 10
+  |Dwan: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Qh 9c]
+  |You: folds
+  |Ivey: folds
+  |Negreanu: calls 20
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: raises 50 to 70
+  |Dwan: calls 50
+  |Negreanu: folds
+  |*** FLOP *** [4h 6h Th]
+  |Antonius: bets 68
+  |Dwan: calls 68
+  |*** TURN *** [4h 6h Th] [6c]
+  |Antonius: bets 341
+  |Dwan: calls 341
+  |*** RIVER *** [4h 6h Th 6c] [9h]
+  |Antonius: bets 767
+  |Dwan: calls 767
+  |*** SHOW DOWN ***
+  |Antonius: shows [6s Ks] (three of a kind, Sixes)
+  |Dwan: shows [8d Td] (two pair, Tens and Sixes)
+  |Antonius collected 2557 from pot
+  |*** SUMMARY ***
+  |Total pot 2557 | Rake 0
+  |Board [4h 6h Th 6c 9h]
+  |Seat 1: You folded before Flop
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson (button) folded before Flop
+  |Seat 8: Antonius (small blind) showed [6s Ks] and won (2557) with three of a kind, Sixes
+  |Seat 9: Dwan (big blind) showed [8d Td] and lost with two pair, Tens and Sixes
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|You folds||30|0|0
+  f preflop|Ivey folds||30|0,1|0
+  f preflop|Negreanu calls 1 bb||50|0,1|0
+  f preflop|Polk folds||50|0,1,3|0
+  f preflop|Selbst folds||50|0,1,3,4|0
+  f preflop|Hellmuth folds||50|0,1,3,4,5|0
+  f preflop|Brunson folds||50|0,1,3,4,5,6|0
+  f preflop|Antonius raises to 3.5 bb||110|0,1,3,4,5,6|0
+  f preflop|Dwan calls 2.5 bb||160|0,1,3,4,5,6|0
+  f preflop|Negreanu folds||160|0,1,3,4,5,6,2|0
+  f flop|Flop: 4h 6h Th|4h6hTh|160|0,1,3,4,5,6,2|0
+  f flop|Antonius bets 3.4 bb|4h6hTh|228|0,1,3,4,5,6,2|0
+  f flop|Dwan calls 3.4 bb|4h6hTh|296|0,1,3,4,5,6,2|0
+  f turn|Turn: 4h 6h Th 6c|4h6hTh6c|296|0,1,3,4,5,6,2|0
+  f turn|Antonius bets 17.1 bb|4h6hTh6c|637|0,1,3,4,5,6,2|0
+  f turn|Dwan calls 17.1 bb|4h6hTh6c|978|0,1,3,4,5,6,2|0
+  f river|River: 4h 6h Th 6c 9h|4h6hTh6c9h|978|0,1,3,4,5,6,2|0
+  f river|Antonius bets 38.4 bb|4h6hTh6c9h|1745|0,1,3,4,5,6,2|0
+  f river|Dwan calls 38.4 bb|4h6hTh6c9h|2512|0,1,3,4,5,6,2|0
+  f showdown|Antonius win 127.8 bb.|4h6hTh6c9h|2512|0,1,3,4,5,6,2|1
+H13 btn=7 pos=BB,UTG,UTG,MP,MP,CO,CO,BTN,SB
+  d1 fold
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 call 30
+  d0 check
+  d3 bet 85
+  d0 call 85
+  d0 check
+  d3 check
+  d0 bet 179
+  d3 call 179
+  [preflop] Hand #13 · blinds 10/20 · ante 5
+  [preflop] Ivey folds
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You calls 30
+  [flop] Flop — 4h 7c 2h
+  [flop] You checks
+  [flop] Polk bets 85
+  [flop] You calls 85
+  [turn] Turn — 4h 7c 2h Kc
+  [turn] You checks
+  [turn] Polk checks
+  [river] River — 4h 7c 2h Kc 7d
+  [river] You bets 179
+  [river] Polk calls 179
+  [showdown] You wins 45 (Main pot)
+  [showdown] You wins 30 (Side pot 1)
+  [showdown] You wins 608 (Side pot 2)
+  stacks=2299,1905,1865,1691,2055,2020,2150,3291,724 pot=683 hero=364
+  pots=0|45|Main pot;0|30|Side pot 1;0|608|Side pot 2 sd=0:8d8c:2653440:Two Pair, Eights & Sevens;3:QhAc:1568192:Pair of Sevens board=4h7c2hKc7d net=364
+  |PokerStars Hand #175000001300013: Hold'em No Limit (10/20) - 2025/06/16 00:06:53 ET
+  |Table 'All-In Dojo' 9-max Seat #8 is the button
+  |Seat 1: You (1935 in chips)
+  |Seat 2: Ivey (1910 in chips)
+  |Seat 3: Negreanu (1870 in chips)
+  |Seat 4: Polk (2010 in chips)
+  |Seat 5: Selbst (2060 in chips)
+  |Seat 6: Hellmuth (2025 in chips)
+  |Seat 7: Brunson (2155 in chips)
+  |Seat 8: Antonius (3296 in chips)
+  |Seat 9: Dwan (739 in chips)
+  |Dwan: posts small blind 10
+  |You: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [8d 8c]
+  |Ivey: folds
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: calls 30
+  |*** FLOP *** [4h 7c 2h]
+  |You: checks
+  |Polk: bets 85
+  |You: calls 85
+  |*** TURN *** [4h 7c 2h] [Kc]
+  |You: checks
+  |Polk: checks
+  |*** RIVER *** [4h 7c 2h Kc] [7d]
+  |You: bets 179
+  |Polk: calls 179
+  |*** SHOW DOWN ***
+  |You: shows [8d 8c] (two pair, Eights and Sevens)
+  |Polk: shows [Qh Ac] (a pair of Sevens)
+  |You collected 683 from pot
+  |*** SUMMARY ***
+  |Total pot 683 | Rake 0
+  |Board [4h 7c 2h Kc 7d]
+  |Seat 1: You (big blind) showed [8d 8c] and won (683) with two pair, Eights and Sevens
+  |Seat 2: Ivey folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk showed [Qh Ac] and lost with a pair of Sevens
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius (button) folded before Flop
+  |Seat 9: Dwan (small blind) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Ivey folds||30|1|0
+  f preflop|Negreanu folds||30|1,2|0
+  f preflop|Polk raises to 2.5 bb||80|1,2|0
+  f preflop|Selbst folds||80|1,2,4|0
+  f preflop|Hellmuth folds||80|1,2,4,5|0
+  f preflop|Brunson folds||80|1,2,4,5,6|0
+  f preflop|Antonius folds||80|1,2,4,5,6,7|0
+  f preflop|Dwan folds||80|1,2,4,5,6,7,8|0
+  f preflop|You calls 1.5 bb||110|1,2,4,5,6,7,8|0
+  f flop|Flop: 4h 7c 2h|4h7c2h|110|1,2,4,5,6,7,8|0
+  f flop|You checks|4h7c2h|110|1,2,4,5,6,7,8|0
+  f flop|Polk bets 4.3 bb|4h7c2h|195|1,2,4,5,6,7,8|0
+  f flop|You calls 4.3 bb|4h7c2h|280|1,2,4,5,6,7,8|0
+  f turn|Turn: 4h 7c 2h Kc|4h7c2hKc|280|1,2,4,5,6,7,8|0
+  f turn|You checks|4h7c2hKc|280|1,2,4,5,6,7,8|0
+  f turn|Polk checks|4h7c2hKc|280|1,2,4,5,6,7,8|0
+  f river|River: 4h 7c 2h Kc 7d|4h7c2hKc7d|280|1,2,4,5,6,7,8|0
+  f river|You bets 8.9 bb|4h7c2hKc7d|459|1,2,4,5,6,7,8|0
+  f river|Polk calls 8.9 bb|4h7c2hKc7d|638|1,2,4,5,6,7,8|0
+  f showdown|You win 34.1 bb.|4h7c2hKc7d|638|1,2,4,5,6,7,8|1
+H14 btn=8 pos=SB,BB,UTG,UTG,MP,MP,CO,CO,BTN
+  d2 fold
+  d3 raise 50
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 fold
+  d1 fold
+  [preflop] Hand #14 · blinds 10/20 · ante 5
+  [preflop] Negreanu folds
+  [preflop] Polk raises to 50
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You folds
+  [preflop] Ivey folds
+  [preflop] Polk wins 125 (uncontested)
+  stacks=2284,1880,1860,1761,2050,2015,2145,3286,719 pot=125 hero=-15
+  pots=3|125|Pot sd= board= net=-15
+  |PokerStars Hand #175000001400014: Hold'em No Limit (10/20) - 2025/06/16 00:06:54 ET
+  |Table 'All-In Dojo' 9-max Seat #9 is the button
+  |Seat 1: You (2299 in chips)
+  |Seat 2: Ivey (1905 in chips)
+  |Seat 3: Negreanu (1865 in chips)
+  |Seat 4: Polk (1691 in chips)
+  |Seat 5: Selbst (2055 in chips)
+  |Seat 6: Hellmuth (2020 in chips)
+  |Seat 7: Brunson (2150 in chips)
+  |Seat 8: Antonius (3291 in chips)
+  |Seat 9: Dwan (724 in chips)
+  |You: posts small blind 10
+  |Ivey: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [6d Th]
+  |Negreanu: folds
+  |Polk: raises 30 to 50
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: folds
+  |Ivey: folds
+  |Uncalled bet (30) returned to Polk
+  |Polk collected 95 from pot
+  |*** SUMMARY ***
+  |Total pot 95 | Rake 0
+  |Seat 1: You (small blind) folded before Flop
+  |Seat 2: Ivey (big blind) folded before Flop
+  |Seat 3: Negreanu folded before Flop
+  |Seat 4: Polk collected (95)
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan (button) folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Negreanu folds||30|2|0
+  f preflop|Polk raises to 2.5 bb||80|2|0
+  f preflop|Selbst folds||80|2,4|0
+  f preflop|Hellmuth folds||80|2,4,5|0
+  f preflop|Brunson folds||80|2,4,5,6|0
+  f preflop|Antonius folds||80|2,4,5,6,7|0
+  f preflop|Dwan folds||80|2,4,5,6,7,8|0
+  f preflop|You folds||80|2,4,5,6,7,8,0|0
+  f preflop|Ivey folds||80|2,4,5,6,7,8,0,1|0
+  f preflop|Polk win 6.3 bb.||80|2,4,5,6,7,8,0,1|1
+H15 btn=0 pos=BTN,SB,BB,UTG,UTG,MP,MP,CO,CO
+  d3 fold
+  d4 fold
+  d5 fold
+  d6 fold
+  d7 fold
+  d8 fold
+  d0 raise 50
+  d1 fold
+  d2 call 30
+  d2 bet 155
+  d0 call 155
+  d2 bet 465
+  d0 call 465
+  d2 bet 1185
+  d0 fold
+  [preflop] Hand #15 · blinds 10/20 · ante 5
+  [preflop] Polk folds
+  [preflop] Selbst folds
+  [preflop] Hellmuth folds
+  [preflop] Brunson folds
+  [preflop] Antonius folds
+  [preflop] Dwan folds
+  [preflop] You raises to 50
+  [preflop] Ivey folds
+  [preflop] Negreanu calls 30
+  [flop] Flop — Jh Qd 9c
+  [flop] Negreanu bets 155
+  [flop] You calls 155
+  [turn] Turn — Jh Qd 9c 2d
+  [turn] Negreanu bets 465
+  [turn] You calls 465
+  [river] River — Jh Qd 9c 2d 7c
+  [river] Negreanu bets 1185 (all-in)
+  [river] You folds
+  [river] Negreanu wins 2580 (uncontested)
+  stacks=1609,1865,2580,1756,2045,2010,2140,3281,714 pot=2580 hero=-675
+  pots=2|2580|Pot sd= board=JhQd9c2d7c net=-675
+  |PokerStars Hand #175000001500015: Hold'em No Limit (10/20) - 2025/06/16 00:06:55 ET
+  |Table 'All-In Dojo' 9-max Seat #1 is the button
+  |Seat 1: You (2284 in chips)
+  |Seat 2: Ivey (1880 in chips)
+  |Seat 3: Negreanu (1860 in chips)
+  |Seat 4: Polk (1761 in chips)
+  |Seat 5: Selbst (2050 in chips)
+  |Seat 6: Hellmuth (2015 in chips)
+  |Seat 7: Brunson (2145 in chips)
+  |Seat 8: Antonius (3286 in chips)
+  |Seat 9: Dwan (719 in chips)
+  |Ivey: posts small blind 10
+  |Negreanu: posts big blind 20
+  |*** HOLE CARDS ***
+  |Dealt to You [Tc Ad]
+  |Polk: folds
+  |Selbst: folds
+  |Hellmuth: folds
+  |Brunson: folds
+  |Antonius: folds
+  |Dwan: folds
+  |You: raises 30 to 50
+  |Ivey: folds
+  |Negreanu: calls 30
+  |*** FLOP *** [Jh Qd 9c]
+  |Negreanu: bets 155
+  |You: calls 155
+  |*** TURN *** [Jh Qd 9c] [2d]
+  |Negreanu: bets 465
+  |You: calls 465
+  |*** RIVER *** [Jh Qd 9c 2d] [7c]
+  |Negreanu: bets 1185 and is all-in
+  |You: folds
+  |Uncalled bet (1185) returned to Negreanu
+  |Negreanu collected 1395 from pot
+  |*** SUMMARY ***
+  |Total pot 1395 | Rake 0
+  |Board [Jh Qd 9c 2d 7c]
+  |Seat 1: You (button) folded on the River
+  |Seat 2: Ivey (small blind) folded before Flop
+  |Seat 3: Negreanu (big blind) collected (1395)
+  |Seat 4: Polk folded before Flop
+  |Seat 5: Selbst folded before Flop
+  |Seat 6: Hellmuth folded before Flop
+  |Seat 7: Brunson folded before Flop
+  |Seat 8: Antonius folded before Flop
+  |Seat 9: Dwan folded before Flop
+  f preflop|Blinds 0.5/1 bb posted.||30||0
+  f preflop|Polk folds||30|3|0
+  f preflop|Selbst folds||30|3,4|0
+  f preflop|Hellmuth folds||30|3,4,5|0
+  f preflop|Brunson folds||30|3,4,5,6|0
+  f preflop|Antonius folds||30|3,4,5,6,7|0
+  f preflop|Dwan folds||30|3,4,5,6,7,8|0
+  f preflop|You raises to 2.5 bb||80|3,4,5,6,7,8|0
+  f preflop|Ivey folds||80|3,4,5,6,7,8,1|0
+  f preflop|Negreanu calls 1.5 bb||110|3,4,5,6,7,8,1|0
+  f flop|Flop: Jh Qd 9c|JhQd9c|110|3,4,5,6,7,8,1|0
+  f flop|Negreanu bets 7.8 bb|JhQd9c|265|3,4,5,6,7,8,1|0
+  f flop|You calls 7.8 bb|JhQd9c|420|3,4,5,6,7,8,1|0
+  f turn|Turn: Jh Qd 9c 2d|JhQd9c2d|420|3,4,5,6,7,8,1|0
+  f turn|Negreanu bets 23.3 bb|JhQd9c2d|885|3,4,5,6,7,8,1|0
+  f turn|You calls 23.3 bb|JhQd9c2d|1350|3,4,5,6,7,8,1|0
+  f river|River: Jh Qd 9c 2d 7c|JhQd9c2d7c|1350|3,4,5,6,7,8,1|0
+  f river|Negreanu bets 59.3 bb (all-in)|JhQd9c2d7c|2535|3,4,5,6,7,8,1|0
+  f river|You folds|JhQd9c2d7c|2535|3,4,5,6,7,8,1,0|0
+  f showdown|Negreanu win 129 bb.|JhQd9c2d7c|2535|3,4,5,6,7,8,1,0|1

@@ -1,0 +1,32 @@
+PokerStars Hand #241537799999: Hold'em No Limit ($0.05/$0.10 USD) - 2024/03/07 21:14:11 ET
+Table 'Aludra III' 6-max Seat #3 is the button
+Seat 1: villain_a ($10.00 in chips)
+Seat 3: hero_name ($12.35 in chips)
+Seat 5: villain_b ($9.40 in chips)
+villain_b: posts small blind $0.05
+villain_a: posts big blind $0.10
+*** HOLE CARDS ***
+Dealt to hero_name [Jh Jc]
+hero_name: raises $0.20 to $0.30
+villain_b: folds
+villain_a: calls $0.20
+*** FLOP *** [2d 7s Td]
+villain_a: checks
+hero_name: bets $0.45
+villain_a: calls $0.45
+*** TURN *** [2d 7s Td] [Qc]
+villain_a: checks
+hero_name: checks
+*** RIVER *** [2d 7s Td Qc] [3h]
+villain_a: bets $1.55
+hero_name: calls $1.55
+*** SHOW DOWN ***
+villain_a: shows [Qd Th] (two pair, Queens and Tens)
+hero_name: mucks hand
+villain_a collected $4.53 from pot
+*** SUMMARY ***
+Total pot $4.75 | Rake $0.22
+Board [2d 7s Td Qc 3h]
+Seat 1: villain_a (big blind) showed [Qd Th] and won ($4.53) with two pair, Queens and Tens
+Seat 3: hero_name (button) mucked
+Seat 5: villain_b (small blind) folded before Flop

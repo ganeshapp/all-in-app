@@ -193,9 +193,10 @@ Map<String, Object?> _potToJson(PotResult p) => {
 
 PotResult _potFromJson(Map<String, Object?> j) => PotResult(
   winners: (j['winners'] as List).map((w) => (w as num).toInt()).toList(),
-  // PotResult.amount is an int in the shared types; fractional amounts can
-  // only come from imported real-money hands and are rounded here.
-  amount: jsRound((j['amount'] as num).toDouble()).toInt(),
+  // Kept as written: imported real-money hands carry fractional amounts and
+  // the desktop's JSON.parse preserves them (they feed the replay's
+  // "win N bb" total, so rounding here would change the copy).
+  amount: j['amount'] as num,
   potLabel: j['potLabel'] as String,
 );
 

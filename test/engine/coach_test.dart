@@ -373,7 +373,10 @@ void main() {
         v.plain,
         'You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 8 times in 10. That call was worth about +7.0 bb.',
       );
-      expect(v.expert![0], 'Ivey (TAG) range ≈ 204 combos (position + action).');
+      expect(
+        v.expert![0],
+        'Ivey (TAG) range ≈ 204 combos (position + action).',
+      );
       expect(
         v.expert![1],
         'Simulation precision: ±2.0% on the equity (1,600 trials).',
@@ -459,16 +462,19 @@ void main() {
       );
     });
 
-    test('check rules: preflop / medium flop → null, strong flop → mistake', () async {
-      expect(await run('checkPreflop'), isNull);
-      expect(await run('checkFlopMedium'), isNull);
-      final v = (await run('checkFlopStrong'))!;
-      expect(v.verdict, Verdict.mistake);
-      expect(
-        v.text,
-        '90% equity checked back — a value bet (~66 chips) was available.',
-      );
-    });
+    test(
+      'check rules: preflop / medium flop → null, strong flop → mistake',
+      () async {
+        expect(await run('checkPreflop'), isNull);
+        expect(await run('checkFlopMedium'), isNull);
+        final v = (await run('checkFlopStrong'))!;
+        expect(v.verdict, Verdict.mistake);
+        expect(
+          v.text,
+          '90% equity checked back — a value bet (~66 chips) was available.',
+        );
+      },
+    );
 
     test('expensive bluff (multiway fold-equity model)', () async {
       final v = (await run('expensiveBluff'))!;
@@ -476,14 +482,15 @@ void main() {
       expect(v.title, 'Expensive bluff');
       expect(v.multiway, isTrue);
       expect(v.opponents, 3);
-      expect(v.evChips, closeTo(-25.0, 1e-9));
+      // 0.58^3 × 100 + (1 − 0.58^3) × (0.15 × 300 − 100), as computed by Node.
+      expect(v.evChips, -24.75763999999999);
       expect(
         v.plain,
         "A very expensive bluff: if anyone calls, your hand wins only about 1 time in 7, and with 3 opponents someone usually calls. You'd need folds about 5 times in 10 just to break even — this bet loses money over time.",
       );
       expect(
         v.text,
-        'Bluffing 100% pot with 15% equity vs the 3-player field: estimated EV -1.3 bb.',
+        'Bluffing 100% pot with 15% equity vs the 3-player field: estimated EV -1.2 bb.',
       );
       expect(
         v.steps![3],
@@ -504,7 +511,10 @@ void main() {
         v.plain,
         'Betting with the goods: if someone calls, your hand wins about 8 times in 10. Money goes in with the best of it — and every fold is profit too.',
       );
-      expect(v.text, "Strong value — 75% equity vs Ivey's range. Betting is correct.");
+      expect(
+        v.text,
+        "Strong value — 75% equity vs Ivey's range. Betting is correct.",
+      );
       expect(
         v.steps![1],
         'A bet also wins when opponents fold — fold equity isn\'t shown here, so treat this as the "called" floor.',
@@ -556,7 +566,10 @@ void main() {
       expect(calls.single.mode, EquityMode.field);
       expect(calls.single.opponents, 5);
       expect(v!.villainName, 'Hellmuth'); // the BB is the preflop aggressor
-      expect(v.steps![0], 'AKs vs the 5-player field on a pre-flop board → 55% equity.');
+      expect(
+        v.steps![0],
+        'AKs vs the 5-player field on a pre-flop board → 55% equity.',
+      );
     });
 
     test('relaxed strictness + high quality', () async {
@@ -579,26 +592,32 @@ void main() {
     expect(calls.single.seed, 2289540689);
   });
 
-  test('default runner uses the real equity engine deterministically', () async {
-    final s = makeState(riverCheck);
-    final a = await evaluateHero(s, const Action.check(), 1);
-    final b = await evaluateHero(s, const Action.check(), 1);
-    expect(a, isNotNull);
-    expect(a!.equity, b!.equity);
-    expect(a.verdict, Verdict.mistake); // AK top-pair on a dry river vs TAG
-    expect(a.expert![1], startsWith('Exact count'));
-    final req = EquityRequest(
-      hero: const ['As', 'Ks'],
-      board: const ['Kh', '7d', '2c'],
-      mode: EquityMode.random,
-      range: const [],
-      opponents: 1,
-      iters: 500,
-      seed: 42,
-    );
-    expect(req.run(), equityVsRandomCards(('As', 'Ks'), req.board, iters: 500, seed: 42));
-    expect(EquityRequest.fromJson(req.toJson()).toJson(), req.toJson());
-  });
+  test(
+    'default runner uses the real equity engine deterministically',
+    () async {
+      final s = makeState(riverCheck);
+      final a = await evaluateHero(s, const Action.check(), 1);
+      final b = await evaluateHero(s, const Action.check(), 1);
+      expect(a, isNotNull);
+      expect(a!.equity, b!.equity);
+      expect(a.verdict, Verdict.mistake); // AK top-pair on a dry river vs TAG
+      expect(a.expert![1], startsWith('Exact count'));
+      final req = EquityRequest(
+        hero: const ['As', 'Ks'],
+        board: const ['Kh', '7d', '2c'],
+        mode: EquityMode.random,
+        range: const [],
+        opponents: 1,
+        iters: 500,
+        seed: 42,
+      );
+      expect(
+        req.run(),
+        equityVsRandomCards(('As', 'Ks'), req.board, iters: 500, seed: 42),
+      );
+      expect(EquityRequest.fromJson(req.toJson()).toJson(), req.toJson());
+    },
+  );
 
   test('coachThresholds / base iters / defaults', () {
     expect(coachThresholds(CoachStrictness.relaxed).mistakeBb, -0.6);
@@ -685,10 +704,7 @@ void main() {
     final s = makeState(const Spec(button: 3, hole: ['As', 'Ks']));
     final bb = s.players[5];
     final fallback = villainRangeFor(s, bb);
-    expect(
-      fallback,
-      buildPreflopRanges(22, 18, Position.bb).play.toList(),
-    );
+    expect(fallback, buildPreflopRanges(22, 18, Position.bb).play.toList());
     expect(fallback.first, 'AA');
     s.botRanges[5] = ['AA', 'KK'];
     expect(villainRangeFor(s, bb), ['AA', 'KK']);
@@ -711,7 +727,8 @@ void main() {
 
   test('botMoveReview builds the desktop "bot" note', () {
     final s = makeState(flopVs1);
-    final p = s.players[1]..lastAction = const PlayerLastAction('Bet', Street.flop);
+    final p =
+        s.players[1]..lastAction = const PlayerLastAction('Bet', Street.flop);
     final rv = botMoveReview(s, p, 3)!;
     expect(rv.kind, ReviewKind.bot);
     expect(rv.verdict, Verdict.info);
@@ -730,7 +747,8 @@ void main() {
     final (v, _) = await runScenario(scenarios['badCall']!);
     final json = v!.toJson();
     expect(CoachReview.fromJson(json).toJson(), json);
-    final bot = botMoveReview(makeState(flopVs1), makeState(flopVs1).players[1], 9)!;
+    final bot =
+        botMoveReview(makeState(flopVs1), makeState(flopVs1).players[1], 9)!;
     expect(CoachReview.fromJson(bot.toJson()).toJson(), bot.toJson());
     expect(Verdict.fromLabel('great'), Verdict.great);
     expect(ReviewKind.fromLabel('bot'), ReviewKind.bot);

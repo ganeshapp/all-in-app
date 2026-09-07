@@ -618,6 +618,7 @@ class LeakSpot {
   final Position heroPos;
   final List<Card> hole;
   final List<Card> board;
+
   /// Coach leaks: chips with `bb` = table big blind. Hand-history import
   /// leaks: already in big blinds with `bb = 1` (may be fractional).
   final num pot;

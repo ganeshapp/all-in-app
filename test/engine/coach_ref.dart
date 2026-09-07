@@ -48,13 +48,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -63,36 +59,31 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.8,
         "potOdds": 0.3333333333333333,
         "evChips": 140,
-        "plain": "You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 8 times in 10. That call was worth about +7.0 bb.",
-        "text": "Against Ivey's range your AKs has 80% equity and you're getting 33% pot odds — calling is worth about +7.0 bb.",
+        "plain":
+            "You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 8 times in 10. That call was worth about +7.0 bb.",
+        "text":
+            "Against Ivey's range your AKs has 80% equity and you're getting 33% pot odds — calling is worth about +7.0 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 80% equity.",
           "Pot 200 + call 100 = 300; pot odds = 33%.",
-          "EV(call) = 80% × 300 − 100 ≈ +140 chips (7.0 bb) > EV(fold)=0."
+          "EV(call) = 80% × 300 − 100 ≈ +140 chips (7.0 bb) > EV(fold)=0.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2289540689
-        }
-      ]
+          "seed": 2289540689,
+        },
+      ],
     },
     "badCall": {
       "review": {
@@ -137,13 +128,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": true,
@@ -152,37 +139,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.25,
         "potOdds": 0.3333333333333333,
         "evChips": -25,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 4 — not enough. Over time this call loses money; folding is better.",
-        "text": "Against Ivey's range your AKs has only 25% equity, but calling needs 33%. This call costs about -1.3 bb — folding is better.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 4 — not enough. Over time this call loses money; folding is better.",
+        "text":
+            "Against Ivey's range your AKs has only 25% equity, but calling needs 33%. This call costs about -1.3 bb — folding is better.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 25% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 25% × 300 − 100 ≈ -25 chips (-1.3 bb). EV(fold) = 0.",
-          "Because EV < 0, folding is the higher-EV play."
+          "Because EV < 0, folding is the higher-EV play.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "thinCall": {
       "review": {
@@ -227,13 +209,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -242,52 +220,40 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.35,
         "potOdds": 0.3333333333333333,
         "evChips": 5,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — just barely enough. A close call, not a mistake.",
-        "text": "35% equity vs ~33% needed — a marginal, close call against Ivey's range.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — just barely enough. A close call, not a mistake.",
+        "text":
+            "35% equity vs ~33% needed — a marginal, close call against Ivey's range.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 35% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 35% × 300 − 100 ≈ 5 chips (0.3 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
+          "seed": 4129404802,
         },
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 6400,
-          "seed": 4129404803
-        }
-      ]
+          "seed": 4129404803,
+        },
+      ],
     },
     "greatCall": {
       "review": {
@@ -332,13 +298,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -347,37 +309,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.8,
         "potOdds": 0.3333333333333333,
         "evChips": 140,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 8 times in 10 — comfortably more than you need. Good call.",
-        "text": "80% equity vs Ivey's range, needing 33% — a clear call worth +7.0 bb.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 8 times in 10 — comfortably more than you need. Good call.",
+        "text":
+            "80% equity vs Ivey's range, needing 33% — a clear call worth +7.0 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 80% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 80% × 300 − 100 ≈ 140 chips (7.0 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "okCall": {
       "review": {
@@ -422,13 +379,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -437,37 +390,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.45,
         "potOdds": 0.3333333333333333,
         "evChips": 35,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 5 times in 10 — comfortably more than you need. Good call.",
-        "text": "45% equity vs Ivey's range, needing 33% — a clear call worth +1.8 bb.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 5 times in 10 — comfortably more than you need. Good call.",
+        "text":
+            "45% equity vs Ivey's range, needing 33% — a clear call worth +1.8 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 45% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 45% × 300 − 100 ≈ 35 chips (1.8 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.4% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "noiseCall": {
       "review": {
@@ -512,13 +460,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -527,52 +471,40 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.3,
         "potOdds": 0.3333333333333333,
         "evChips": -10,
-        "plain": "Genuinely too close to call: the numbers say roughly break-even here. Either choice is fine.",
-        "text": "Looks slightly losing (~-0.5 bb), but it's within the simulation's margin of error — either choice is reasonable here.",
+        "plain":
+            "Genuinely too close to call: the numbers say roughly break-even here. Either choice is fine.",
+        "text":
+            "Looks slightly losing (~-0.5 bb), but it's within the simulation's margin of error — either choice is reasonable here.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 30% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 30% × 300 − 100 ≈ -10 chips (-0.5 bb). EV(fold) = 0.",
-          "Because EV < 0, folding is the higher-EV play."
+          "Because EV < 0, folding is the higher-EV play.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±6.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
+          "seed": 4129404802,
         },
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 6400,
-          "seed": 4129404803
-        }
-      ]
+          "seed": 4129404803,
+        },
+      ],
     },
     "missedValueRiver": {
       "review": {
@@ -617,54 +549,41 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c",
-          "9s",
-          "3h"
-        ],
+        "board": ["Kh", "7d", "2c", "9s", "3h"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
         "verdict": "mistake",
         "title": "Missed value",
         "equity": 0.9,
-        "plain": "Your hand wins about 9 times in 10 — that's a hand that wants to bet. Checking here gives up a clear value bet: when you're ahead this often, put chips in and get paid.",
-        "text": "90% equity checked on the river — a value bet (~198 chips) was available.",
+        "plain":
+            "Your hand wins about 9 times in 10 — that's a hand that wants to bet. Checking here gives up a clear value bet: when you're ahead this often, put chips in and get paid.",
+        "text":
+            "90% equity checked on the river — a value bet (~198 chips) was available.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c 9s 3h → 90% equity.",
           "A ~66% pot bet (198) gets called by enough worse hands to profit when you win this often.",
-          "Checking wins the same pot but never builds it — EV left behind grows with your win chance."
+          "Checking wins the same pot but never builds it — EV left behind grows with your win chance.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Exact count — every possible holding and runout was enumerated, so there's no simulation noise.",
           "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
-          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel."
-        ]
+          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel.",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c",
-            "9s",
-            "3h"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c", "9s", "3h"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 1897551768
-        }
-      ]
+          "seed": 1897551768,
+        },
+      ],
     },
     "missedValueRiverThin": {
       "review": {
@@ -709,54 +628,41 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c",
-          "9s",
-          "3h"
-        ],
+        "board": ["Kh", "7d", "2c", "9s", "3h"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
         "verdict": "thin",
         "title": "Missed value",
         "equity": 0.7,
-        "plain": "Your hand wins about 7 times in 10 — usually strong enough for a small value bet here. Checking is cautious but leaves some money behind.",
-        "text": "70% equity checked on the river — a value bet (~198 chips) was available.",
+        "plain":
+            "Your hand wins about 7 times in 10 — usually strong enough for a small value bet here. Checking is cautious but leaves some money behind.",
+        "text":
+            "70% equity checked on the river — a value bet (~198 chips) was available.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c 9s 3h → 70% equity.",
           "A ~66% pot bet (198) gets called by enough worse hands to profit when you win this often.",
-          "Checking wins the same pot but never builds it — EV left behind grows with your win chance."
+          "Checking wins the same pot but never builds it — EV left behind grows with your win chance.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Exact count — every possible holding and runout was enumerated, so there's no simulation noise.",
           "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
-          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel."
-        ]
+          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel.",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c",
-            "9s",
-            "3h"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c", "9s", "3h"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 1897551768
-        }
-      ]
+          "seed": 1897551768,
+        },
+      ],
     },
     "expensiveBluff": {
       "review": {
@@ -801,13 +707,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 3,
         "multiway": true,
         "blocking": false,
@@ -816,38 +718,33 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.15,
         "potOdds": 0.5,
         "evChips": -24.75763999999999,
-        "plain": "A very expensive bluff: if anyone calls, your hand wins only about 1 time in 7, and with 3 opponents someone usually calls. You'd need folds about 5 times in 10 just to break even — this bet loses money over time.",
-        "text": "Bluffing 100% pot with 15% equity vs the 3-player field: estimated EV -1.2 bb.",
+        "plain":
+            "A very expensive bluff: if anyone calls, your hand wins only about 1 time in 7, and with 3 opponents someone usually calls. You'd need folds about 5 times in 10 just to break even — this bet loses money over time.",
+        "text":
+            "Bluffing 100% pot with 15% equity vs the 3-player field: estimated EV -1.2 bb.",
         "steps": [
           "54s vs the 3-player field on Kh 7d 2c → 15% equity when called.",
           "Break-even fold rate = bet / (pot + bet) = 50%.",
           "Assuming each opponent continues ~42% vs this size, everyone folds only 20% of the time.",
-          "EV ≈ 20% × 100 + 80% × (15% × 300 − 100) ≈ -25 chips."
+          "EV ≈ 20% × 100 + 80% × (15% × 300 − 100) ≈ -25 chips.",
         ],
         "expert": [
           "Equity is run against 3 opponents as random hands (1600-trial sim) — more players, lower equity.",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
           "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
-          "The fold-equity model is heuristic (fixed continue rates by bet size, no ranges) — aggression verdicts are approximate by design."
-        ]
+          "The fold-equity model is heuristic (fixed continue rates by bet size, no ranges) — aggression verdicts are approximate by design.",
+        ],
       },
       "calls": [
         {
           "mode": "field",
-          "hero": [
-            "5h",
-            "4h"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["5h", "4h"],
+          "board": ["Kh", "7d", "2c"],
           "opponents": 3,
           "iters": 1600,
-          "seed": 2575390930
-        }
-      ]
+          "seed": 2575390930,
+        },
+      ],
     },
     "valueBet": {
       "review": {
@@ -892,14 +789,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c",
-          "9s"
-        ],
+        "board": ["Kh", "7d", "2c", "9s"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -908,36 +800,30 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.75,
         "potOdds": 0.3939393939393939,
         "evChips": 117.5,
-        "plain": "Betting with the goods: if someone calls, your hand wins about 8 times in 10. Money goes in with the best of it — and every fold is profit too.",
-        "text": "Strong value — 75% equity vs Ivey's range. Betting is correct.",
+        "plain":
+            "Betting with the goods: if someone calls, your hand wins about 8 times in 10. Money goes in with the best of it — and every fold is profit too.",
+        "text":
+            "Strong value — 75% equity vs Ivey's range. Betting is correct.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c 9s → 75% equity when called.",
-          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor."
+          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Exact count — every possible holding and runout was enumerated, so there's no simulation noise.",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c",
-            "9s"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c", "9s"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 343056057
-        }
-      ]
+          "seed": 343056057,
+        },
+      ],
     },
     "bluffRaise": {
       "review": {
@@ -982,13 +868,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -997,35 +879,30 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.3,
         "potOdds": 0.5714285714285714,
         "evChips": -95,
-        "plain": "This is a bluff: if you get called, your hand only wins about 1 time in 3. The bet makes money only when opponents fold — fine as a plan, just know that's the plan.",
-        "text": "Aggressive: only 30% equity if called. Works as a bluff but relies on folds.",
+        "plain":
+            "This is a bluff: if you get called, your hand only wins about 1 time in 3. The bet makes money only when opponents fold — fine as a plan, just know that's the plan.",
+        "text":
+            "Aggressive: only 30% equity if called. Works as a bluff but relies on folds.",
         "steps": [
           "54s vs Ivey's range on Kh 7d 2c → 30% equity when called.",
-          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor."
+          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±4.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "5h",
-            "4h"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["5h", "4h"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 3645068569
-        }
-      ]
+          "seed": 3645068569,
+        },
+      ],
     },
     "solidBet": {
       "review": {
@@ -1070,13 +947,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -1085,35 +958,30 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.5,
         "potOdds": 0.2857142857142857,
         "evChips": 30,
-        "plain": "A solid bet: when called, your hand wins about 5 times in 10, and every fold you pick up is pure profit on top.",
-        "text": "50% equity vs Ivey's range — a reasonable bet — worse hands may call, and every fold wins you the pot.",
+        "plain":
+            "A solid bet: when called, your hand wins about 5 times in 10, and every fold you pick up is pure profit on top.",
+        "text":
+            "50% equity vs Ivey's range — a reasonable bet — worse hands may call, and every fold wins you the pot.",
         "steps": [
           "QJs vs Ivey's range on Kh 7d 2c → 50% equity when called.",
-          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor."
+          "A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the \"called\" floor.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.4% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "Qs",
-            "Js"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["Qs", "Js"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2247856088
-        }
-      ]
+          "seed": 2247856088,
+        },
+      ],
     },
     "preflopFieldCall": {
       "review": {
@@ -1170,7 +1038,7 @@ const Map<String, Object?> kCoachRef = {
           "65s",
           "ATo",
           "KTo",
-          "QTo"
+          "QTo",
         ],
         "board": [],
         "opponents": 5,
@@ -1181,33 +1049,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.55,
         "potOdds": 0.4,
         "evChips": 7.5000000000000036,
-        "plain": "You paid 1 bb to win a pot of 2.5 bb — you need to win about 1 time in 2.5. Your hand wins about 6 times in 10 — comfortably more than you need. Good call.",
-        "text": "55% equity vs the 5-player field, needing 40% — a clear call worth +0.4 bb.",
+        "plain":
+            "You paid 1 bb to win a pot of 2.5 bb — you need to win about 1 time in 2.5. Your hand wins about 6 times in 10 — comfortably more than you need. Good call.",
+        "text":
+            "55% equity vs the 5-player field, needing 40% — a clear call worth +0.4 bb.",
         "steps": [
           "AKs vs the 5-player field on a pre-flop board → 55% equity.",
           "Pot 30 + your call 20 = 50; pot odds = 20/50 = 40%.",
           "EV(call) = 55% × 50 − 20 ≈ 8 chips (0.4 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Equity is run against 5 opponents as random hands (1600-trial sim) — more players, lower equity.",
           "Simulation precision: ±2.4% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "field",
-          "hero": [
-            "As",
-            "Ks"
-          ],
+          "hero": ["As", "Ks"],
           "board": [],
           "opponents": 5,
           "iters": 1600,
-          "seed": 4033492258
-        }
-      ]
+          "seed": 4033492258,
+        },
+      ],
     },
     "escalation": {
       "review": {
@@ -1252,13 +1119,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -1267,52 +1130,40 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.36,
         "potOdds": 0.3333333333333333,
         "evChips": 8,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — just barely enough. A close call, not a mistake.",
-        "text": "36% equity vs ~33% needed — a marginal, close call against Ivey's range.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — just barely enough. A close call, not a mistake.",
+        "text":
+            "36% equity vs ~33% needed — a marginal, close call against Ivey's range.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 36% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 36% × 300 − 100 ≈ 8 chips (0.4 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±1.2% on the equity (6,400 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
+          "seed": 4129404802,
         },
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 6400,
-          "seed": 4129404803
-        }
-      ]
+          "seed": 4129404803,
+        },
+      ],
     },
     "storedRange": {
       "review": {
@@ -1320,18 +1171,8 @@ const Map<String, Object?> kCoachRef = {
         "kind": "decision",
         "villainName": "Ivey",
         "villainArchetype": "TAG",
-        "villainRange": [
-          "AA",
-          "KK",
-          "AKs",
-          "AKo",
-          "QQ"
-        ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "villainRange": ["AA", "KK", "AKs", "AKo", "QQ"],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -1340,37 +1181,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.8,
         "potOdds": 0.3333333333333333,
         "evChips": 140,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 8 times in 10 — comfortably more than you need. Good call.",
-        "text": "80% equity vs Ivey's range, needing 33% — a clear call worth +7.0 bb.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 8 times in 10 — comfortably more than you need. Good call.",
+        "text":
+            "80% equity vs Ivey's range, needing 33% — a clear call worth +7.0 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 80% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 80% × 300 − 100 ≈ 140 chips (7.0 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 34 combos (position + action).",
           "Exact count — every possible holding and runout was enumerated, so there's no simulation noise.",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 5,
           "iters": 1600,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "runnerThrows": {
       "review": {
@@ -1415,13 +1251,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -1430,37 +1262,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.5,
         "potOdds": 0.3333333333333333,
         "evChips": 50,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 5 times in 10 — comfortably more than you need. Good call.",
-        "text": "50% equity vs Ivey's range, needing 33% — a clear call worth +2.5 bb.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 5 times in 10 — comfortably more than you need. Good call.",
+        "text":
+            "50% equity vs Ivey's range, needing 33% — a clear call worth +2.5 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 50% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 50% × 300 − 100 ≈ 50 chips (2.5 bb). EV(fold) = 0.",
-          "Because EV > 0, calling beats folding."
+          "Because EV > 0, calling beats folding.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±0.0% on the equity (0 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "relaxedBadCall": {
       "review": {
@@ -1505,13 +1332,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": true,
@@ -1520,37 +1343,32 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.29,
         "potOdds": 0.3333333333333333,
         "evChips": -13,
-        "plain": "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — not enough. Over time this call loses money; folding is better.",
-        "text": "Against Ivey's range your AKs has only 29% equity, but calling needs 33%. This call costs about -0.7 bb — folding is better.",
+        "plain":
+            "You paid 5 bb to win a pot of 15 bb — you need to win about 1 time in 3. Your hand wins about 1 time in 3 — not enough. Over time this call loses money; folding is better.",
+        "text":
+            "Against Ivey's range your AKs has only 29% equity, but calling needs 33%. This call costs about -0.7 bb — folding is better.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 29% equity.",
           "Pot 200 + your call 100 = 300; pot odds = 100/300 = 33%.",
           "EV(call) = 29% × 300 − 100 ≈ -13 chips (-0.7 bb). EV(fold) = 0.",
-          "Because EV < 0, folding is the higher-EV play."
+          "Because EV < 0, folding is the higher-EV play.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±1.0% on the equity (4,000 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 4000,
-          "seed": 4129404802
-        }
-      ]
+          "seed": 4129404802,
+        },
+      ],
     },
     "strictFold": {
       "review": {
@@ -1595,13 +1413,9 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
@@ -1610,112 +1424,83 @@ const Map<String, Object?> kCoachRef = {
         "equity": 0.42,
         "potOdds": 0.3333333333333333,
         "evChips": 26,
-        "plain": "You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 1 time in 2. That call was worth about +1.3 bb.",
-        "text": "Against Ivey's range your AKs has 42% equity and you're getting 33% pot odds — calling is worth about +1.3 bb.",
+        "plain":
+            "You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 1 time in 2. That call was worth about +1.3 bb.",
+        "text":
+            "Against Ivey's range your AKs has 42% equity and you're getting 33% pot odds — calling is worth about +1.3 bb.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 42% equity.",
           "Pot 200 + call 100 = 300; pot odds = 33%.",
-          "EV(call) = 42% × 300 − 100 ≈ +26 chips (1.3 bb) > EV(fold)=0."
+          "EV(call) = 42% × 300 − 100 ≈ +26 chips (1.3 bb) > EV(fold)=0.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±1.0% on the equity (1,600 trials).",
-          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises)."
-        ]
+          "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2289540689
-        }
-      ]
+          "seed": 2289540689,
+        },
+      ],
     },
     "standardFoldNoNote": {
       "review": null,
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2289540689
-        }
-      ]
+          "seed": 2289540689,
+        },
+      ],
     },
     "foldFree": {
       "review": null,
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2289540689
-        }
-      ]
+          "seed": 2289540689,
+        },
+      ],
     },
     "checkPreflop": {
       "review": null,
       "calls": [
         {
           "mode": "field",
-          "hero": [
-            "As",
-            "Ks"
-          ],
+          "hero": ["As", "Ks"],
           "board": [],
           "opponents": 5,
           "iters": 1600,
-          "seed": 2534460842
-        }
-      ]
+          "seed": 2534460842,
+        },
+      ],
     },
     "checkFlopMedium": {
       "review": null,
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2596157304
-        }
-      ]
+          "seed": 2596157304,
+        },
+      ],
     },
     "checkFlopStrong": {
       "review": {
@@ -1760,167 +1545,145 @@ const Map<String, Object?> kCoachRef = {
           "Q9s",
           "T8s",
           "87s",
-          "KJo"
+          "KJo",
         ],
-        "board": [
-          "Kh",
-          "7d",
-          "2c"
-        ],
+        "board": ["Kh", "7d", "2c"],
         "opponents": 1,
         "multiway": false,
         "blocking": false,
         "verdict": "mistake",
         "title": "Missed value",
         "equity": 0.9,
-        "plain": "Your hand wins about 9 times in 10 — that's a hand that wants to bet. Checking here gives up a clear value bet: when you're ahead this often, put chips in and get paid.",
-        "text": "90% equity checked back — a value bet (~66 chips) was available.",
+        "plain":
+            "Your hand wins about 9 times in 10 — that's a hand that wants to bet. Checking here gives up a clear value bet: when you're ahead this often, put chips in and get paid.",
+        "text":
+            "90% equity checked back — a value bet (~66 chips) was available.",
         "steps": [
           "AKs vs Ivey's range on Kh 7d 2c → 90% equity.",
           "A ~66% pot bet (66) gets called by enough worse hands to profit when you win this often.",
-          "Checking wins the same pot but never builds it — EV left behind grows with your win chance."
+          "Checking wins the same pot but never builds it — EV left behind grows with your win chance.",
         ],
         "expert": [
           "Ivey (TAG) range ≈ 204 combos (position + action).",
           "Simulation precision: ±2.0% on the equity (1,600 trials).",
           "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).",
-          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel."
-        ]
+          "Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel.",
+        ],
       },
       "calls": [
         {
           "mode": "range",
-          "hero": [
-            "As",
-            "Ks"
-          ],
-          "board": [
-            "Kh",
-            "7d",
-            "2c"
-          ],
+          "hero": ["As", "Ks"],
+          "board": ["Kh", "7d", "2c"],
           "rangeLen": 37,
           "iters": 1600,
-          "seed": 2596157304
-        }
-      ]
-    }
+          "seed": 2596157304,
+        },
+      ],
+    },
   },
   "bots": {
     "1:TAG:Fold": "Ivey folds — their range no longer matters this hand.",
-    "1:TAG:Check": "A check from Ivey usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
-    "1:TAG:Call": "A call keeps Ivey's possible hands wide — their strongest hands included — proceed with caution.",
-    "1:TAG:All-In": "A call keeps Ivey's possible hands wide — their strongest hands included — proceed with caution.",
-    "1:TAG:Bet": "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "1:TAG:Raise": "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "1:TAG:SB": "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "1:TAG:null": "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "2:Station:Fold": "Negreanu folds — their range no longer matters this hand.",
-    "2:Station:Check": "A check from Negreanu usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
-    "2:Station:Call": "Negreanu (Station) calls with almost anything — their possible hands stay very wide and weak. Bet your good hands relentlessly; never bluff.",
-    "2:Station:All-In": "Negreanu (Station) calls with almost anything — their possible hands stay very wide and weak. Bet your good hands relentlessly; never bluff.",
-    "2:Station:Bet": "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
-    "2:Station:Raise": "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
-    "2:Station:SB": "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
-    "2:Station:null": "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
+    "1:TAG:Check":
+        "A check from Ivey usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
+    "1:TAG:Call":
+        "A call keeps Ivey's possible hands wide — their strongest hands included — proceed with caution.",
+    "1:TAG:All-In":
+        "A call keeps Ivey's possible hands wide — their strongest hands included — proceed with caution.",
+    "1:TAG:Bet":
+        "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "1:TAG:Raise":
+        "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "1:TAG:SB":
+        "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "1:TAG:null":
+        "Ivey (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "2:Station:Fold":
+        "Negreanu folds — their range no longer matters this hand.",
+    "2:Station:Check":
+        "A check from Negreanu usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
+    "2:Station:Call":
+        "Negreanu (Station) calls with almost anything — their possible hands stay very wide and weak. Bet your good hands relentlessly; never bluff.",
+    "2:Station:All-In":
+        "Negreanu (Station) calls with almost anything — their possible hands stay very wide and weak. Bet your good hands relentlessly; never bluff.",
+    "2:Station:Bet":
+        "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
+    "2:Station:Raise":
+        "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
+    "2:Station:SB":
+        "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
+    "2:Station:null":
+        "Negreanu (Station) almost never raises — when they do, it's usually close to the best possible hand.",
     "3:LAG:Fold": "Polk folds — their range no longer matters this hand.",
-    "3:LAG:Check": "A check from Polk usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
-    "3:LAG:Call": "Polk (LAG) calls with lots of hands, often planning to steal the pot later — keep betting your good hands; expect them to call you down with medium ones.",
-    "3:LAG:All-In": "Polk (LAG) calls with lots of hands, often planning to steal the pot later — keep betting your good hands; expect them to call you down with medium ones.",
-    "3:LAG:Bet": "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
-    "3:LAG:Raise": "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
-    "3:LAG:SB": "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
-    "3:LAG:null": "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
+    "3:LAG:Check":
+        "A check from Polk usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
+    "3:LAG:Call":
+        "Polk (LAG) calls with lots of hands, often planning to steal the pot later — keep betting your good hands; expect them to call you down with medium ones.",
+    "3:LAG:All-In":
+        "Polk (LAG) calls with lots of hands, often planning to steal the pot later — keep betting your good hands; expect them to call you down with medium ones.",
+    "3:LAG:Bet":
+        "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
+    "3:LAG:Raise":
+        "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
+    "3:LAG:SB":
+        "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
+    "3:LAG:null":
+        "Polk (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.",
     "4:Nit:Fold": "Selbst folds — their range no longer matters this hand.",
-    "4:Nit:Check": "A check from Selbst usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
-    "4:Nit:Call": "Even a Nit's call means a fairly strong hand — though they'd raise their very best. Slow down with so-so hands.",
-    "4:Nit:All-In": "Even a Nit's call means a fairly strong hand — though they'd raise their very best. Slow down with so-so hands.",
-    "4:Nit:Bet": "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
-    "4:Nit:Raise": "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
-    "4:Nit:SB": "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
-    "4:Nit:null": "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
+    "4:Nit:Check":
+        "A check from Selbst usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
+    "4:Nit:Call":
+        "Even a Nit's call means a fairly strong hand — though they'd raise their very best. Slow down with so-so hands.",
+    "4:Nit:All-In":
+        "Even a Nit's call means a fairly strong hand — though they'd raise their very best. Slow down with so-so hands.",
+    "4:Nit:Bet":
+        "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
+    "4:Nit:Raise":
+        "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
+    "4:Nit:SB":
+        "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
+    "4:Nit:null":
+        "A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.",
     "5:TAG:Fold": "Hellmuth folds — their range no longer matters this hand.",
-    "5:TAG:Check": "A check from Hellmuth usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
-    "5:TAG:Call": "A call keeps Hellmuth's possible hands wide — their strongest hands included — proceed with caution.",
-    "5:TAG:All-In": "A call keeps Hellmuth's possible hands wide — their strongest hands included — proceed with caution.",
-    "5:TAG:Bet": "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "5:TAG:Raise": "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "5:TAG:SB": "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
-    "5:TAG:null": "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too."
+    "5:TAG:Check":
+        "A check from Hellmuth usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.",
+    "5:TAG:Call":
+        "A call keeps Hellmuth's possible hands wide — their strongest hands included — proceed with caution.",
+    "5:TAG:All-In":
+        "A call keeps Hellmuth's possible hands wide — their strongest hands included — proceed with caution.",
+    "5:TAG:Bet":
+        "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "5:TAG:Raise":
+        "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "5:TAG:SB":
+        "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
+    "5:TAG:null":
+        "Hellmuth (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.",
   },
   "guess": {
-    "aaKk": {
-      "accuracy": 0.5454545454545454,
-      "precision": 0.5,
-      "recall": 0.6
-    },
-    "same": {
-      "accuracy": 1,
-      "precision": 1,
-      "recall": 1
-    },
-    "miss": {
-      "accuracy": 0,
-      "precision": 0,
-      "recall": 0
-    },
-    "dupes": {
-      "accuracy": 1,
-      "precision": 1,
-      "recall": 1
-    },
+    "aaKk": {"accuracy": 0.5454545454545454, "precision": 0.5, "recall": 0.6},
+    "same": {"accuracy": 1, "precision": 1, "recall": 1},
+    "miss": {"accuracy": 0, "precision": 0, "recall": 0},
+    "dupes": {"accuracy": 1, "precision": 1, "recall": 1},
     "wide": {
       "accuracy": 0.42857142857142855,
       "precision": 0.2727272727272727,
-      "recall": 1
+      "recall": 1,
     },
-    "empty": {
-      "accuracy": 0,
-      "precision": 0,
-      "recall": 0
-    },
+    "empty": {"accuracy": 0, "precision": 0, "recall": 0},
     "big": {
       "accuracy": 0.6,
       "precision": 0.5333333333333333,
-      "recall": 0.6857142857142857
-    }
+      "recall": 0.6857142857142857,
+    },
   },
   "seats": [
-    {
-      "id": 0,
-      "name": "You",
-      "position": "UTG"
-    },
-    {
-      "id": 1,
-      "name": "Ivey",
-      "archetype": "TAG",
-      "position": "MP"
-    },
-    {
-      "id": 2,
-      "name": "Negreanu",
-      "archetype": "Station",
-      "position": "CO"
-    },
-    {
-      "id": 3,
-      "name": "Polk",
-      "archetype": "LAG",
-      "position": "BTN"
-    },
-    {
-      "id": 4,
-      "name": "Selbst",
-      "archetype": "Nit",
-      "position": "SB"
-    },
-    {
-      "id": 5,
-      "name": "Hellmuth",
-      "archetype": "TAG",
-      "position": "BB"
-    }
+    {"id": 0, "name": "You", "position": "UTG"},
+    {"id": 1, "name": "Ivey", "archetype": "TAG", "position": "MP"},
+    {"id": 2, "name": "Negreanu", "archetype": "Station", "position": "CO"},
+    {"id": 3, "name": "Polk", "archetype": "LAG", "position": "BTN"},
+    {"id": 4, "name": "Selbst", "archetype": "Nit", "position": "SB"},
+    {"id": 5, "name": "Hellmuth", "archetype": "TAG", "position": "BB"},
   ],
-  "firstOpp": 1
+  "firstOpp": 1,
 };

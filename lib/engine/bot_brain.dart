@@ -170,13 +170,14 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
     if (!facingRaise) {
       if (la.canCheck) {
         // BB with the option: raise premiums over limps, otherwise check.
-        final f = min(
-          1.0,
-          (_bbVsSbThreebet()[label] ?? 0) * dial.threebet,
-        );
+        final f = min(1.0, (_bbVsSbThreebet()[label] ?? 0) * dial.threebet);
         if (rnd < f && la.canRaise) {
           final limpers = _limpers(s, bb);
-          final to = _clampInt((3 + limpers) * bb, la.minRaiseTo, la.maxRaiseTo);
+          final to = _clampInt(
+            (3 + limpers) * bb,
+            la.minRaiseTo,
+            la.maxRaiseTo,
+          );
           return BotDecision(
             action: _betOrRaise(s, to),
             range: chartLabels(_bbVsSbThreebet(), 0.25),
@@ -252,11 +253,15 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
         fc = min(1, (f3 + fc) * dial.call);
         f3 = label == 'AA' || label == 'KK' ? 0.5 : 0;
       } else {
-        if (archetype == Archetype.nit && f3 < 0.9) f3 *= 0.3; // drop bluff 3-bets
+        if (archetype == Archetype.nit && f3 < 0.9) {
+          f3 *= 0.3; // drop bluff 3-bets
+        }
         f3 = min(1, f3 * dial.threebet);
         fc = min(1 - f3, fc * dial.call);
       }
-      if (kPremium.contains(label)) f3 = max(f3, 0.85); // premiums stay aggressive
+      if (kPremium.contains(label)) {
+        f3 = max(f3, 0.85); // premiums stay aggressive
+      }
       if (rnd < f3 && la.canRaise) {
         final to = _clampInt(s.currentBet * 3.2, la.minRaiseTo, la.maxRaiseTo);
         return BotDecision(
@@ -343,8 +348,10 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
 
   // Equity vs the opponent's NARROWED range heads-up; vs random as the
   // multiway / no-range fallback.
-  final liveOpps = s.players.where((q) => !q.hasFolded && q.id != seat).toList();
-  final soleOppRange = liveOpps.length == 1 ? s.botRanges[liveOpps[0].id] : null;
+  final liveOpps =
+      s.players.where((q) => !q.hasFolded && q.id != seat).toList();
+  final soleOppRange =
+      liveOpps.length == 1 ? s.botRanges[liveOpps[0].id] : null;
   double e;
   if (soleOppRange != null && soleOppRange.isNotEmpty) {
     final blocked = <int>{...holeInts, ...boardInts};
@@ -353,13 +360,20 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       for (final (a, b) in labelToCombos(l)) {
         final ai = cardToInt(a);
         final bi = cardToInt(b);
-        if (!blocked.contains(ai) && !blocked.contains(bi)) combos.add([ai, bi]);
+        if (!blocked.contains(ai) && !blocked.contains(bi)) {
+          combos.add([ai, bi]);
+        }
       }
     }
     e =
         combos.isNotEmpty
-            ? equityVsRange(holeInts, boardInts, combos, iters: 260, rng: rng)
-                .equity
+            ? equityVsRange(
+              holeInts,
+              boardInts,
+              combos,
+              iters: 260,
+              rng: rng,
+            ).equity
             : equityVsRandom(holeInts, boardInts, iters: 320, rng: rng).equity;
   } else {
     e = equityVsRandom(holeInts, boardInts, iters: 320, rng: rng).equity;
@@ -466,10 +480,7 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
     );
   }
   // Draws call a little wider (implied-odds proxy); rivers don't.
-  final effE = min(
-    0.95,
-    e + (s.street != Street.river ? draw * 0.05 : 0),
-  );
+  final effE = min(0.95, e + (s.street != Street.river ? draw * 0.05 : 0));
   final callThreshold = needed * (1 - stickiness * 0.5);
   if (effE >= callThreshold && la.canCall) {
     return BotDecision(

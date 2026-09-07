@@ -575,6 +575,43 @@ void main() {
       expectFrames(buildReplayFrames(h), kRefAllinFrames);
     });
 
+    test('fromJson keeps fractional pot amounts (imported \$ hands)', () {
+      // Desktop JSON.parse keeps 2.5; rounding it to 3 changed the replay's
+      // closing line ("win 6 bb." instead of "win 5 bb."). Reference from
+      // buildReplayFrames/formatHand in Node.
+      const json =
+          '{"id":7,"startedAt":1781870400000,"button":0,"sb":0.25,"bb":0.5,'
+          '"sbSeat":1,"bbSeat":0,"seats":[{"seat":0,"name":"You","stack":50,'
+          '"isHero":true,"position":"BB"},{"seat":1,"name":"Ivey","stack":50,'
+          '"isHero":false,"position":"BTN"}],"holes":{"0":["Ah","Kd"]},'
+          '"actions":[{"street":"preflop","seat":1,"name":"Ivey","type":"raise",'
+          '"amount":1.5,"allIn":false},{"street":"preflop","seat":0,"name":"You",'
+          '"type":"raise","amount":4.5,"allIn":false},{"street":"preflop",'
+          '"seat":1,"name":"Ivey","type":"fold","amount":0,"allIn":false}],'
+          '"board":[],"potResults":[{"winners":[0],"amount":2.5,'
+          '"potLabel":"Pot"}],"heroNet":1.5}';
+      final h = HHHand.fromJson(
+        (jsonDecode(json) as Map).cast<String, Object?>(),
+      );
+      expect(h.potResults[0].amount, 2.5);
+      expect(jsonEncode(h.toJson()), json);
+      final frames = buildReplayFrames(h);
+      expect(frames.map((f) => [f.text, f.pot]).toList(), [
+        ['Blinds 0.5/1 bb posted.', 0.75],
+        ['Ivey raises to 3 bb', 2],
+        ['You raises to 9 bb', 6],
+        ['Ivey folds', 6],
+        ['You win 5 bb.', 6],
+      ]);
+      // formatHand rounds each share like the desktop (Math.round(2.5) = 3,
+      // minus the 3 uncalled): "Total pot 0", hero "mucked".
+      final text = formatHand(h);
+      expect(text, contains('Uncalled bet (3) returned to You'));
+      expect(text, contains('Total pot 0 | Rake 0'));
+      expect(text, contains('Seat 1: You (big blind) mucked'));
+      expect(text, contains('Seat 2: Ivey (small blind) folded before Flop'));
+    });
+
     test('fromJson tolerates a minimal payload', () {
       final h = HHHand.fromJson({
         'id': 1,

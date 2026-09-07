@@ -343,10 +343,34 @@ List<HandLabel> chartLabels05(Map<String, num> chart) => [
     if (e.value >= 0.5) e.key,
 ];
 
+/// Re-key a chart in JavaScript object enumeration order: integer-like keys
+/// (the pairs `22`..`99`) first in ascending numeric order, then every other
+/// key in insertion order. The generated charts in `lib/data` are already
+/// emitted this way; this is only needed for maps built at runtime (the
+/// desktop's `{ ...call, ...threebet }` spread), because label order feeds
+/// [strengthSlice]'s stable sort and hence the grade range.
+Map<String, T> jsObjectKeyOrder<T>(Map<String, T> m) {
+  final numeric = <String>[];
+  final other = <String>[];
+  for (final k in m.keys) {
+    (_isJsArrayIndex(k) ? numeric : other).add(k);
+  }
+  numeric.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+  return {
+    for (final k in numeric) k: m[k] as T,
+    for (final k in other) k: m[k] as T,
+  };
+}
+
+final RegExp _jsArrayIndex = RegExp(r'^(0|[1-9][0-9]*)$');
+bool _isJsArrayIndex(String k) =>
+    _jsArrayIndex.hasMatch(k) && k.length <= 10 && int.parse(k) < 4294967295;
+
 int _rint(Random rng, int a, int b) => a + rng.nextInt(b - a + 1);
 double _r1(double x) => jsRound(x * 10) / 10;
 int _pct(double x) => jsRound(x * 100).toInt();
-String _capital(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+String _capital(String s) =>
+    s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
 List<DrillSeatView> _fullSeats(
   Position heroPos,
@@ -390,7 +414,8 @@ List<Position> _nonBlinds(Iterable<Position> ps) => [
     if (p != Position.sb && p != Position.bb) p,
 ];
 
-List<int> _ints(List<Card> cards) => cards.map(cardToInt).toList(growable: false);
+List<int> _ints(List<Card> cards) =>
+    cards.map(cardToInt).toList(growable: false);
 
 List<Card> _postflopBoard(List<Card> deck, Street street) {
   final n =
@@ -577,10 +602,11 @@ Puzzle _genVsRaise(Random rng) {
   final f3 = threebet[label] ?? 0.0;
   final fc = call[label] ?? 0.0;
   final ff = max(0.0, 1 - f3 - fc);
-  final freqs = _stableSortedDesc<(DrillAction, double)>(
-    [(DrillAction.raise, f3), (DrillAction.call, fc), (DrillAction.fold, ff)],
-    (e) => e.$2,
-  );
+  final freqs = _stableSortedDesc<(DrillAction, double)>([
+    (DrillAction.raise, f3),
+    (DrillAction.call, fc),
+    (DrillAction.fold, ff),
+  ], (e) => e.$2);
   final best = freqs[0].$1;
   final accept = [
     for (final (a, f) in freqs)
@@ -653,12 +679,15 @@ Puzzle _genPostflopBet(Random rng) {
   final deck = shuffle(makeDeck(), rng: rng);
   final hole = <Card>[deck[0], deck[1]];
   final label = cardsToLabel(hole[0], hole[1]);
-  final street = const [Street.flop, Street.turn, Street.river][_rint(rng, 0, 2)];
+  final street =
+      const [Street.flop, Street.turn, Street.river][_rint(rng, 0, 2)];
   final board = _postflopBoard(deck, street);
 
   final heroPos = rng.nextDouble() < 0.5 ? Position.bb : Position.btn;
   final villainPos = heroPos == Position.bb ? Position.co : Position.bb;
-  final potBeforeBet = _r1(5 + _rint(rng, 0, 8).toDouble()); // single-raised-ish pot
+  final potBeforeBet = _r1(
+    5 + _rint(rng, 0, 8).toDouble(),
+  ); // single-raised-ish pot
   final betFrac = const [0.5, 0.66, 1.0][_rint(rng, 0, 2)];
   final bet = _r1(potBeforeBet * betFrac);
   final pot = _r1(potBeforeBet + bet);
@@ -691,9 +720,7 @@ Puzzle _genPostflopBet(Random rng) {
   if (eq >= breakEven + band) {
     best = DrillAction.call;
     accept =
-        eq > 0.72
-            ? [DrillAction.call, DrillAction.raise]
-            : [DrillAction.call];
+        eq > 0.72 ? [DrillAction.call, DrillAction.raise] : [DrillAction.call];
   } else if (eq <= breakEven - band) {
     best = DrillAction.fold;
     accept = [DrillAction.fold];
@@ -884,7 +911,11 @@ Puzzle _genPostflopCheck(Random rng) {
     best: best,
     accept: accept,
     rationale:
-        'With ~${_pct(eq)}% equity vs ${villainPos.label}\'s range, ${accept.length == 2 ? 'betting and checking are both fine — it\'s a marginal value/pot-control spot.' : best == DrillAction.bet ? 'you\'re ahead often enough to bet for value.' : 'you don\'t have enough to value bet; check and keep the pot small.'}',
+        'With ~${_pct(eq)}% equity vs ${villainPos.label}\'s range, ${accept.length == 2
+            ? 'betting and checking are both fine — it\'s a marginal value/pot-control spot.'
+            : best == DrillAction.bet
+            ? 'you\'re ahead often enough to bet for value.'
+            : 'you don\'t have enough to value bet; check and keep the pot small.'}',
     equity: eq,
     difficulty: 2,
     gradeRange: topPercentRange(kStreetRangePct[street]!).toList(),
@@ -978,9 +1009,7 @@ Puzzle _genThreeBetPot(Random rng) {
   if (eq >= breakEven + band) {
     best = DrillAction.call;
     accept =
-        eq > 0.62
-            ? [DrillAction.call, DrillAction.raise]
-            : [DrillAction.call];
+        eq > 0.62 ? [DrillAction.call, DrillAction.raise] : [DrillAction.call];
   } else if (eq <= breakEven - band) {
     best = DrillAction.fold;
     accept = [DrillAction.fold];
@@ -1074,9 +1103,12 @@ Puzzle _genFacingCheckRaise(Random rng) {
   const villainPos = Position.bb;
 
   // BB defended, then check-raised: strong slice of the defend range + bluff tail.
-  // (Map spread: a label in both charts takes the 3-bet frequency, as desktop.)
+  // (Object spread: a label in both charts takes the 3-bet frequency, and the
+  // merged keys enumerate in JS order — pairs 22..99 first — as desktop.)
   final bbVsBtn = kVsRfi100['BB_vs_BTN']!;
-  final defend = chartLabels05({...bbVsBtn['call']!, ...bbVsBtn['threebet']!});
+  final defend = chartLabels05(
+    jsObjectKeyOrder({...bbVsBtn['call']!, ...bbVsBtn['threebet']!}),
+  );
   final villLabels = strengthSlice(defend, board, 0.3, true);
 
   const potPre = 5.5;
@@ -1105,9 +1137,7 @@ Puzzle _genFacingCheckRaise(Random rng) {
   if (eq >= breakEven + band) {
     best = DrillAction.call;
     accept =
-        eq > 0.68
-            ? [DrillAction.call, DrillAction.raise]
-            : [DrillAction.call];
+        eq > 0.68 ? [DrillAction.call, DrillAction.raise] : [DrillAction.call];
   } else if (eq <= breakEven - band) {
     best = DrillAction.fold;
     accept = [DrillAction.fold];
@@ -1178,7 +1208,11 @@ Puzzle _genFacingCheckRaise(Random rng) {
     best: best,
     accept: accept,
     rationale:
-        'A check-raise represents the strong part of ${villainPos.label}\'s defend range plus some draws. Your $label has ~${_pct(eq)}% equity against that, needing ${_pct(breakEven)}%. ${best == DrillAction.call ? 'Continue — folding here would let check-raises print money against your c-bets.' : best == DrillAction.fold ? 'Let this one go — c-betting means sometimes folding to check-raises; that\'s fine when the hand has this little.' : 'Continue.'}',
+        'A check-raise represents the strong part of ${villainPos.label}\'s defend range plus some draws. Your $label has ~${_pct(eq)}% equity against that, needing ${_pct(breakEven)}%. ${best == DrillAction.call
+            ? 'Continue — folding here would let check-raises print money against your c-bets.'
+            : best == DrillAction.fold
+            ? 'Let this one go — c-betting means sometimes folding to check-raises; that\'s fine when the hand has this little.'
+            : 'Continue.'}',
     equity: eq,
     potOdds: breakEven,
     difficulty: (eq - breakEven).abs() < 0.06 ? 3 : 2,
@@ -1801,12 +1835,12 @@ Puzzle generatePushFold({Random? rng}) {
 
   if (rng.nextDouble() < 0.6) {
     // Open-shove: folded to hero late
-    final heroPos = const [
-      Position.mp,
-      Position.co,
-      Position.btn,
-      Position.sb,
-    ][_rint(rng, 0, 3)];
+    final heroPos =
+        const [Position.mp, Position.co, Position.btn, Position.sb][_rint(
+          rng,
+          0,
+          3,
+        )];
     final table = kNashShove[stack]?[heroPos.label];
     final freq = table?[label] ?? 0.0;
     final g = gradeFromFreq(
@@ -1880,11 +1914,8 @@ Puzzle generatePushFold({Random? rng}) {
   }
 
   // Call a shove from the BB
-  final shoverPos = const [Position.btn, Position.co, Position.sb][_rint(
-    rng,
-    0,
-    2,
-  )];
+  final shoverPos =
+      const [Position.btn, Position.co, Position.sb][_rint(rng, 0, 2)];
   final table = kNashCall[stack]?['${shoverPos.label}>BB'];
   final freq = table?[label] ?? 0.0;
   final g = gradeFromFreq(

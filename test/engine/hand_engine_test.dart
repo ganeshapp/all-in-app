@@ -1167,7 +1167,7 @@ void main() {
         const deckLeft = {0: 40, 3: 36, 4: 34, 5: 32};
         expect(state.deck.length, deckLeft[state.board.length]);
         final summary = state.summary!;
-        final dist = summary.potResults.fold(0, (a, b) => a + b.amount);
+        final dist = summary.potResults.fold<num>(0, (a, b) => a + b.amount);
         expect(dist, state.pot, reason: 'pot fully distributed');
         expect(summary.handNumber, state.handNumber);
         expect(
@@ -1294,7 +1294,7 @@ void main() {
           final totalAfter = state.players.fold(0, (a, p) => a + p.stack);
           expect(totalAfter, totalBefore, reason: '$name: chip conservation');
           expect(state.players.every((p) => p.stack >= 0), isTrue);
-          final dist = state.summary!.potResults.fold(
+          final dist = state.summary!.potResults.fold<num>(
             0,
             (a, b) => a + b.amount,
           );

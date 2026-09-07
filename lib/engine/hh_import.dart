@@ -106,11 +106,12 @@ class ImportAnalysis {
 
 final RegExp _cardRe = RegExp(r'^[2-9TJQKA][cdhs]$');
 
-List<Card> _parseCards(String inside) => inside
-    .trim()
-    .split(RegExp(r'\s+'))
-    .where((c) => _cardRe.hasMatch(c))
-    .toList();
+List<Card> _parseCards(String inside) =>
+    inside
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((c) => _cardRe.hasMatch(c))
+        .toList();
 
 final RegExp _moneyChars = RegExp(r'[$,]');
 final RegExp _floatPrefix = RegExp(
@@ -151,12 +152,13 @@ String _jsNumString(num v) {
 /// [now] (epoch ms) is used as `startedAt` for hands whose header carries no
 /// date (desktop `Date.now()`); defaults to the wall clock.
 ParseResult parsePokerStars(String text, {int? now}) {
-  final blocks = text
-      .replaceAll('\r', '')
-      .split(RegExp(r'\n{2,}(?=PokerStars )'))
-      .map((b) => b.trim())
-      .where((b) => b.startsWith('PokerStars '))
-      .toList();
+  final blocks =
+      text
+          .replaceAll('\r', '')
+          .split(RegExp(r'\n{2,}(?=PokerStars )'))
+          .map((b) => b.trim())
+          .where((b) => b.startsWith('PokerStars '))
+          .toList();
   final hands = <ImportedHand>[];
   int skipped = 0;
   for (final block in blocks) {
@@ -242,16 +244,17 @@ ImportedHand? _parseOne(String block, int? now) {
   final sb = _num(hm[2]!);
   final bb = _num(hm[3]!);
   final dm = _dateRe.firstMatch(header);
-  final startedAt = dm != null
-      ? DateTime(
-          int.parse(dm[1]!),
-          int.parse(dm[2]!),
-          int.parse(dm[3]!),
-          int.parse(dm[4]!),
-          int.parse(dm[5]!),
-          int.parse(dm[6]!),
-        ).millisecondsSinceEpoch
-      : (now ?? DateTime.now().millisecondsSinceEpoch);
+  final startedAt =
+      dm != null
+          ? DateTime(
+            int.parse(dm[1]!),
+            int.parse(dm[2]!),
+            int.parse(dm[3]!),
+            int.parse(dm[4]!),
+            int.parse(dm[5]!),
+            int.parse(dm[6]!),
+          ).millisecondsSinceEpoch
+          : (now ?? DateTime.now().millisecondsSinceEpoch);
 
   final tm = lines.length > 1 ? _buttonRe.firstMatch(lines[1]) : null;
   final buttonSeatNo = tm != null ? int.parse(tm[1]!) : 1;
@@ -445,9 +448,7 @@ ImportedHand? _parseOne(String block, int? now) {
 
   final idStr = hm[1]!;
   return ImportedHand(
-    id: int.parse(
-      idStr.length > 6 ? idStr.substring(idStr.length - 6) : idStr,
-    ),
+    id: int.parse(idStr.length > 6 ? idStr.substring(idStr.length - 6) : idStr),
     startedAt: startedAt,
     button: buttonSeatNo - 1,
     sb: sb,
@@ -510,13 +511,14 @@ ImportAnalysis analyzeImported(List<ImportedHand> hands, {int? now}) {
       if (a.type == ActionType.call) {
         if (a.seat == hero.seat && a.amount > 0) {
           reviewed++;
-          final boardNow = street == Street.preflop
-              ? <Card>[]
-              : street == Street.flop
-              ? h.board.take(3).toList()
-              : street == Street.turn
-              ? h.board.take(4).toList()
-              : h.board.take(5).toList();
+          final boardNow =
+              street == Street.preflop
+                  ? <Card>[]
+                  : street == Street.flop
+                  ? h.board.take(3).toList()
+                  : street == Street.turn
+                  ? h.board.take(4).toList()
+                  : h.board.take(5).toList();
           final needed = a.amount / (pot + a.amount);
           final r = equityVsRandom(
             comboToInts((hole[0], hole[1])),

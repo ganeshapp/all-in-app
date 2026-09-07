@@ -1,0 +1,65 @@
+PokerStars Hand #100000000002: Hold'em No Limit (10/20) - 2026/06/19 12:05:00 ET
+Table 'T' 6-max Seat #1 is the button
+Seat 1: v1 (5000 in chips)
+Seat 2: v2 (5000 in chips)
+Seat 3: hero (5000 in chips)
+v2: posts small blind 10
+hero: posts big blind 20
+*** HOLE CARDS ***
+Dealt to hero [7h 2c]
+v1: raises 40 to 60
+v2: folds
+hero: calls 40
+*** FLOP *** [As Ks Qs]
+hero: checks
+v1: bets 500
+hero: calls 500
+*** TURN *** [As Ks Qs] [Js]
+hero: checks
+v1: bets 1000
+hero: calls 1000
+*** RIVER *** [As Ks Qs Js] [2d]
+hero: checks
+v1: bets 300
+hero: calls 300
+*** SHOW DOWN ***
+v1: shows [Ts 9s] (a straight flush)
+hero: mucks hand
+v1 collected 3730 from pot
+*** SUMMARY ***
+Total pot 3730 | Rake 0
+Board [As Ks Qs Js 2d]
+Seat 1: v1 (button) showed [Ts 9s] and won (3730) with a straight flush
+Seat 2: v2 (small blind) folded before Flop
+Seat 3: hero (big blind) mucked
+
+
+PokerStars Hand #100000000003: Hold'em No Limit (10/20) - 2026/06/19 12:06:00 ET
+Table 'T' 6-max Seat #2 is the button
+Seat 2: hero (2000 in chips)
+Seat 4: v1 (2000 in chips)
+hero: posts small blind 10
+v1: posts big blind 20
+*** HOLE CARDS ***
+Dealt to hero [Ah Ad]
+hero: raises 40 to 60
+v1: raises 1940 to 2000 and is all-in
+hero: calls 1940 and is all-in
+*** FLOP *** [2c 3d 8h]
+*** TURN *** [2c 3d 8h] [9c]
+*** RIVER *** [2c 3d 8h 9c] [Kd]
+*** SHOW DOWN ***
+hero: shows [Ah Ad] (a pair of Aces)
+v1: shows [Kc Qc] (a pair of Kings)
+hero collected 4000 from pot
+*** SUMMARY ***
+Total pot 4000 | Rake 0
+Board [2c 3d 8h 9c Kd]
+Seat 2: hero (small blind) showed [Ah Ad] and won (4000) with a pair of Aces
+Seat 4: v1 (big blind) showed [Kc Qc] and lost with a pair of Kings
+
+garbage block that is not a hand
+
+PokerStars Hand #5: broken header without blinds
+Seat 1: a (100 in chips)
+Seat 2: b (100 in chips)

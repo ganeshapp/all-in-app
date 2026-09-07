@@ -100,7 +100,7 @@ TableState _toRiver(Archetype arch, List<Card> hole, [int heroBets = 0]) {
   return s;
 }
 
-late final Map<String, dynamic> _ref =
+final Map<String, dynamic> _ref =
     jsonDecode(kBotBrainRefJson) as Map<String, dynamic>;
 Map<String, dynamic> _refPre(String k) =>
     (_ref['preflop'] as Map<String, dynamic>)[k] as Map<String, dynamic>;
@@ -200,10 +200,10 @@ void main() {
         final board = (t['board'] as List).cast<String>();
         final hole = (t['hole'] as List).cast<String>();
         expect(
-          drawStrength(
-            [cardToInt(hole[0]), cardToInt(hole[1])],
-            board.map(cardToInt).toList(),
-          ),
+          drawStrength([
+            cardToInt(hole[0]),
+            cardToInt(hole[1]),
+          ], board.map(cardToInt).toList()),
           t['draw'],
           reason: 'draw $hole on $board',
         );
@@ -212,8 +212,10 @@ void main() {
 
     test('documented quirks', () {
       List<int> ints(List<String> c) => c.map(cardToInt).toList();
-      // Empty board: nothing wet, highCard 0.
-      expect(boardTexture([]).wet, isFalse);
+      // Empty board: highCard 0, and "wet" — the desktop's flushy test is
+      // `max(suits) >= min(3, board.length)`, i.e. `0 >= 0` (never reached
+      // in play: boardTexture only runs postflop).
+      expect(boardTexture([]).wet, isTrue);
       expect(boardTexture([]).highCard, 0);
       // Ace counts low for connectivity: A23 is straighty.
       expect(boardTexture(ints(['Ah', '2d', '3c'])).wet, isTrue);
@@ -221,19 +223,39 @@ void main() {
       expect(boardTexture(ints(['Qd', 'Jd', '9d'])).wet, isTrue);
       expect(boardTexture(ints(['Kc', '8d', '3h'])).wet, isFalse);
       // River: no draws at all.
-      expect(drawStrength(ints(['As', 'Ks']), ints(['Qs', 'Js', '2s', '3d', '4h'])), 0);
+      expect(
+        drawStrength(ints(['As', 'Ks']), ints(['Qs', 'Js', '2s', '3d', '4h'])),
+        0,
+      );
       // A made straight still reads as a strong draw on the flop (as desktop).
       expect(drawStrength(ints(['Jh', 'Th']), ints(['Qd', '9c', '8s'])), 2);
       // Board-only run counts as an OESD for the holder.
-      expect(drawStrength(ints(['As', 'Ks']), ints(['5c', '6d', '7h', '8s'])), 2);
+      expect(
+        drawStrength(ints(['As', 'Ks']), ints(['5c', '6d', '7h', '8s'])),
+        2,
+      );
       // Flush draw needs one of the hole cards in the suit.
       expect(drawStrength(ints(['As', '2s']), ints(['Ks', 'Qs', '3d'])), 2);
-      expect(drawStrength(ints(['Ah', '2d']), ints(['Ks', 'Qs', '3s', '4s'])), 0);
+      expect(
+        drawStrength(ints(['Ah', '9d']), ints(['Ks', 'Qs', '3s', '4s'])),
+        0,
+      );
+      // ...but the ace still counts low for straights: A-2-3-4 is an OESD.
+      expect(
+        drawStrength(ints(['Ah', '2d']), ints(['Ks', 'Qs', '3s', '4s'])),
+        2,
+      );
       // Backdoor flush draw on the flop is weak (1); on the turn it is not.
       expect(drawStrength(ints(['As', '7d']), ints(['Ks', 'Qs', '3d'])), 1);
-      expect(drawStrength(ints(['As', '7d']), ints(['Ks', 'Qs', '3d', '4h'])), 0);
-      // Gutshot is weak.
-      expect(drawStrength(ints(['Ah', 'Kd']), ints(['Qc', 'Js', '2h'])), 1);
+      expect(
+        drawStrength(ints(['As', '7d']), ints(['Ks', 'Qs', '3d', '4h'])),
+        0,
+      );
+      // Gutshot is weak: 4 of 5 ranks in a window without a 4-card run.
+      expect(drawStrength(ints(['Ah', 'Kd']), ints(['Qc', 'Ts', '2h'])), 1);
+      // A 4-card run counts as strong even when only one rank completes
+      // it (AKQJ needs exactly a T) — the desktop counts runs, not outs.
+      expect(drawStrength(ints(['Ah', 'Kd']), ints(['Qc', 'Js', '2h'])), 2);
     });
   });
 
@@ -245,12 +267,13 @@ void main() {
       expect(stored.length, 97);
     });
 
-    for (final board in const {
-      'flop': ['Kc', '8d', '3h'],
-      'turn': ['Kc', '8d', '3h', '2s'],
-      'river': ['Kc', '8d', '3h', '2s', '9c'],
-      'wetFlop': ['Qd', 'Jd', '9d'],
-    }.entries) {
+    for (final board
+        in const {
+          'flop': ['Kc', '8d', '3h'],
+          'turn': ['Kc', '8d', '3h', '2s'],
+          'river': ['Kc', '8d', '3h', '2s', '9c'],
+          'wetFlop': ['Qd', 'Jd', '9d'],
+        }.entries) {
       for (final kind in NarrowKind.values) {
         test('${board.key} ${kind.name} matches the desktop exactly', () {
           for (final actual in ['KK', '72o']) {
@@ -268,7 +291,10 @@ void main() {
     test('small ranges pass through (same list) or gain the actual label', () {
       final small = ['AA', 'KK', 'QQ'];
       expect(
-        identical(narrowRange(small, ['Kc', '8d', '3h'], NarrowKind.aggro, 'KK'), small),
+        identical(
+          narrowRange(small, ['Kc', '8d', '3h'], NarrowKind.aggro, 'KK'),
+          small,
+        ),
         isTrue,
       );
       expect(
@@ -290,8 +316,11 @@ void main() {
         'KK',
       );
       expect(got, _refNarrow('blocked'));
-      expect(got, isNot(contains('KK')));
+      // KK's combos are all blocked, so it is not scored — but the actual
+      // label is always re-appended at the end (desktop guarantee).
+      expect(got.last, 'KK');
       expect(got.length, 7);
+      expect(got, ['AA', 'QQ', 'JJ', 'TT', '99', '88', 'KK']);
     });
   });
 
@@ -304,13 +333,21 @@ void main() {
       expect(d.range, isEmpty);
       final s2 = _setup({3: Archetype.tag});
       s2.players[3].hole = null;
-      expect(decideBot(s2, 3, rng: _FixedRandom(0)).action.type, ActionType.fold);
+      expect(
+        decideBot(s2, 3, rng: _FixedRandom(0)).action.type,
+        ActionType.fold,
+      );
     });
 
     test('RFI: premiums always open, 2.5bb sizing', () {
       _pinPre(_setup({3: Archetype.tag}), 3, 0.99, 'P1_tag_utg_AA_099');
       _pinPre(
-        _setup({3: Archetype.tag}, {3: ['Ac', 'Ad']}),
+        _setup(
+          {3: Archetype.tag},
+          {
+            3: ['Ac', 'Ad'],
+          },
+        ),
         3,
         0.99,
         'P1b_tag_utg_AA_099',
@@ -318,27 +355,57 @@ void main() {
     });
 
     test('RFI: Nit trims mixed opens (98s UTG = 0.5 * 0.35)', () {
-      final s = _setup({3: Archetype.nit}, {3: ['9c', '8c']});
+      final s = _setup(
+        {3: Archetype.nit},
+        {
+          3: ['9c', '8c'],
+        },
+      );
       _pinPre(s, 3, 0.30, 'P2_nit_utg_98s_030');
       _pinPre(s, 3, 0.10, 'P2b_nit_utg_98s_010');
     });
 
     test('RFI: Station limps playable hands, LAG rounds opens up', () {
       _pinPre(
-        _setup({3: Archetype.station}, {3: ['9c', '8c']}),
+        _setup(
+          {3: Archetype.station},
+          {
+            3: ['9c', '8c'],
+          },
+        ),
         3,
         0.50,
         'P3_station_utg_98s_050',
       );
-      final lag = _setup({3: Archetype.lag}, {3: ['9c', '8c']});
+      final lag = _setup(
+        {3: Archetype.lag},
+        {
+          3: ['9c', '8c'],
+        },
+      );
       _pinPre(lag, 3, 0.85, 'P4_lag_utg_98s_085');
       _pinPre(lag, 3, 0.95, 'P4b_lag_utg_98s_095');
     });
 
     test('RFI: junk never limps, even for loose types', () {
-      _pinPre(_setup({3: Archetype.nit}, {3: ['7c', '2d']}), 3, 0.0, 'P_nit_utg_72o');
       _pinPre(
-        _setup({3: Archetype.station}, {3: ['7c', '2d']}),
+        _setup(
+          {3: Archetype.nit},
+          {
+            3: ['7c', '2d'],
+          },
+        ),
+        3,
+        0.0,
+        'P_nit_utg_72o',
+      );
+      _pinPre(
+        _setup(
+          {3: Archetype.station},
+          {
+            3: ['7c', '2d'],
+          },
+        ),
         3,
         0.0,
         'P_station_utg_72o',
@@ -346,37 +413,70 @@ void main() {
     });
 
     test('vs RFI: call / 3-bet / fold by chart frequency and archetype', () {
-      var s = _setup({4: Archetype.tag}, {4: ['Ac', 'Qc']});
+      var s = _setup(
+        {4: Archetype.tag},
+        {
+          4: ['Ac', 'Qc'],
+        },
+      );
       s = applyAction(s, 3, const Action.raise(50));
       _pinPre(s, 4, 0.5, 'P5_tag_mp_AQs_vs_utg_050');
 
-      var lag = _setup({4: Archetype.lag}, {4: ['Ac', '5c']});
+      var lag = _setup(
+        {4: Archetype.lag},
+        {
+          4: ['Ac', '5c'],
+        },
+      );
       lag = applyAction(lag, 3, const Action.raise(50));
       _pinPre(lag, 4, 0.7, 'P5b_lag_mp_A5s_vs_utg_070');
       _pinPre(lag, 4, 0.9, 'P5c_lag_mp_A5s_vs_utg_090');
 
-      var nit = _setup({4: Archetype.nit}, {4: ['Ac', '5c']});
+      var nit = _setup(
+        {4: Archetype.nit},
+        {
+          4: ['Ac', '5c'],
+        },
+      );
       nit = applyAction(nit, 3, const Action.raise(50));
       _pinPre(nit, 4, 0.10, 'P5d_nit_mp_A5s_vs_utg_010');
     });
 
-    test('vs RFI from the BB: Station flats wide, premiums stay aggressive', () {
-      var s = _setup({2: Archetype.station}, {2: ['Ac', 'Ad']});
-      s = applyAction(s, 3, const Action.raise(50));
-      s = _fold(s, [4, 5, 0, 1]);
-      _pinPre(s, 2, 0.3, 'P6_station_bb_AA_vs_utg_030');
-      _pinPre(s, 2, 0.9, 'P6b_station_bb_AA_vs_utg_090');
+    test(
+      'vs RFI from the BB: Station flats wide, premiums stay aggressive',
+      () {
+        var s = _setup(
+          {2: Archetype.station},
+          {
+            2: ['Ac', 'Ad'],
+          },
+        );
+        s = applyAction(s, 3, const Action.raise(50));
+        s = _fold(s, [4, 5, 0, 1]);
+        _pinPre(s, 2, 0.3, 'P6_station_bb_AA_vs_utg_030');
+        _pinPre(s, 2, 0.9, 'P6b_station_bb_AA_vs_utg_090');
 
-      var aq = _setup({2: Archetype.station}, {2: ['Ac', 'Qc']});
-      aq = applyAction(aq, 3, const Action.raise(50));
-      aq = _fold(aq, [4, 5, 0, 1]);
-      _pinPre(aq, 2, 0.5, 'P6c_station_bb_AQs_vs_utg_050');
+        var aq = _setup(
+          {2: Archetype.station},
+          {
+            2: ['Ac', 'Qc'],
+          },
+        );
+        aq = applyAction(aq, 3, const Action.raise(50));
+        aq = _fold(aq, [4, 5, 0, 1]);
+        _pinPre(aq, 2, 0.5, 'P6c_station_bb_AQs_vs_utg_050');
 
-      var junk = _setup({2: Archetype.tag}, {2: ['7c', '2d']});
-      junk = applyAction(junk, 3, const Action.raise(50));
-      junk = _fold(junk, [4, 5, 0, 1]);
-      _pinPre(junk, 2, 0.0, 'P6d_tag_bb_72o_vs_utg_000');
-    });
+        var junk = _setup(
+          {2: Archetype.tag},
+          {
+            2: ['7c', '2d'],
+          },
+        );
+        junk = applyAction(junk, 3, const Action.raise(50));
+        junk = _fold(junk, [4, 5, 0, 1]);
+        _pinPre(junk, 2, 0.0, 'P6d_tag_bb_72o_vs_utg_000');
+      },
+    );
 
     test('vs 3-bet: AA/KK 4-bet or call, QQ class continues, junk folds', () {
       TableState threeBet(Archetype a, List<Card> hole) {
@@ -402,27 +502,35 @@ void main() {
       _pinPre(stationA5, 5, 0.9, 'P8c_station_co_A5s_vs_3bet_090');
     });
 
-    test('BB with the option: raise over limps (3bb + 1bb per limper) or check', () {
-      TableState limped(List<Card> hole) {
-        var s = _setup({2: Archetype.tag}, {2: hole});
-        s = applyAction(s, 3, const Action.call(amount: 20));
-        s = _fold(s, [4, 5, 0]);
-        return applyAction(s, 1, const Action.call(amount: 10));
-      }
+    test(
+      'BB with the option: raise over limps (3bb + 1bb per limper) or check',
+      () {
+        TableState limped(List<Card> hole) {
+          var s = _setup({2: Archetype.tag}, {2: hole});
+          s = applyAction(s, 3, const Action.call(amount: 20));
+          s = _fold(s, [4, 5, 0]);
+          return applyAction(s, 1, const Action.call(amount: 10));
+        }
 
-      _pinPre(limped(['8c', '8d']), 2, 0.5, 'P9_tag_bb_88_option_050');
-      _pinPre(limped(['7c', '2d']), 2, 0.5, 'P9b_tag_bb_72o_option_050');
-      // The check range is every label minus the >= 0.5 raise-over-limps chart.
-      expect(
-        _refPre('P9b_tag_bb_72o_option_050')['range'],
-        _refChart('setdiff_all_minus_bbsb050'),
-      );
-    });
+        _pinPre(limped(['8c', '8d']), 2, 0.5, 'P9_tag_bb_88_option_050');
+        _pinPre(limped(['7c', '2d']), 2, 0.5, 'P9b_tag_bb_72o_option_050');
+        // The check range is every label minus the >= 0.5 raise-over-limps chart.
+        expect(
+          _refPre('P9b_tag_bb_72o_option_050')['range'],
+          _refChart('setdiff_all_minus_bbsb050'),
+        );
+      },
+    );
 
     test('an uncharted spot falls through to the 3-bet ladder', () {
       // MP raises over the UTG limp: UTG faces a raise from an MP aggressor,
       // and "UTG_vs_MP" is not a chart → AA still continues, 72o folds.
-      var s = _setup({3: Archetype.tag}, {3: ['Ac', 'Ad']});
+      var s = _setup(
+        {3: Archetype.tag},
+        {
+          3: ['Ac', 'Ad'],
+        },
+      );
       s = applyAction(s, 3, const Action.call(amount: 20));
       s = applyAction(s, 4, const Action.raise(80));
       s = _fold(s, [5, 0, 1, 2]);
@@ -442,14 +550,29 @@ void main() {
 
     test('jittered dials override the archetype knobs', () {
       // QQ facing a 3-bet: 4-bet when rnd < 0.1 + 0.35 * aggression.
-      var s = _setup({5: Archetype.nit}, {5: ['Qc', 'Qd']});
+      var s = _setup(
+        {5: Archetype.nit},
+        {
+          5: ['Qc', 'Qd'],
+        },
+      );
       s = applyAction(s, 3, const Action.raise(50));
       s = applyAction(s, 4, const Action.raise(160));
       // Nit aggression 0.5 → threshold 0.275: rnd 0.3 calls...
-      expect(decideBot(s, 5, rng: _FixedRandom(0.3)).action.type, ActionType.call);
+      expect(
+        decideBot(s, 5, rng: _FixedRandom(0.3)).action.type,
+        ActionType.call,
+      );
       // ...but a jittered aggression of 0.9 → 0.415 raises.
-      s.players[5].dials = const Dials(aggression: 0.9, stickiness: 0.2, cbetFlop: 55);
-      expect(decideBot(s, 5, rng: _FixedRandom(0.3)).action.type, ActionType.raise);
+      s.players[5].dials = const Dials(
+        aggression: 0.9,
+        stickiness: 0.2,
+        cbetFlop: 55,
+      );
+      expect(
+        decideBot(s, 5, rng: _FixedRandom(0.3)).action.type,
+        ActionType.raise,
+      );
     });
   });
 
@@ -463,7 +586,11 @@ void main() {
     });
 
     test('junk checks back; the stored range gains the actual label', () {
-      _pinRiver(_toRiver(Archetype.station, ['7s', '2h']), 0.5, 'R3_station_72o_nobet_050');
+      _pinRiver(
+        _toRiver(Archetype.station, ['7s', '2h']),
+        0.5,
+        'R3_station_72o_nobet_050',
+      );
       expect(_refRiver('R3_station_72o_nobet_050')['range'], ['72o']);
     });
 
@@ -474,7 +601,11 @@ void main() {
     });
 
     test('facing a bet with junk: pot odds and the station calldown', () {
-      _pinRiver(_toRiver(Archetype.nit, ['7s', '2h'], 60), 0.5, 'R5_nit_72o_vs_bet60_050');
+      _pinRiver(
+        _toRiver(Archetype.nit, ['7s', '2h'], 60),
+        0.5,
+        'R5_nit_72o_vs_bet60_050',
+      );
       final st = _toRiver(Archetype.station, ['7s', '2h'], 60);
       _pinRiver(st, 0.5, 'R5b_station_72o_vs_bet60_050');
       _pinRiver(st, 0.8, 'R5c_station_72o_vs_bet60_080');
@@ -485,44 +616,75 @@ void main() {
       );
     });
 
-    test('scare-card barrel: LAG bluffs the K-high river at aggression * 0.12', () {
-      final s = _toRiver(Archetype.lag, ['7s', '2h']);
-      _pinRiver(s, 0.05, 'R6_lag_72o_nobet_005');
-      _pinRiver(s, 0.2, 'R6b_lag_72o_nobet_020');
-    });
+    test(
+      'scare-card barrel: LAG bluffs the K-high river at aggression * 0.12',
+      () {
+        final s = _toRiver(Archetype.lag, ['7s', '2h']);
+        _pinRiver(s, 0.05, 'R6_lag_72o_nobet_005');
+        _pinRiver(s, 0.2, 'R6b_lag_72o_nobet_020');
+      },
+    );
 
-    test('with a stored range the returned range is narrowed (exact river)', () {
-      final stored = _bbVsBtnCall025();
-      var s = _toRiver(Archetype.tag, ['Ks', 'Kd']);
-      s.botRanges = {2: List.of(stored)};
-      _pinRiver(s, 0.6, 'R7_tag_KK_nobet_060_stored');
-      s = _toRiver(Archetype.tag, ['Ks', 'Kd'], 60);
-      s.botRanges = {2: List.of(stored)};
-      _pinRiver(s, 0.9, 'R7b_tag_KK_vs_bet60_090_stored');
-      s = _toRiver(Archetype.station, ['7s', '2h']);
-      s.botRanges = {2: List.of(stored)};
-      _pinRiver(s, 0.5, 'R7c_station_72o_nobet_050_stored');
-      final ref = _refRiver('R7c_station_72o_nobet_050_stored');
-      expect((ref['range'] as List).length, lessThan(stored.length));
-      expect(ref['range'], contains('72o'));
-    });
+    test(
+      'with a stored range the returned range is narrowed (exact river)',
+      () {
+        final stored = _bbVsBtnCall025();
+        var s = _toRiver(Archetype.tag, ['Ks', 'Kd']);
+        s.botRanges = {2: List.of(stored)};
+        _pinRiver(s, 0.6, 'R7_tag_KK_nobet_060_stored');
+        s = _toRiver(Archetype.tag, ['Ks', 'Kd'], 60);
+        s.botRanges = {2: List.of(stored)};
+        _pinRiver(s, 0.9, 'R7b_tag_KK_vs_bet60_090_stored');
+        s = _toRiver(Archetype.station, ['7s', '2h']);
+        s.botRanges = {2: List.of(stored)};
+        _pinRiver(s, 0.5, 'R7c_station_72o_nobet_050_stored');
+        final ref = _refRiver('R7c_station_72o_nobet_050_stored');
+        expect((ref['range'] as List).length, lessThan(stored.length));
+        expect(ref['range'], contains('72o'));
+      },
+    );
 
     test('equity vs the sole opponent\'s stored range is used heads-up', () {
-      // Hero has no stored range, so these ran vs random. Give the villain
-      // (seat 0) a narrow range the bot crushes → still a bet; a range that
-      // crushes KK (only quads 99 / straight-making hands) → the equity
-      // drops below the value threshold and the bot checks.
+      // Reference outputs from the desktop under Node (Math.random = 0.6) on
+      // the Kc 8d 3h 2s 9c river. Top set vs a range of small sets bets
+      // 1.25x pot; 72o (a pair of deuces) checks vs random but bets when the
+      // sole opponent's stored range is pure air, and checks when it is sets.
       var s = _toRiver(Archetype.tag, ['Ks', 'Kd']);
-      s.botRanges = {0: ['22', '33', '44']};
-      expect(decideBot(s, 2, rng: _FixedRandom(0.6)).action.type, ActionType.bet);
-      s = _toRiver(Archetype.tag, ['Ks', 'Kd']);
-      s.botRanges = {0: ['99', 'JT s'.replaceAll(' ', '')]};
-      final d = decideBot(s, 2, rng: _FixedRandom(0.6));
-      expect(d.action.type, ActionType.check);
+      s.botRanges = {
+        0: ['22', '33', '44'],
+      };
+      var d = decideBot(s, 2, rng: _FixedRandom(0.6));
+      expect(d.action.type, ActionType.bet);
+      expect(d.action.amount, 138);
+      s = _toRiver(Archetype.station, ['7s', '2h']);
+      expect(
+        decideBot(s, 2, rng: _FixedRandom(0.6)).action.type,
+        ActionType.check,
+      );
+      s = _toRiver(Archetype.station, ['7s', '2h']);
+      s.botRanges = {
+        0: ['54o'],
+      };
+      d = decideBot(s, 2, rng: _FixedRandom(0.6));
+      expect(d.action.type, ActionType.bet);
+      expect(d.action.amount, 138);
+      s = _toRiver(Archetype.station, ['7s', '2h']);
+      s.botRanges = {
+        0: ['88', '33'],
+      };
+      expect(
+        decideBot(s, 2, rng: _FixedRandom(0.6)).action.type,
+        ActionType.check,
+      );
     });
 
     test('flop decisions consume the injected rng (deterministic)', () {
-      var s = _setup({2: Archetype.lag}, {2: ['Ks', 'Kd']});
+      var s = _setup(
+        {2: Archetype.lag},
+        {
+          2: ['Ks', 'Kd'],
+        },
+      );
       s = _fold(s, [3, 4, 5]);
       s = applyAction(s, 0, const Action.raise(50));
       s = applyAction(s, 1, const Action.fold());
@@ -540,9 +702,59 @@ void main() {
     });
   });
 
+  group('performance', () {
+    test('a flop decision vs a wide stored range is fast on the host', () {
+      // Worst realistic case: hero's stored range is the full BB call chart,
+      // so the bot samples 260 trials vs that range plus narrows its own
+      // 97-label range with 80-trial seeded sims (~100 sims total).
+      var s = _setup(
+        {2: Archetype.lag},
+        {
+          2: ['Ks', 'Kd'],
+        },
+      );
+      s = _fold(s, [3, 4, 5]);
+      s = applyAction(s, 0, const Action.raise(50));
+      s = applyAction(s, 1, const Action.fold());
+      s = applyAction(s, 2, const Action.call(amount: 30));
+      s.botRanges = {
+        0: _bbVsBtnCall025(),
+        2: chartLabels(kRfi100['BTN']!, 0.4),
+      };
+      decideBot(s, 2, rng: Random(1)); // warm-up
+      final sw = Stopwatch()..start();
+      for (int i = 0; i < 5; i++) {
+        decideBot(s, 2, rng: Random(i));
+      }
+      sw.stop();
+      expect(
+        sw.elapsedMilliseconds,
+        lessThan(400),
+        reason: '5 decisions in ${sw.elapsedMilliseconds} ms',
+      );
+    });
+  });
+
   group('bot_test.ts properties (all-bot tables)', () {
-    const arch = [Archetype.tag, Archetype.lag, Archetype.nit, Archetype.station];
-    const junk = {'72o', '82o', '92o', 'T2o', 'J2o', '83o', '73o', '62o', '52o', '42o', '32o'};
+    const arch = [
+      Archetype.tag,
+      Archetype.lag,
+      Archetype.nit,
+      Archetype.station,
+    ];
+    const junk = {
+      '72o',
+      '82o',
+      '92o',
+      'T2o',
+      'J2o',
+      '83o',
+      '73o',
+      '62o',
+      '52o',
+      '42o',
+      '32o',
+    };
 
     test('Run A: premiums never fold, junk never calls big, ranges narrow', () {
       final rng = Random(2024);
@@ -563,25 +775,34 @@ void main() {
         state = startHand(state, rng: rng);
         final checkedThisStreet = <Street, Set<int>>{};
         int guard = 0;
-        while (state.phase == GamePhase.betting && state.toAct != null && guard++ < 5000) {
+        while (state.phase == GamePhase.betting &&
+            state.toAct != null &&
+            guard++ < 5000) {
           final seat = state.toAct!;
           final p = state.players[seat];
           final dec = decideBot(state, seat, rng: rng);
           if (state.street != Street.preflop) {
-            final set = checkedThisStreet.putIfAbsent(state.street, () => <int>{});
+            final set = checkedThisStreet.putIfAbsent(
+              state.street,
+              () => <int>{},
+            );
             if (dec.action.type == ActionType.check) set.add(seat);
             if (dec.action.type == ActionType.bet && state.pot > 0) {
-              final ratio = ((dec.action.amount ?? 0) / state.pot * 4).round() / 4;
+              final ratio =
+                  ((dec.action.amount ?? 0) / state.pot * 4).round() / 4;
               sizings.add(ratio.toStringAsFixed(2));
             }
-            if (dec.action.type == ActionType.raise && set.contains(seat)) checkRaises++;
+            if (dec.action.type == ActionType.raise && set.contains(seat)) {
+              checkRaises++;
+            }
           }
           final hole = p.hole;
           final label = hole != null ? cardsToLabel(hole[0], hole[1]) : null;
           if (state.street == Street.preflop && label != null) {
             decisions++;
             final la = legalActions(state);
-            if ((label == 'AA' || label == 'KK') && dec.action.type == ActionType.fold) {
+            if ((label == 'AA' || label == 'KK') &&
+                dec.action.type == ActionType.fold) {
               premiumFolds++;
             }
             if (junk.contains(label) &&
@@ -590,7 +811,9 @@ void main() {
               junkBigCalls++;
             }
           }
-          if (dec.range != null && label != null && dec.action.type != ActionType.fold) {
+          if (dec.range != null &&
+              label != null &&
+              dec.action.type != ActionType.fold) {
             if (!dec.range!.contains(label)) rangeExclusions++;
             if (state.street != Street.preflop) {
               final before = state.botRanges[seat]?.length ?? 0;
@@ -608,18 +831,38 @@ void main() {
         hands++;
       }
       expect(hands, 400);
-      expect(decisions, greaterThan(1600), reason: 'saw plenty of preflop decisions');
+      expect(
+        decisions,
+        greaterThan(1600),
+        reason: 'saw plenty of preflop decisions',
+      );
       expect(premiumFolds, 0, reason: 'AA/KK never fold preflop');
       expect(junkBigCalls, 0, reason: 'junk never calls a big raise');
-      expect(rangeExclusions, 0, reason: "stored range never excludes the bot's hand");
-      expect(postflopNarrowings, greaterThan(60), reason: 'postflop actions narrow ranges');
+      expect(
+        rangeExclusions,
+        0,
+        reason: "stored range never excludes the bot's hand",
+      );
+      expect(
+        postflopNarrowings,
+        greaterThan(60),
+        reason: 'postflop actions narrow ranges',
+      );
       expect(postflopGrowths, 0, reason: 'postflop ranges never grow');
-      expect(sizings.length, greaterThanOrEqualTo(3), reason: '3+ distinct sizings: $sizings');
+      expect(
+        sizings.length,
+        greaterThanOrEqualTo(3),
+        reason: '3+ distinct sizings: $sizings',
+      );
       expect(checkRaises, greaterThan(0), reason: 'bots check-raise');
     });
 
     /// Drive [hands] hands with a scripted hero (seat 0); returns hero net chips.
-    int heroNet(int hands, Random rng, Action Function(TableState s, LegalActions la) hero) {
+    int heroNet(
+      int hands,
+      Random rng,
+      Action Function(TableState s, LegalActions la) hero,
+    ) {
       var state = createTable(_cfg, rng: rng);
       for (final p in state.players) {
         if (!p.isHero) p.archetype = arch[(p.id - 1) % arch.length];
@@ -628,12 +871,18 @@ void main() {
       for (int h = 0; h < hands; h++) {
         state = startHand(state, rng: rng);
         int guard = 0;
-        while (state.phase == GamePhase.betting && state.toAct != null && guard++ < 5000) {
+        while (state.phase == GamePhase.betting &&
+            state.toAct != null &&
+            guard++ < 5000) {
           final seat = state.toAct!;
           if (seat == 0) {
             state = applyAction(state, 0, hero(state, legalActions(state)));
           } else {
-            state = applyAction(state, seat, decideBot(state, seat, rng: rng).action);
+            state = applyAction(
+              state,
+              seat,
+              decideBot(state, seat, rng: rng).action,
+            );
           }
         }
         net += state.summary?.heroNetChips ?? 0;
@@ -650,21 +899,33 @@ void main() {
           }
           return const Action.fold();
         }
-        if (la.canBet) return Action.bet(max(la.minRaiseTo, (s.pot * 0.66).round()));
+        if (la.canBet) {
+          return Action.bet(max(la.minRaiseTo, (s.pot * 0.66).round()));
+        }
         if (la.canCheck) return const Action.check();
         return const Action.fold();
       });
-      expect(net, lessThan(0), reason: 'stab-every-check net ${net / _cfg.bigBlind} bb');
+      expect(
+        net,
+        lessThan(0),
+        reason: 'stab-every-check net ${net / _cfg.bigBlind} bb',
+      );
     });
 
     test('Run B: the open-jam maniac loses vs the field', () {
       final net = heroNet(400, Random(13), (s, la) {
-        if (s.street == Street.preflop && la.canRaise) return Action.raise(la.maxRaiseTo);
+        if (s.street == Street.preflop && la.canRaise) {
+          return Action.raise(la.maxRaiseTo);
+        }
         if (la.canCheck) return const Action.check();
         if (la.canCall) return Action.call(amount: la.callAmount);
         return const Action.fold();
       });
-      expect(net, lessThan(0), reason: 'open-jam net ${net / _cfg.bigBlind} bb');
+      expect(
+        net,
+        lessThan(0),
+        reason: 'open-jam net ${net / _cfg.bigBlind} bb',
+      );
     });
   });
 }

@@ -1,0 +1,12 @@
+PokerStars Hand #100000000001: Hold'em No Limit (10/20) - 2026/06/19 12:00:00 ET
+Table 'T' 6-max Seat #1 is the button
+Seat 1: hero (2000 in chips)
+Seat 2: v1 (2000 in chips)
+v1: posts small blind 10
+hero: posts big blind 20
+*** HOLE CARDS ***
+Dealt to hero [7h 2c]
+v1: raises 1980 to 2000
+hero: calls 1980
+*** SUMMARY ***
+Total pot 4000 | Rake 0
