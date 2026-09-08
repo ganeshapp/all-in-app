@@ -13,8 +13,11 @@ Grotesque (display: headings, card ranks, big numbers), Inter (body), JetBrains 
 that changes; tabular figures). Tokens: `lib/theme/tokens.dart` (`AllInColors`, `AllInRadius`,
 `AllInSpace`), `typography.dart` (`AllInText.display/body/mono/eyebrow`), `motion.dart`
 (`AllInMotion`). All sizes below are pt. **Every tappable target is ≥ 44×44 pt** (visual size may
-be smaller; hit-slop makes up the difference) except the two paint surfaces called out in §4.9
-and §6.5, which are handled by drag-paint, loupe and header selectors.
+be smaller; hit-slop makes up the difference) except the **five** surfaces enumerated in §12 —
+the two paint surfaces (§4.9 matrix, §6.5 range editor), handled by drag-paint, loupe and header
+selectors, and the three inspect surfaces (§7.3 cumulative chart and read-accuracy bars, §7.11
+practice heatmap), handled by a 200 ms hold that claims the pointer and a label that follows the
+finger. Nothing else is exempt.
 
 Copy in double quotes is exact. Copy marked *(desktop)* is verbatim from the desktop app and must
 not be paraphrased (TONE.md). Copy marked *(new)* is new to mobile.
@@ -202,7 +205,9 @@ TabScaffold (StatefulShellRoute)
 │                             ├─ push Tools (S3 ×6)
 │                             └─ push Quick reference / Glossary (S4)
 └─ Stats (T0) ────────────────┬─ sheet Explainer (T1) · sheet Chart value (T4)
-                              ├─ push Replayer (P11) ── sheet Note (P12)
+                              ├─ push Replayer (P11) at /stats/hand/:startedAt ── sheet Note (P12)
+                              ├─ push Session summary (P10 read-only) at /stats/session/:id
+                              │        ── push Replayer (P11) at /stats/session/:id/hand/:startedAt
                               ├─ push All hands (T2) ── P11 / P12 / Import (T3)
                               ├─ system File picker → sheet Import result (T3)
                               └─ push Settings (X0) ── dialog Reset (X2) · dialog Restore (X3) · system Share
@@ -764,8 +769,13 @@ overlap 40) · hero strip 612–640 · context row 644–692 · action row 700�
 96×54 (6-max), 78×46 (9-max), HU plate 148×60; 6-max board 40×56 (x 70–290), 9-max board 28×39
 (x 104–256); opponent hole cards 28×39 (6-max) / 22×31 (9-max, peek 12); bet pills ≤ 40 wide
 (hero 36); pot pill ≤ 120; coach chip 274×40. Names truncate at 6 characters without ellipsis.
-Bottom row heights are hard minimums and never shrink. The sizing rail keeps all seven ticks
-(spacing 45 pt, labels 10 pt). The hero strip uses the **short** price line (§4.4).
+Bottom row heights are hard minimums and never shrink. The sizing rail keeps all seven detent
+slots (spacing 45 pt) and its labels stay at **11 pt — the §13 legibility floor, which the rail
+does not get to duck**: at 360 the two thirds, `⅓` and `⅔`, render as **unlabelled ticks** —
+still magnetised, still tappable, still announced by the screen reader as "one third pot" — so
+the five remaining labels (Min · ½ · ¾ · Pot · All-in) never collide at 11 pt. Shrinking the type
+to 10 pt to keep two more words on screen is the shrunken-desktop move §1 forbids. The hero strip
+uses the **short** price line (§4.4).
 
 **430×932**: felt 380×548 at x 25–405, y 121–669 (extra height goes to the felt only), 6-max
 board 50×70 (x 78–352), 9-max board 36×50 (x 119–311), hero cards 80×112 (top 625), plates
@@ -800,11 +810,30 @@ their amounts into the hero strip ("Call" + strip line "To call 2 bb").
   allows. In Auto pace the HUD line is replaced by a three-dot "thinking" shimmer while the bot's
   delay runs; `thinking` is cleared whenever the loop exits for any reason.
 - **Eye glyph** `👁` (12 pt, gold @ 70 %) at the plate's outer top corner, visible while
-  `phase == betting && !hasFolded && hole != null`; its invisible hit box is 44×44 (the corner
-  quadrant of the plate plus 12 pt of felt outside it). **Tap → P7 Read range** (one tap for
-  experts). Hidden on folded seats and at hand-over.
-- **Tap the plate** (anywhere except the eye) → **P6 Player sheet** (the gentle default: a curious
-  first-week tap never lands in a 13×13 matrix).
+  `phase == betting && !hasFolded && hole != null`; its invisible hit box is 44×44 — the plate's
+  outer top **corner quadrant** (52×29 of a 104×58 plate) plus 12 pt of felt beyond its two outer
+  edges. **Tap → P7 Read range** (one tap for experts). Hidden on folded seats and at hand-over.
+- **The eye and the plate are one control with two zones, not two overlapping controls — and the
+  eye box wins inside its quadrant.** §12's rule ("hit-slop never overlaps a neighbouring
+  control's box") governs *neighbouring widgets*, which must keep an 8 pt gap so a slopped target
+  cannot steal a tap meant for its neighbour. Here there is no neighbour: one `GestureDetector`
+  owns the whole plate, reads `details.localPosition` and dispatches itself —
+
+  ```dart
+  onTapUp: (d) => eyeRect.contains(d.localPosition) && showEye ? onEye() : onTap();
+  ```
+
+  so **inside the 44×44 eye rect the tap always opens P7 and the plate never sees it; everywhere
+  else on the plate it always opens P6.** No slop overlaps anything because there is nothing to
+  overlap, and no gap is owed because there is no second box. This also keeps both targets legal:
+  the eye gets its full 44×44 on a 58 pt-tall plate, and what is left of the plate is still
+  ≥ 52×58 — comfortably over the floor. When the eye is hidden (folded seat, hand-over, coach
+  reads unavailable) `eyeRect` is empty and the entire plate goes to P6. The 9-max compact plate
+  (84×50) uses the same split with a 44×44 rect anchored to its outer top corner, leaving
+  ≥ 40×50 of plate; below that size the eye is dropped rather than shrunk (long-press still opens
+  P7).
+- **Tap the plate** (anywhere outside the eye rect) → **P6 Player sheet** (the gentle default: a
+  curious first-week tap never lands in a 13×13 matrix).
 - **Long-press the plate** (500 ms, medium haptic) → P7 directly (shortcut).
 - **Tap the action pill** (hit box 44 tall, full pill width + 8 pt) → Explain last move (§4.10)
   when that seat was the last actor; otherwise no-op.
@@ -823,7 +852,11 @@ their amounts into the hero strip ("Call" + strip line "To call 2 bb").
   at the next deal exactly as the desktop `deal()` does — the plate shows "100 bb" again with a
   one-hand "rebought" caption *(new)* in place of the HUD line).
 
-**P6 — Player sheet** (S detent, ≈ 380 pt):
+**P6 — Player sheet** (**sheet M**, 55 %). Its content below measures **≈ 380 pt** and the S
+detent is auto-height *capped at 40 % of the viewport* — 338 pt at 844, 312 pt at 780 — so P6
+cannot be an S sheet at any supported size. Rather than cut the archetype blurb or the verbatim
+HUD explanation (the two things that make the sheet worth opening), P6 is an **M** sheet at every
+width, which is also what §2.2 lists. One detent, stated once, in both places:
 
 ```
 ┌──────────────────────────────────────────┐
@@ -861,11 +894,35 @@ Exploits drills must connect to play). Disabled buttons read at 40 % with the re
   `suitGreen`). Tap a card: nothing (no fan gimmicks).
 - **Hero strip** (28 pt, y 666–694, Inter 15 / mono 15): left `"BB · 100 bb"` (position pill
   + stack; dealer disc appears left of it when hero is BTN); right, the **price line** when facing
-  a bet: `"To call 2 bb · need to win 1 in 4"` (`fmtBb`, `fmtNeed`) — layer-1 pot odds visible
-  before every decision; the percentage form lives in the coach note's layer 2. Otherwise the
-  right side shows the hand label `"QQ · pocket queens"` (`cardsToLabel` + friendly names for
-  pairs and broadways, else `"K♠ 9♠ · suited"`). At hand-over it shows the made hand ("Two pair,
-  queens and sevens").
+  a bet (`fmtBb`, `fmtNeed`) — layer-1 pot odds visible before every decision; the percentage form
+  lives in the coach note's layer 2. Otherwise the right side shows the hand label
+  `"QQ · pocket queens"` (`cardsToLabel` + friendly names for pairs and broadways, else
+  `"K♠ 9♠ · suited"`). At hand-over it shows the made hand ("Two pair, queens and sevens").
+- **The price line has exactly two forms, and the width picks one — it is not a matter of taste,
+  and the two must never both appear in the same build.**
+
+  | Form | String | Width at Inter 15 |
+  |---|---|---|
+  | **long** | `"To call 2 bb · need to win 1 in 4"` | ≈ 240 pt |
+  | **short** | `"To call 2 bb · need 1 in 4"` | ≈ 188 pt |
+
+  The strip's content box is `screenW − 2 × margin`: **328** at 360 (margin 16), **358** at 390,
+  **390** at 430 (margin 20). The left segment is ≈ 92 pt for `"BB · 100 bb"`, ≈ 104 with the
+  dealer disc, ≈ 112 for the heads-up `"BTN/SB · 98.5 bb"`; add a 12 pt gap:
+
+  | Width | Box | Left + gap | Left for the price | Form |
+  |---|---|---|---|---|
+  | 360 | 328 | 104 | **224** | **short** — the long form at 240 overflows by 16 |
+  | 390 | 358 | 104 | **254** | **long** — 240 fits with 14 pt to spare |
+  | 430 | 390 | 116 | **274** | **long** |
+
+  Overrides, in order: **heads-up uses the short form at every width** (the left segment is
+  ≥ 112 pt — §4.2.1); **`textScaler > 1.15` uses the short form at every width** (§4.2.4); and if
+  even the short form does not fit (a 1.3× scale on a 360 with a long amount, e.g.
+  `"To call 37.5 bb · need 1 in 3"`) the strip drops its **left** segment to the bare position
+  pill `"BB"` — the price line is **never** ellipsised and never truncated, because it is the one
+  number the decision depends on. Every wireframe in this document obeys the table: §4.2 (390)
+  shows the long form, §4.2.1 (heads-up) and §4.2.3 (360) show the short one.
 - After 8 hands, tapping the left part of the strip opens T1 with the "Your VPIP / PFR" copy
   *(desktop)* and the hero's `"24/19 · 12h"`; the numbers themselves live in P2 Session (not on
   the strip — width is spent on the price line).
@@ -907,12 +964,30 @@ Labels Inter 17 semibold; amounts mono. Every button acknowledges with a 120 ms 
 - Seven **detents**, evenly spaced across the rail regardless of value: `Min · ⅓ · ½ · ⅔ · ¾ ·
   Pot · All-in`. Values: Min = `minRaiseTo`; fractions = `add = round((pot + toCall) × f)`,
   `raiseTo = clamp(currentBet > 0 ? currentBet + add : add)` (the desktop `setFraction`, ½ ¾ Pot
-  unchanged; ⅓ and ⅔ added); All-in = `maxRaiseTo`. Detents whose clamped value equals their left
-  neighbour's collapse into it (label hidden, tick merged) so labels never overlap.
-- Between two detents the knob interpolates linearly in bb, quantised to `max(1, bb/2)` chips
-  (0.5 bb). Dragging anywhere on the band moves the knob to the finger; the knob magnetises to a
-  detent within ±6 pt with a `selectionClick` haptic per detent crossed. **Tap** a label or tick to
-  jump. **Release never commits** — only the Raise button commits.
+  unchanged; ⅓ and ⅔ added); All-in = `maxRaiseTo`.
+- **Collapsed detents keep their slot; the surviving labels never re-space.** A short stack makes
+  ⅔, ¾ and Pot all clamp to All-in. When a detent's clamped value equals its left neighbour's it
+  loses its label and its magnet — and **keeps its x position**. The rail's geometry is a function
+  of the seven detent *slots*, never of how many are currently distinct, so `Min` is at the same
+  x on every hand and a tick never slides out from under a live thumb. (Re-spacing was the
+  alternative and it is disqualified by exactly that: the values change on every street, so a
+  self-spacing rail would rearrange itself mid-session, sometimes between the touch-down and the
+  lift.) A collapsed run renders as one tick at the **leftmost** slot of the run followed by plain
+  rail; dragging across that stretch holds the value constant and fires no haptic, because no
+  distinct detent is crossed. The gap is intentional and reads as "there is nothing between here
+  and all-in", which is true.
+- **Degenerate case — `minRaiseTo == maxRaiseTo`** (the only legal raise is the shove: a short
+  stack, or the hero covered by a smaller one). Every detent collapses onto a single value, so
+  **the rail hides entirely** and the context row shows the muted line *(new)*
+  `"Only one raise size — all-in {x} bb"` in its 48 pt place (the band never changes height,
+  §4.5). Showing a one-label rail would be a slider with one stop: a control that looks
+  adjustable and is not. The action row's third button already reads "All-in {x}" (exact-commit
+  labels) and is the whole control; §4.5's 150 ms tap guard still applies to it.
+- Between two **distinct** detents the knob interpolates linearly in bb, quantised to
+  `max(1, bb/2)` chips (0.5 bb). Dragging anywhere on the band moves the knob to the finger; the
+  knob magnetises to a **distinct** detent within ±6 pt with a `selectionClick` haptic per detent
+  crossed. **Tap** a label or tick to jump. **Release never commits** — only the Raise button
+  commits.
 - Default on open: ⅔ (desktop 0.66 rule), recomputed whenever `toAct / street / currentBet /
   phase / handNumber` change. The selected detent's label is gold; a custom value shows no gold
   label and a small readout `"7.5 bb"` above the knob while dragging (mono 12).
@@ -973,6 +1048,40 @@ context row as above.
   Auto pace a 3 s ring counts down; **touching the results card cancels the countdown** (the user
   is reading) and "Next hand" becomes explicit.
 
+**States C and D when the hero is out of the hand** — the hero has folded, or the hero is all-in
+and the board has to run out. This is not a rare corner: at 6-max the hero folds pre-flop in most
+hands, so it is one of the two most-seen configurations of the action zone.
+
+- **There is no separate state.** It is **C in Manual pace and D in Auto pace**, because that is
+  literally what is happening: bots are to act and the hero is not. `heroToAct` is false, so the
+  action row is "Next action ›" (C) or "Pause · tap the table" (D), and every C/D gesture is
+  unchanged — tap the felt to step, hold "Next action" to fast-forward, tap the felt in Auto to
+  pause.
+- **The sizing rail hides.** The rail belongs to State A alone and is never shown when the hero
+  has no bet to size. The 48 pt context row keeps its height (it always does) and carries the
+  ghost "◉ Explain last move" plus a caption naming the situation *(new)*: **"You folded —
+  playing it out"** after a fold, **"You're all-in — running it out"** while all-in. That caption
+  takes the slot the first-three-hands "Tap the table or Next action to step" hint would use; the
+  hint is suppressed while the hero is out (it would be advice about a decision the user does not
+  have).
+- **`⏭` appears in Manual too — and only here.** Everywhere else `⏭` is Auto-only, because in
+  Manual the user is deliberately stepping and a skip button would undercut the whole pace
+  setting. Once the hero is out of the hand there is nothing left to step *for*, so State C's
+  context row gains the same 44×44 `⏭` (screen-reader label **"Finish hand"**), which runs the
+  remaining bot actions at the 120 ms cadence and stops at hand-over. It disappears on the next
+  deal. Holding "Next action" still fast-forwards; `⏭` is simply the one-tap version for the
+  common case.
+- **The hero strip** keeps the hand label (or `"ALL-IN"` in `chipRed` while all-in) and **never
+  shows a price line** — there is no price. Hero cards stay face-up: while all-in they keep the
+  gold glow through the run-out; after a fold they slide 20 pt down and dim to 30 %, like any
+  folded seat, and the glow is off.
+- **The coach is quiet for the rest of the hand** — `evaluateHero` has nothing to evaluate once
+  the hero cannot act — but the verdict for the **fold itself** arrives as a normal chip (§4.8),
+  and a *blocking* fold mistake pauses the run-out exactly as it would pause mid-hand. Bot-read
+  notes (§4.10) still work: "Explain last move" is the one thing left to do while watching.
+- At hand-over the state becomes **E** as usual and the results overlay opens. A hand the hero
+  folded is still a hand to learn from — `revealNote` is written to say what the fold gave up.
+
 **State F — paused** (blocking note up, P7 open, app backgrounded): the action zone dims to 40 %
 and ignores taps; the reason is on screen (the sheet, or the ticker "Paused — tap to continue"
 *(new)*).
@@ -1026,7 +1135,7 @@ ring is static, the pot number snaps.
 
 | Surface | What | When |
 |---|---|---|
-| **Coach chip** (`CoachChip`) | 300×40 pill in the felt's chip zone (fraction (0.50, 0.79) → y 479–519 at 390), 90 pt above the hero cards and inside the thumb arc | every non-blocking verdict |
+| **Coach chip** (`CoachChip`) | 300×40 pill in the felt's chip zone (fraction (0.50, 0.79) → y 479–519 at 390), **37 pt above the hero cards' top edge** and inside the thumb arc | every non-blocking verdict |
 | **Coach badge** `[◉ 3]` | top-bar 44×44; count = notes this hand; dot = latest verdict colour | whenever `reviewLog` is non-empty |
 | **Coach sheet** (P3) | bottom sheet M (55 %) → L (capped so the bottom 120 pt stay visible, §2.4) | tap chip / badge row; auto for blocking |
 
@@ -1034,6 +1143,16 @@ The chip sits **on the felt, under the board and above the hero's cards** — no
 so a thumb resting on the action row reaches it without a second hand, and it never covers a
 seat, the board, the pot or the action row. When the chip zone would collide with a bet pill
 (HU layout, 9-max hero bet spot), bet pills are drawn beneath it; the chip has priority for 4 s.
+
+**The gap to the hero cards is 37 pt, and that is the number to build against.** Chip bottom 519,
+hero-card top 556 (§4.2's never-collide table reports 36.6 for the same pair; the 0.4 is
+sub-pixel anchor rounding). Earlier drafts said "90 pt above the hero cards" — a clearance that
+exists at no width. An engineer building to 90 would raise the chip to y ≈ 426–466, straight
+through the board (315–377 at 390) and the seat-1/5 bet pills (385–407). The chip has exactly one
+anchor, the fraction **(0.50, 0.79)**, and the clearance that fraction produces is **37.9 / 36.6 /
+51.0 pt** at 360 / 390 / 430 — enough that the chip and the cards never touch, tight enough that
+the chip stays inside the thumb arc. Do not add an absolute offset to it (§4.2, "bet spots are
+anchors, not an offset").
 
 **Non-blocking notes → chip.** When `evaluateHero` resolves (after the action is applied, never
 blocking the UI), the chip springs in (scale 0.9→1, 260 ms `AllInMotion.ease`, light haptic):
@@ -1064,6 +1183,39 @@ to 60 %, a `notification.warning` haptic fires once, the action zone dims to 40 
 and P3 opens at **M with no grabber**. Scrim tap does nothing; swipe-down does nothing; system
 back **equals "Got it"** (§2.5 — acknowledgement is the only way on, and back is an
 acknowledgement, never an escape). "Got it" → `dismissReview()` → `maybeAutoLoop()`.
+
+**A blocking verdict that resolves while another sheet is already open.** The sequence is
+ordinary: the hero acts, `evaluateHero` runs off the UI thread, and before it returns the user
+taps the ticker (**P2**), a plate (**P6**) or the eye (**P7**). Then the verdict comes back
+`blocking`. §2.4 forbids a sheet on top of a sheet, so P3 cannot simply open over it. The rule is
+**queue until the open surface closes — never replace it**:
+
+- The note is held in `coachProvider.pendingBlocking` and the loop **pauses immediately**
+  (`paused = true`). The pause does not wait for the sheet: nothing advances behind the user's
+  back while a blocking verdict is outstanding.
+- **The open surface is left alone.** A sheet the user opened themselves is never yanked away
+  mid-sentence. That is "interrupt only for money" read correctly: the money is already spent and
+  the hand is already stopped, so the only thing urgency would buy is startling someone who is
+  reading a hand log.
+- The **coach badge** takes the verdict colour and pulses once. Table sheets are capped to leave
+  the bottom 120 pt clear (§2.4), not the top bar, so the badge is visible from P2 and P6 — but
+  the user does not have to act on it. From P7 (a full-screen modal) it is not visible; that is
+  fine, because closing P7 is one tap on ✕ or Continue.
+- **When the open surface closes** — any path: swipe-down, scrim tap, ✕, "Continue", system back
+  — P3 opens blocking on the **next frame**, with its full entrance (felt dims 60 %,
+  `notification.warning`, no grabber, no scrim dismiss). `closeGuess()` from P7 does **not**
+  resume the loop while a blocking note is pending; the pause survives until "Got it".
+- **The queue holds one note.** If a second blocking verdict resolves while one is queued, the
+  newer replaces the older *in the queue only* — the older is already in `reviewLog` and in
+  `hand_json.coachNotes[]`, so P4 lists both and Stats counts both. (Two blocking verdicts in one
+  hand means two hero actions, so this only happens if a sheet stayed open across a whole
+  street.)
+- **Non-blocking verdicts are unaffected**: the chip draws on the felt underneath the sheet, the
+  badge count increments, the 4 s / 8 s lifetime runs and it folds into the badge as usual.
+  Nothing is ever lost — every note reaches P4, the hand record and Stats.
+- The same queue covers the two other things that can want the screen while a sheet is up: a
+  hand-over (§4.12) and a bust. Both wait for the sheet to close, and the loop is paused
+  meanwhile.
 
 **P3 — Coach note sheet** (blocking example; a non-blocking note is identical with a grabber and
 "Close" (ghost) instead of "Got it"):
@@ -1115,8 +1267,10 @@ acknowledgement, never an escape). "Got it" → `dismissReview()` → `maybeAuto
   call makes money."
 - **View range** pushes **P5** inside the sheet (slide-left 250 ms): title "Ivey's assumed
   range", subtitle *(desktop)* "This is the range the coach used for its equity estimate, based
-  on archetype, position and action so far.", a read-only `RangeMatrix` (346 pt at 390; cells
-  24), `RangeLegend(kind)`, footer mono "≈ 312 combos · 23 % of all hands", back chevron
+  on archetype, position and action so far.", a read-only `RangeMatrix` sized to the sheet's
+  **326 pt content width** (row header 18 + 13 × 23 + 12 × 1 = **329**; the widget is
+  width-driven — §4.9 arithmetic, §10.4), `RangeLegend(kind)`, footer mono
+  "≈ 312 combos · 23 % of all hands", back chevron
   returns to the note. The sheet stays at L while P5 is shown.
 - Bot-read notes (`kind == "bot"`, verdict `info`): eye disc, line 2 "Bot read · Ivey's raise",
   the `interpretBot` sentence as layer 1, no equity bar, layer 2 = "No math for a read — this
@@ -1163,7 +1317,8 @@ Full-screen modal (the matrix needs the full width); tab bar hidden.
 │ Optionally paint your guess, or just     │ desktop subtitle line 2
 │ peek to study their range.               │
 │    A  K  Q  J  T  9  8  7  6  5  4  3  2 │ 155–175 column header (tap = toggle column; long-press = "this and better")
-│ A ▓▓ ▓▓ ▓▓ ▓▓ ▓▓ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ │ 179–541 matrix 362×362 at 390 (cells 26 + gap 2)
+│ A ▓▓ ▓▓ ▓▓ ▓▓ ▓▓ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ │ 179–541 grid rows 362 tall; grid 382 WIDE at 390 =
+│  ⋮                                       │         header 20 + 13 × 26 + 12 × 2 (see below)
 │ K ▓▓ ▓▓ ▓▓ ▓▓ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ │ row header 20 pt wide (tap = toggle row; long-press = 99+ etc.)
 │ Q ▓▓ ▓▓ ▓▓ ▓▓ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ │ pairs diagonal = comboPair · suited (upper-right) = comboSuited
 │ J ▓▓ ░░ ░░ ▓▓ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ │ offsuit (lower-left) = comboOffsuit · unpainted = ink700 + faint label
@@ -1181,9 +1336,68 @@ Full-screen modal (the matrix needs the full width); tab bar hidden.
 └──────────────────────────────────────────┘ + 34 inset
 ```
 
-**Finger-painting spec (`RangeMatrix.editable`)** — cells are 26 pt (25 at 360, 29 at 430),
-deliberately below 44: the matrix is one paint surface, not 169 buttons. Precision comes from
-five mechanisms:
+**Matrix arithmetic — one formula, every call site.** `RangeMatrix` is **width-driven**: the
+caller passes the box it may occupy and the widget solves for the cell. Never the reverse — a
+hard-coded `cellSize` is what produced the numbers below that do not add up.
+
+```
+cell = floor((W − H − 12 × g) / 13)          // W box, H row-header column, g gap
+grid = H + 13 × cell + 12 × g   ≤ W          // debug assert
+```
+
+The old figures fail it. "362 at 390 (cells 26 + gap 2)" was the grid **without** its 20 pt row
+header (13 × 26 + 12 × 2 = 362; **+ 20 = 382**), and §4.8's "346 pt, cells 24" was neither
+(13 × 24 + 12 × 2 = 336; + 18 = 354). At **360 the old numbers overflow the screen**:
+13 × 25 + 12 × 2 + 20 = **369 > 360**. Restated, every call site:
+
+| Call site | box W | H | g | **cell** | grid = H + 13c + 12g |
+|---|---|---|---|---|---|
+| P7 painter @ **360**×780 | 352 (margin 4) | 20 | **1** | **24** | 20 + 312 + 12 = **344** |
+| P7 painter @ **390**×844 | 382 (margin 4) | 20 | **2** | **26** | 20 + 338 + 24 = **382** |
+| P7 painter @ **430**×932 | 422 (margin 4) | 22 | **2** | **29** | 22 + 377 + 24 = **423** |
+| P7 **Peek reveal** @ 360 / 390 / 430 | 352 / 382 / 422 | 18 / 20 / 20 | 1 | **19 / 21 / 24** | **277 / 305 / 334** |
+| P5 assumed range, inside P3 (§4.8) | 326 | 18 | 1 | **23** | 18 + 299 + 12 = **329** |
+| D1 grading range, in the panel (§5.3) | 326 | 18 | 1 | **18** | 18 + 234 + 12 = **264** |
+| Lessons / RangeExplorer / EquityCalculator / mini-drill (§6.5) | 326 | 18 | 1 | **23** | **329** |
+| P8 reveal-row inline matrix (§4.12) | 300 | 16 | 1 | **21** | 16 + 273 + 12 = **301** |
+| S6 range editor | = the P7 painter at that width | | | | |
+
+Three notes on the table. **(1)** The painter runs a **4 pt page margin**, not 8: on P7 the matrix
+*is* the screen, and its outer columns are protected from the Android back gesture by an exclusion
+rect (below) rather than by whitespace. **(2)** At **360 the painter uses gap 1**, which is what
+makes a 24 pt cell fit; `RangeMatrix.hairline` (gap 0 with a 1 pt divider painted *inside* each
+cell) is the sanctioned fallback that buys one more point — cell 25, grid 20 + 325 = **345** — and
+is what the widget switches to automatically when `textScaler > 1.3` widens the row header.
+**(3)** The fit is **never** solved by cropping a column or by shrinking the label below its
+floor.
+
+**Cell labels are graphics, not prose — the second and last exemption to the legibility floor.**
+At cell 24–29 the in-cell label ("AKs", "T9o", "77") renders at **9.5–11 pt** mono semibold,
+under the 11 pt floor §13 sets for text a user must read in order to act. It is exempt because it
+is **redundant four times over**: the cell's *position* is its identity (row = higher rank, column
+= lower rank, above the diagonal = suited, the diagonal = pairs), the fill colour carries the
+state, the **loupe** renders the label under the finger at Bricolage 13, and the screen reader
+announces the full name ("Ace King suited, painted"). Nobody has to read 9.5 pt type to paint
+correctly. The label is drawn at `min(11, cell × 0.40)` and is **omitted entirely below cell 20**
+(D1's grading range at cell 18 is read-only and compare-coloured, so it needs none). This is the
+only exemption granted on the matrix — the 9-max HUD asked for the same thing at 9 pt and was
+moved to P6 instead (§4.2.2), because there the numbers were the content, not a redundant tag.
+
+**Android gesture-navigation exclusion (the matrix).** The grid spans x 4–386 of 390, so its
+row-header column and its first and last cell columns sit inside Android's ≈ 20–24 pt side-back
+zones: a stroke starting on the "A" column or ending on the "2" column would pop the route
+mid-paint. `RangeMatrix` therefore publishes a `SystemGestureExclusionRect` over **its own
+bounds** whenever it is `.editable` or `.compare` (a `.readOnly` matrix publishes none — nothing
+is lost if a stray drag pops a viewer). On P7 and S6 that is the whole grid; **inside a scroll
+view (§6.5) the rect is recomputed on every scroll frame** so it only ever covers the visible part
+of the grid. Android budgets 200 pt of vertical edge per side, and on these screens it is spent
+**grid first**; the preset chips, the legend and the button row sit ≥ 16 pt clear of both edges
+and need nothing. This is the same mechanism `TableScreen` uses for the felt (§4.2). iOS needs
+nothing: P7 and S6 are modal routes, so the interactive pop gesture is off.
+
+**Finger-painting spec (`RangeMatrix.editable`)** — cells are **24–29 pt** depending on width
+(table above), deliberately below 44: the matrix is one paint surface, not 169 buttons. Precision
+comes from five mechanisms:
 
 1. **Touch-down decides the stroke mode**: the first cell touched is toggled immediately; if it
    was empty the stroke is *add*, otherwise *remove* (desktop `addModeRef`). The stroke keeps
@@ -1200,8 +1414,10 @@ five mechanisms:
 5. **Header selectors**: tap a column header → toggle the whole column; tap a row header →
    toggle the whole row (mode = the majority state inverted); tap the "A" corner → toggle all
    pairs; **long-press** a row header → "this and better" (long-press "9" → 99+; on the suited
-   header row → A9s+ style "and better" along that row). Header hit boxes are 44 tall / 26 wide
-   + slop to 44.
+   header row → A9s+ style "and better" along that row). Header hit boxes are **one cell wide
+   (24–29 pt, per the arithmetic above) with slop out to 44×44** — they may overlap the felt/page
+   margin outside the grid, never a neighbouring header's box, and never a cell (the grid's own
+   pan recognizer owns everything inside the cell area, §6.5).
 
 - **Undo** reverts the last stroke (20 deep; a preset or Clear counts as one stroke). **Clear**
   empties with a 3 s "Undo clear" snackbar. Presets replace the current paint: Top 10 / 15 /
@@ -1224,14 +1440,14 @@ five mechanisms:
 │ BTN · Tight-Aggressive (TAG) · Flop      │
 │    (13×13 compare matrix, read-only)     │ green correct · amber missed · red extra
 │ ■ Correct ■ Missed ■ Extra  Their range: 312 combos │ legend switches to compare mode
-│ ┌──────────────────────────────────────┐ │
-│ │  64 %   SOLID                        │ │ Bricolage 40 + grade label, both in the grade colour
-│ │  You caught about 7 in 10 of the     │ │ plain-English recall / precision (new, layer 1)
-│ │  hands they play here, and about 6   │ │
+│ ┌──────────────────────────────────────┐ │ score card ≈ 196, rendered by CoachNoteView.peek()
+│ │  SOLID                               │ │ LAYER 1 headline = the GRADE WORD, Bricolage 34,
+│ │  You caught about 7 in 10 of the     │ │ grade colour. NO percentage at layer 1 (principle 3)
+│ │  hands they play here, and about 6   │ │ plain-English recall / precision (new)
 │ │  in 10 of what you painted was right.│ │
-│ │  Coverage (recall): 71 %             │ │ desktop lines, mono, muted (layer 2 of this card)
-│ │  Precision: 58 %                     │ │
-│ └──────────────────────────────────────┘ │
+│ │  ▸ Show me the math                  │ │ LAYER 2 · score 64 % · recall 71 % · precision 58 %
+│ │  ▸ Expert detail                     │ │ LAYER 3 · combos, how the range was built, whose
+│ └──────────────────────────────────────┘ │         model this is — required, not optional
 │ Everyone's exact cards are revealed when │ desktop
 │ the hand ends.                           │
 │ ┌──────────────────────────────────────┐ │
@@ -1240,8 +1456,72 @@ five mechanisms:
 └──────────────────────────────────────────┘
 ```
 
+**Layer 1 is the grade word and counts — never the percentage.** Principle 3 is not suspended on
+this card: the headline is the verbatim grade — "Sharp read" / "Solid" / "Rough" / "Way off" — in
+Bricolage 34 in the grade colour, followed by the two plain-English lines ("about 7 in 10",
+"about 6 in 10"; `fmtTimes`). **`64 %` does not appear at layer 1 at all.** The earlier draft led
+with "64 %" in Bricolage 40 and set the word beside it, which makes a percentage the largest
+object on the screen — the exact reading habit this app spends every other surface trying to
+replace. The number is not hidden, it is one row down:
+
+- **"Show me the math"** (`DisclosureRow`, gold) opens to the desktop's own numbers, mono:
+  `"Score: 64 %"` · `"Coverage (recall): 71 % — 34 of the 48 combos they actually play"` ·
+  `"Precision: 58 % — 34 of the 59 combos you painted"` · `"Score = (recall + precision) / 2"`.
+- **"Expert detail"** (`DisclosureRow`, muted) is **required on this card**, not exempt, and it
+  answers the three things a thinking user asks next:
+  1. *(new)* `"Painted 59 combos; their range holds 48; 34 overlap. These are combos, not hands —
+     AKs is 4 combos, AKo is 12, a pair is 6, so painting one pair cell is worth less than one
+     offsuit cell."`
+  2. *(new)* `"Their range was built from this archetype's opening and continuing frequencies for
+     this position and the action so far, then filtered by the board. It is the same range the EV
+     Coach used for its equity estimate on this street — grading you against one model and
+     advising you from another would be dishonest."`
+  3. *(new)* `"This is the coach's model of what they would play here, not the two cards they were
+     dealt. Their actual hand shows at hand-over. A 'Way off' score against a hand they should not
+     have had is the model being right and the deck being the deck."`
+  Without line 3 the card silently invites "the coach said 64 % but they turned over 7-2 offsuit",
+  and the three-layer structure exists precisely to answer that before it is asked. **No
+  exemption is granted here** — a score the user might dispute is the strongest case for layer 3
+  in the app.
+
+**The reveal has to fit without pushing the matrix off-screen.** The naive stack does not: 382 pt
+matrix + 24 legend + ≈ 180 score card + 36 caption + 56 Continue + 34 inset, under a 59 pt safe
+inset, a 44 pt top bar and a 32 pt subtitle, sums to **≈ 877 pt** against 844 — and misses by more
+at 360. Two changes, both applied:
+
+1. **The reveal matrix is smaller than the painter's.** Painting needs a big target; *reading* a
+   compare grid does not. At 390 the reveal renders at **cell 21, gap 1, header 20 → 305 pt**; at
+   360 **cell 19 → 277**; at 430 **cell 24 → 334** (§4.9 arithmetic). The Peek crossfade therefore
+   also scales the grid (200 ms, same curve): the cells the user painted stay in the same relative
+   places, which is what keeps the compare colouring readable at a glance.
+2. **The score card scrolls under a pinned Continue.** Everything between the legend and the
+   button is one scroll view; **Continue is pinned** to the bottom safe area and never scrolls.
+   When the content is shorter than the space — the usual case, both disclosures closed — it
+   simply sits there and nothing scrolls.
+
+| Band | @390×844 | @360×780 |
+|---|---|---|
+| safe inset | 59 | 32 |
+| top bar (✕ · title) | 44 | 44 |
+| subtitle (position · archetype · street) | 32 | 32 |
+| **compare matrix** | **305** | **277** |
+| legend + "Their range: 312 combos" | 24 | 24 |
+| score card (grade + 3 plain lines + 2 disclosure rows) | 196 | 196 |
+| "Everyone's exact cards…" caption | 36 | 36 |
+| *running total* | **696** | **641** |
+| pinned Continue 56 + 16 gap | 72 | 72 |
+| home indicator / gesture inset | 34 | 24 |
+| **total** | **802** ≤ 844 — **42 spare** | **737** ≤ 780 — **43 spare** |
+
+At 430×932 everything grows and the spare rises to ≈ 90. Opening a disclosure row scrolls the
+card; the matrix, the legend and Continue never move. Under dynamic type only the card and the
+caption grow. The **painter** side of P7 has its own budget (matrix 382 + legend 24 + presets 36 +
+buttons 56 + hint 18 = 516 under the same 135 pt of chrome, 685 of 844) and scrolls its preset row
+horizontally, never vertically.
+
 - Grades *(desktop)*: ≥ 0.8 "Sharp read" (`good`) · ≥ 0.6 "Solid" (`gold`) · ≥ 0.4 "Rough"
-  (`warn`) · else "Way off" (`bad`). Recorded (`recordGuess`) only when something was painted.
+  (`warn`) · else "Way off" (`bad`) — the grade word is the card's headline (above). Recorded
+  (`recordGuess`) only when something was painted.
 - Nothing painted: the matrix highlights the actual range read-only and the card reads
   *(desktop)* "Here's Ivey's assumed range. Paint a guess first next time for an accuracy
   score."
@@ -1287,6 +1567,15 @@ Options), swipe-up on the hero strip. Sheet M; the segment is remembered for the
 
 - **Log**: the engine `log` for the current hand; empty state "Actions will appear here."
   *(desktop)*. Long-press any hand's header → "Hand log copied" toast.
+- **How far back the Log goes — the list is capped at 20.** The current hand renders in full;
+  below it, the **last 20 hands of this session** collapse to 44 pt rows, newest first, and that
+  is the end of the list. A 200-hand session does not build a 200-row sheet. After the twentieth
+  row the list closes with a single row *(new)* **"Earlier hands — open the Session tab ›"**,
+  which switches this sheet's segment to **Session**, whose "Hands this session (N)" list is the
+  complete one (52 pt rows, paginated 100 at a time per §14). Only **one** collapsed hand is
+  expanded at a time — opening another collapses the previous — so the sheet's height stays
+  predictable and the scroll position never jumps under the thumb. Hands from *ended* sessions are
+  not in this sheet at all; they live in Stats → All hands (T2).
 - **Session**: stat tiles (`StatTile`, mono) Hands `12` · Net `+4.5 bb` (good/bad) · bb/100
   `+37` · Read accuracy `64 %` (or "—") · Your style `24/19 · 12h` (after 8 hands; "—" before).
   Each tile tap → T1 explainer with the verbatim tooltip (bb/100: "Big blinds won per 100 hands
@@ -1338,11 +1627,46 @@ At `phase == hand-over` (all steps skippable by tapping Next hand):
 - Tap a reveal row → P6 for that seat with "Read their range" disabled ("Hand over — reads
   reopen on the next deal") and an inline read-only matrix of the range assigned for their last
   street; "Explain their last move" enabled when applicable.
+- **The coach chip at hand-over becomes the results card's header row.** The chip zone
+  (y 479–519) sits **inside** the results card's band (y 372–560), so a verdict landing on the
+  hero's *last* action of the hand — very often the most expensive one, the river call — would be
+  painted underneath the card and never seen. At hand-over the chip therefore does not render on
+  the felt at all. It renders as a 44 pt strip **pinned at the top of the results card**, inside
+  the card's own rounded corners, above the net line:
+
+```
+│      │     ▭    ▭    ▭    ▭    ▭         │  │ board stays visible
+│ ┌──────────────────────────────────────────┐ │ 372
+│ │ ⊗ Mistake · You paid 8 bb to win 24 …  › │ │ 372–416 COACH ROW: verdict disc 24 · label ·
+│ ├──────────────────────────────────────────┤ │         first clause · chevron → P3 at M
+│ │  +12.5 bb            Ivey wins with two  │ │ 416– the card exactly as drawn above
+```
+
+  Rules:
+  - **The card's band does not move.** It is y 372–560 with or without the coach row — it cannot
+    grow up (the board ends at 377) and it cannot grow down (the hero cards start at 556). The
+    44 pt comes out of the **scrolling reveal list**, which shows **two** rows instead of three
+    while the coach row is present. The list already scrolls, and "All 8 hands ›" / P9 already
+    exists for the 9-max case, so nothing becomes unreachable.
+  - The row appears only when a verdict for this hand's last hero action exists and has not been
+    acknowledged. It reuses `CoachChip`'s content and colours (disc 24, label, first clause,
+    chevron) so it is recognisably *the chip* rather than a new component.
+  - It has **no 4 s lifetime**: the hand is over, nothing is going to overwrite it, so it lives as
+    long as the card does. Tapping it opens P3 at M over the card.
+  - A verdict that resolves **after** the card is already up fades the row in at the top (240 ms)
+    while the reveal list shortens by one row; the card's own top and bottom stay put.
+  - A **blocking** mistake never reaches this path — it pauses the hand before hand-over and is
+    acknowledged first (§4.8).
+  - Coach off, or no verdict for the last action: no row, and the card's top is its net line,
+    exactly as drawn above.
 - **Learn-by-reveal**: the card opens automatically at every hand-over (it is the desktop
   overlay). If the user taps Next hand within 1 s on three consecutive hands, the card collapses
   to a one-line strip ("+12.5 bb · You won the pot · See everyone's cards ›") on subsequent
   hands until they open it twice in a row again. Nothing is ever hidden; only the default
-  height adapts.
+  height adapts. **The collapse never takes the coach row with it**: when the card is a strip, the
+  coach row is drawn *above* the strip and the strip below it — the collapse hides the reveals,
+  which the user has just told us they are skipping, never the verdict, which is the one thing
+  they have not seen yet.
 - "Next hand" → `deal()`. With **Auto-deal next hand** on (default off) and Auto pace, a 3 s ring
   counts down in the context row; **touching the results card cancels the countdown** and the
   button becomes explicit. Under reduced motion the ring is a static "3 s" caption that counts.
@@ -1368,6 +1692,8 @@ P10; **closing P10 with ✕ returns to the table and the session continues** *(d
 │ │ Best: a turn raise worth +3.2 bb.    │ │ "Best: a {street} {action} worth {ev} bb."
 │ │ Costliest: a river call (−3.1 bb) —  │ │ "Costliest: a {street} {action} ({ev} bb) — it's
 │ │ it's in your Review queue.        ›  │ │  in your Review queue." → tap: Drills Review mode
+│ │ ▸ Show me the math                   │ │ LAYER 2 · the counts behind 11 % and 14 %
+│ │ ▸ Expert detail                      │ │ LAYER 3 · what "flagged" means + the thresholds
 │ └──────────────────────────────────────┘ │
 │ ┌──────────┬──────────┐                  │
 │ │ Net      │ bb / 100 │                  │ 2×2 StatTiles: Net (good/bad) · bb / 100 ·
@@ -1395,6 +1721,27 @@ P10; **closing P10 with ✕ returns to the table and the session continues** *(d
   `all-in-session-{startedAt ISO, first 19 chars, ":"/"T" → "-"}.txt`; Copy is one of its
   targets. Disabled when 0 hands. Toast after a share that completes: none (the OS confirms);
   after "Copy": "Hand history copied to clipboard." *(desktop)*.
+- **The debrief card is a three-layer surface and carries both disclosure rows.** TONE.md lists
+  the session debrief beside the coach note and the drill rationale, and this is the one card in
+  the app that states a rate ("11 % vs your usual 14 %") *and* a judgement ("cleaner than
+  average") in the same breath — exactly the place where an unopenable number asks to be trusted.
+  It renders through `CoachNoteView` like every other three-layer surface, with layer 1 = the
+  paragraph above and:
+  - **"Show me the math"** → the counts, mono *(all new)*: `"2 of 18 coached decisions were
+    flagged this session = 11 %."` · `"Lifetime: 47 of 336 = 14 %."` · `"Best and costliest are
+    the highest and lowest EV among this session's coached decisions: +3.2 bb and −3.1 bb."` ·
+    and, when the session has fewer than 10 coached decisions, `"18 decisions is a small sample —
+    one flagged call moves this by 6 points."`
+  - **"Expert detail"** → the rule behind the word "flagged" *(all new)*: `"A decision is flagged
+    when the coach's EV estimate for your action is below the best legal action by more than the
+    strictness threshold — 0.5 bb on Relaxed, 0.25 bb on Standard, 0.1 bb on Strict — and the gap
+    is outside the simulation's noise band for that spot."` · `"'Cleaner than average' means this
+    session's rate is at least 2 points under your lifetime rate; '— a rougher one' is 2 points
+    over; inside ±2 the clause is omitted."` · `"Only decisions made with the EV Coach on are
+    counted, so a session played with it off shows no card at all."`
+  - Both rows render in the degenerate case too: with 0 coached decisions layer 1 reads *(new)*
+    "No coached decisions this session — the EV Coach was off." and the rows open to the standard
+    "No math for this one…" / "Nothing extra here." placeholders (§4.8).
 - The verdict card and the money tiles never share a colour scale (principle 8).
 - Read-only P10 (from Home / Lobby recent sessions / T0): same layout, no "New session", "Done"
   only; header "Session · Today 18:10 · 6-max".
@@ -1501,8 +1848,49 @@ is stateless until answered, so leaving costs nothing.
   the feedback panel's header adds a one-line strip "Set done — 8 of 10 · rating +24" with
   "Keep going" as the Next button's label; the endless loop is otherwise unchanged. There is
   no set-summary card and no forced stop.
-- **360×780**: table 264 pt; the stats strip and the Today line merge into one 32 pt line
-  ("Rating 1084 · 71 % · 4/9 · ◔ 14/20"); everything else keeps its height.
+- **360×780 — the full band list.** The compact height has to absorb 64 pt, and it takes them
+  from the drill table and from merging the two stats lines. It never takes them from the answer
+  row:
+
+  | Band | @390×844 | @360×780 |
+  |---|---|---|
+  | safe inset | 0–59 | 0–32 |
+  | title + ⓘ | 59–103 | 32–76 |
+  | mode chips | 103–147 | 76–120 |
+  | stats strip | 147–179 | 120–152 — **one merged 32 pt line**: "Rating 1084 · 71 % · 4/9 · ◔ 14/20" |
+  | Today line | 179–203 | *(merged above)* |
+  | **drill table** | 207–507 (**300**) | 156–420 (**264**) |
+  | move navigator | 515–559 | 428–472 |
+  | hand label + source pill | 563–583 | 476–496 |
+  | **answer row** | 591–647 (**56**) | 504–560 (**56** — a hard minimum, never shrinks) |
+  | tab bar + inset | 664–844 | 580–780 |
+
+- **The feedback panel's compact top is derived from the table, not fixed.** Principle 2 says the
+  spot stays visible under the panel, so the constraint is **compact top = hero-cards bottom +
+  8**, and the panel gets whatever is left. `DrillTable` puts the board at fraction (0.50, 0.47)
+  of the table box and the hero cards at (0.50, 0.85), so:
+
+  | | @390×844 | @360×780 |
+  |---|---|---|
+  | table box | y 207–507 (300 tall) | y 156–420 (264 tall) |
+  | board (44×62 / 40×56) | y 317–379 | y 252–308 |
+  | hero cards (48×67 / 40×56) | y 428–495 | y 352–408 |
+  | **compact panel top** | **503** | **416** |
+  | compact panel height (to the inset) | 844 − 503 − 34 = **307** | 780 − 416 − 24 = **340** |
+  | expanded panel top (92 %) | 68 | 62 |
+
+  The earlier draft's "panel top at y ≈ 300 (compact)" is **withdrawn**: at 390 that line runs
+  through the middle of the drill table and covers the board, the hero's cards and the navigator —
+  the exact failure Principle 2 exists to prevent, and at 360 (board bottom 308) it would cover
+  the board by 8 pt even after shrinking the table. Golden tests assert `panelTop > boardBottom`
+  at all three widths in the compact detent, at 1.0× and 1.3× text.
+- **What the compact detent must fit in those 307 / 340 pt**: header 44 + EV-loss line 40 +
+  rationale (3 lines) 66 + the two disclosure rows 96 + Next 56 + 2 × 16 padding = **334**. At 390
+  that is 27 pt over, so the compact detent **scrolls its middle** (rationale and outcomes box)
+  with the header and Next pinned — the same pinned-primary pattern as the Peek reveal (§4.9). At
+  360 it fits with 6 pt to spare. The outcomes box and the secondary button row belong to the
+  expanded detent; at 360 that row stacks into two full-width 48 pt buttons rather than shrinking
+  them side by side.
 
 ### 5.2 Move navigator (D0 scrubber, D2 frame list)
 
@@ -1530,7 +1918,8 @@ from behind the answer row (280 ms spring; reduced motion: appears):
 ```
 ┌──────────────────────────────────────────┐
 │   (table visible, dimmed 20 %)           │
-│ ┌──────────────────────────────────────┐ │ panel top at y ≈ 300 (compact) / 92 % (expanded)
+│ ┌──────────────────────────────────────┐ │ compact top = hero-cards bottom + 8 (503 at 390,
+│                                          │ 416 at 360 — §5.1) / 92 % (expanded)
 │ │ ⊗  Not optimal                  −6   │ │ header: badge 28 (bad ✕ / good ✓) · verdict · rating delta (mono)
 │ │ That choice costs about 1.2 bb every │ │ EV-loss line, bad colour (only wrong & > 0.05 bb):
 │ │ time — a real leak.                  │ │ "…— a small leak | a real leak | a blunder-sized leak."
@@ -1543,7 +1932,9 @@ from behind the answer row (280 ms spring; reduced motion: appears):
 │ │ wins about 1 time in 3 and you need  │ │
 │ │ about 1 time in 4.                   │ │
 │ │ ▸ Show me the math                   │ │ LAYER 2 · "Equity: 33% · Pot odds: 25%" + steps (new)
-│ │ ▸ See the range it was graded against│ │ LAYER 3 · read-only matrix 260 + gradeRangeTitle
+│ │ ▸ Expert detail                      │ │ LAYER 3 · same label as everywhere else; opens to
+│ │                                      │ │ gradeRangeTitle + read-only matrix (326 box → cell
+│ │                                      │ │ 18, grid 264 — §10.4) + the desktop caption
 │ │ ┌───────────────┐ ┌────────────────┐ │ │
 │ │ │ 📖 Pot Odds… │ │ ◎ Drill 5 similar│ │ │ secondary row 48: lessonTitle ?? "Read the lesson" ·
 │ │ └───────────────┘ └────────────────┘ │ │ "Drill 5 similar" (practice, non-leak only)
@@ -1562,13 +1953,26 @@ from behind the answer row (280 ms spring; reduced motion: appears):
 - **Three layers, always**: layer 1 = verdict + EV-loss line + rationale (+ the outcomes box);
   "Show me the math" = the "Equity: 33%" / "Pot odds: 25%" line *(desktop)* plus the EV
   arithmetic as steps *(new)*: "Pot 24 + call 8 = 32 · 33 % × 32 − 8 ≈ +2.6 bb"; when neither
-  value exists the row opens to "No math for this one — it's a chart spot." *(new)*. Row 3 =
-  "See the range it was graded against" / "Hide the range" *(desktop)*, or "Expert detail:
-  no range for this spot" *(new)* for leak puzzles without `gradeRange`.
+  value exists the row opens to "No math for this one — it's a chart spot." *(new)*.
+- **Row 3 is labelled "Expert detail" — the range lives inside it.** The row opens to
+  `gradeRangeTitle` (e.g. "CO opening range — 100 bb baseline"), the read-only compare matrix
+  (326 pt box → cell 18, §10.4) and the desktop's caption; the label toggles to "Hide expert
+  detail". Earlier drafts named this row "See the range it was graded against", which reads better
+  in isolation and is exactly the wrong trade: Principle 3 promises that **the same two labels sit
+  in the same two places on every three-layer surface**, so a user learns "the second row is the
+  deep end" once and never again. A row that renames itself per surface is not recognisable as the
+  same thing and teaches nothing. No copy is lost — the desktop string survives as the **first
+  line of the row's body** ("The range it was graded against:"). For leak puzzles with no
+  `gradeRange` the row still renders and opens to *(new)* "No range for this spot — it was graded
+  against your own flagged decision." §15.2 records this as a deliberate deviation from desktop
+  copy.
 - **Rating delta** "+12" / "−6" in the header (practice modes only), then after 600 ms flies to
   the stats strip whose Rating rolls to the new value (200 ms). Review mode: no delta.
-- **Lesson link** → S1 as a **full-screen modal over Drills** ("Done" returns to the same
-  answered spot with the panel still up).
+- **Lesson link** → S1 at the **root-level route `/lesson/:id`** (`fullscreenDialog`, "Done"
+  instead of `‹`) — a full-screen modal *over* Drills, not a Study-branch push. A branch push
+  would switch the user to the Study tab and abandon the answered spot behind it; the root-level
+  modal keeps D0 alive underneath, so "Done" returns to the same answered spot with the feedback
+  panel still up (§2.6, §16.1).
 - **Next puzzle** → `next()`; also reachable by **overscrolling the expanded panel** (a small
   "release for next" hint at 60 pt of overscroll) for one-thumb chains.
 - Streak: a correct answer pulses the streak number once; a wrong one resets it with a 200 ms
@@ -1688,9 +2092,16 @@ spots if you're experienced, clearer ones if you're new. No grade, no judgment, 
 skip it." — "Skip — start playing" (ghost) · "Calibrate me" (primary). Result page: gold card
 with the headline ("Starting fresh — perfect." / "You know the basics." / "Solid foundations.")
 and "{score}/8 — drills are calibrated to match. {advice}"; buttons "Take me there" (secondary →
-`hand-rankings` / `pot-odds` / `threebet-pots`) and "Start playing" (primary → Home). Seeding ≤
+`hand-rankings` / `pot-odds` / `threebet-pots`, opened as the **Study-branch push**
+`/study/lesson/:id` — *not* the `/lesson/:id` modal, because the placement modal closes on the way
+out and there is nothing to return to; the user should land in the Study tab with the course
+behind the lesson) and "Start playing" (primary → Home). Seeding ≤
 2 → 900, ≤ 5 → 1050, else 1250 (`seedRating`, keeps solved/correct/streak/best). ✕ mid-quiz →
-`markOnboarded()`, rating untouched. System back = previous question; on Q1 a subtle shake.
+`markOnboarded()`, rating untouched. System back = previous question; on Q1 it is the §2.5
+**blocked-back** response — a 120 ms 4 pt shake plus `selectionClick` — and **under reduced motion
+the shake is dropped entirely, leaving the haptic as the whole answer**; with Settings → Haptics
+also off, nothing happens at all (✕ is on screen and is the stated exit). Motion is never the sole
+channel for a refusal.
 
 ---
 
@@ -1712,8 +2123,13 @@ completion rules. Completion is explicit ("Mark complete"); "Next lesson" never 
 │ │ Level 3 · 6 min read                 │ │ → S1
 │ └──────────────────────────────────────┘ │
 │ TOOLS                                    │ eyebrow
-│ [Range explorer][Equity calc][Pot odds]  │ 2×3 grid of 44-tall tool tiles (icon + label) → S3
-│ [Bluff calc][Multiway][Hand rankings]    │
+│ ┌────────────────────┬───────────────────┐│ TOOLS: 2 columns × 56 tall, 8 pt gaps → S3
+│ │ ◫ Range explorer   │ ◎ Equity calc     ││ tile = icon 20 + label Inter 15 on ONE line;
+│ ├────────────────────┼───────────────────┤│ 171 wide at 390 (159 at 360, 191 at 430)
+│ │ ⊘ Pot odds         │ ✦ Bluff calc      ││
+│ ├────────────────────┼───────────────────┤│
+│ │ ⋔ Multiway         │ ♠ Hand rankings   ││
+│ └────────────────────┴───────────────────┘│ three rows = 184 pt
 │ ▤ Quick reference & glossary          ›  │ pinned row 56 → S4
 │ L1  Basics                         3/3   │ level header 48: icon tile 28 gold-tinted · "L1" faint · title · mono count
 │  ● Hand Rankings                    4m   │ lesson rows 52: 16 pt circle (good + check when done,
@@ -1733,6 +2149,13 @@ completion rules. Completion is explicit ("Mark complete"); "Next lesson" never 
 - Levels are always expanded (31 rows scroll; no accordion — one less tap and the sticky
   header keeps orientation). The active/last-read lesson row is gold-tinted 15 %.
 - Progress "7/31" and `pct` from `studyStore.completed` *(desktop)*.
+- **Tools are two columns of 56 pt tiles, not three of 44.** Three columns give a ≈ 109 pt tile
+  at 390 (101 at 360), which cannot hold "Range explorer" or "Hand rankings" on one line at Inter
+  15 — the labels would wrap inside a 44 pt tile or truncate, and a truncated tool name is a tool
+  nobody opens. Two columns give 171 pt of label width and a 56 pt tile that holds icon + one line
+  comfortably to 1.3× text (above 1.3× the tile grows to 72; above 1.5× the grid reflows to a
+  single column of 56 pt rows). Six tiles, three rows, 184 pt of height — 8 pt more than the 2×3
+  grid cost, for labels that are actually readable.
 - Tools (S3) and Quick reference (S4) are pushes; the same widgets also appear inside their
   lessons (Level 5) — the tool screens are the lessons' widgets given the full screen with the
   lesson's lead paragraph as an intro.
@@ -1754,7 +2177,8 @@ grids, cards, widgets) rendered at Inter 16/1.55, headings Bricolage 22, content
 │ pot odds and equity …                    │
 │ ┌──────────────────────────────────────┐ │
 │ │ (PotOddsCalculator widget, full      │ │ widgets render inline at full width; the range
-│ │  width)                              │ │ matrices render at 346 (§6.5)
+│ │  width)                              │ │ matrices are width-driven: a 326 pt content box
+│ │                                      │ │ → cell 23, grid 329 (§4.9, §6.5)
 │ └──────────────────────────────────────┘ │
 │ ┌──────────────────────────────────────┐ │
 │ │ ◎ Practice            optional       │ │ Quiz card (§6.4)
@@ -1772,8 +2196,13 @@ grids, cards, widgets) rendered at Inter 16/1.55, headings Bricolage 22, content
 - Scroll position resets to top on lesson change. A thin gold read-progress line (2 pt) runs
   under the top bar as the user scrolls.
 - "Next lesson" → replaces the route (no stack growth). Last lesson: the button is absent.
-- Opened from a drill (D1) or the placement result: presented as a **full-screen modal** with
-  "Done" instead of `‹`; Done returns to the exact prior state.
+- **Two hosts, two routes** (§16.1). From **S0's rows and Home's continue card** it is
+  `/study/lesson/:id`, a Study-branch push with `‹`. From the **drill feedback panel (D1)** it is
+  the root-level `/lesson/:id` (`fullscreenDialog`, "Done" instead of `‹`), presented *over*
+  Drills so Done returns to the exact answered spot. The **placement result** uses the **push**,
+  `/study/lesson/:id`: the placement modal is dismissed on the way there and there is no prior
+  state to preserve, so the user should end up in the Study tab with the course list behind the
+  lesson. Same screen widget, same providers, different `parentNavigatorKey`.
 - Long-press any paragraph → "Copy" only (no share; keeps the reader quiet).
 
 ### 6.3 Term popover (S2)
@@ -1808,10 +2237,47 @@ are `StatTile`; every big number is mono or Bricolage; every card is full conten
 | **PotOddsCalculator** | Fields stacked (Pot before the bet 1–60 · Opponent's bet 0.5–60); Result tiles in one 3-column row (You risk · To win · Getting); gold box "Break-even equity" (Bricolage 32) + formula line; Field "Your equity estimate" 0–100; verdict box two columns (EV of calling · Decision "Call"/"Fold"). |
 | **BluffCalculator** | Fields stacked (Pot · Your bet "{bet} bb ({pct} pot)" 0.5–90); two result boxes stacked: gold "If you're bluffing" · plain "If they call you", each with its verbatim caption. |
 | **MultiwayEquityTrainer** | Scenario chips in a wrapping row (36 tall, hit 44); hero cards 40 + "on" + board 36; Field "Opponents" 1–5; big number Bricolage 36 (good ≥ 0.6, gold ≥ 0.4, bad) + caption "equity vs {n}"; the five-column bar chart (columns are 44-wide tap targets; tap sets `opp`); footer paragraph verbatim. Bars show a shimmer until all five results arrive. |
-| **RangeExplorer** | Preset chips row (h-scroll, 36/44: "UTG ~14%" … "BB defend ~55%", "Clear"); editable `RangeMatrix` 346 (§4.9 paint spec, loupe on); legend + "{combos} combos · {pct} of all hands"; paragraph verbatim. |
-| **EquityCalculator** | Stacked, not side-by-side: segmented "Range / Hand"; **Your range** matrix 346 (or hand-mode card picker); **Opponent's range** matrix 346; legend; **Board (n/5)** with the 52-card grid as **S5 Card keypad** (sheet M) opened by tapping the board slots; footer summary + "Calculate equity" (56, primary; "Calculating…" busy); result panel (equity, stacked bar, Win/Tie/Lose, samples/exact, blockers line); breakdown cards. Tapping either matrix's "Edit" opens **S6 Range editor** (full-screen, the §4.9 painter with Done). |
+| **RangeExplorer** | Preset chips row (h-scroll, 36/44: "UTG ~14%" … "BB defend ~55%", "Clear"); editable `RangeMatrix` at the 326 pt content box (→ cell 23, grid 329; §4.9 arithmetic and paint spec, loupe on); legend + "{combos} combos · {pct} of all hands"; paragraph verbatim. |
+| **EquityCalculator** | Stacked, not side-by-side: segmented "Range / Hand"; **Your range** matrix (326 box → cell 23; or the hand-mode card picker); **Opponent's range** matrix (326 box → cell 23); legend; **Board (n/5)** with the 52-card grid as **S5 Card keypad** (sheet M) opened by tapping the board slots; footer summary + "Calculate equity" (56, primary; "Calculating…" busy); result panel (equity, stacked bar, Win/Tie/Lose, samples/exact, blockers line); breakdown cards. Tapping either matrix's "Edit" opens **S6 Range editor** (full-screen, the §4.9 painter with Done). |
 | **RangeBoardBreakdown** | One card per range: title, made-hand rows (label · combos · pct bar), draws row, blockers line — as desktop, single column. |
-| **Study mini-drills** (Pot-odds · Outs → equity · Range-building) | Shell card: title · mono "Score {r}/{t}"; prompt Inter 16; option grid 2×2 (48 tall, mono values); "Correct. " / "Not quite. " explain line; footer button "New spot" / "Check" / "New drill" (48). Range-building uses the editable matrix 346 and compare colouring + "{pct} match". |
+| **Study mini-drills** (Pot-odds · Outs → equity · Range-building) | Shell card: title · mono "Score {r}/{t}"; prompt Inter 16; option grid 2×2 (48 tall, mono values); "Correct. " / "Not quite. " explain line; footer button "New spot" / "Check" / "New drill" (48). Range-building uses the editable matrix (326 box → cell 23) and compare colouring + "{pct} match". |
+
+**Painting inside a scroll view — who wins the drag.** Three surfaces put an *editable*
+`RangeMatrix` inside a vertically scrolling page: the **Range explorer** (in a lesson and as a
+tool screen), the **Equity calculator**'s two range matrices, and the **Range-building
+mini-drill**. A vertical drag that starts on the grid is ambiguous — paint a column, or scroll the
+page? Unresolved, it is the worst kind of bug: the page lurches on some strokes and not others.
+The rule is **the grid claims every drag that starts inside its cells**:
+
+- `RangeMatrix.editable` registers an **eager** pan recognizer (an
+  `AllowMultipleGestureRecognizer` subclass that declares victory on touch-down and never yields
+  to the enclosing `Scrollable`). A pointer that lands on a cell paints from that instant. The
+  first cell toggles on touch-**down** (§4.9 mechanism 1), which is also what makes the
+  arbitration *visible*: the user sees a cell flip before they have moved a millimetre, so they
+  know the grid has the finger. Nothing about the page moves.
+- **The page is scrolled from the grid's margins**, which exist for exactly this purpose: the row
+  header column (18 pt), the column header row (20 pt), the 16 pt page margins to either side of
+  the grid, and every other block on the page. Header **drags** are scrolls; header **taps** and
+  **long-presses** are still the row/column selectors of §4.9 mechanism 5 — a tap moves < 4 pt, so
+  the two never collide.
+- To guarantee there is always somewhere to scroll from even on a short page, an editable matrix
+  embedded in a scroll view reserves a **24 pt gutter on both sides** (inside the 16 pt page
+  margin, painted with the page background). It is invisible but it is real estate, and the
+  golden tests check that it is there.
+- **Long-press is not used to start painting.** It is the obvious alternative — long-press to
+  paint, plain drag to scroll — and it is rejected: it puts a 500 ms wait in front of every
+  stroke on a surface whose whole point is fluent painting, and it collides with the header
+  long-press ("this and better"). A gutter is cheaper than a delay.
+- **The loupe in a scroll view** behaves as on P7 with one change: it is clamped to the
+  **viewport**, not to the grid, so a cell painted at the top of a partly scrolled grid still gets
+  its bubble. When 48 pt above the fingertip would cross the viewport's top edge, the bubble flips
+  to 48 pt **below** the fingertip. The loupe never causes a scroll and never extends the
+  scrollable extent.
+- The matrix's `SystemGestureExclusionRect` (§4.9) is recomputed on every scroll frame so it
+  covers only the visible part of the grid.
+- **S6 exists so that serious edits never happen in a scroll view at all**: "Edit" on either
+  Equity-calculator matrix opens the full-screen painter. The in-page matrices stay editable for
+  quick single-cell corrections, which is what they are actually used for.
 
 **S5 Card keypad** (sheet M, 420 tall): four suit rows × 13 rank keys (26×36, hit 44 via row
 height 44), rank "T" shown as "10", suit-coloured glyphs; used cards (board/hero) disabled at
@@ -1835,8 +2301,14 @@ Push. A search field (44, "Search terms and numbers") filters both. Sections are
 `cheat-sheet` lesson's five headings rendered as `Row(k, v)` cards (k Inter 14 · v mono 13
 gold-light) in one column, then **Glossary** as one row per entry (term Inter 15 semibold ·
 definition Inter 14 muted), in glossary order. Caption *(desktop, adapted)*: "Every term below
-is also tappable wherever it appears in a lesson." Deep link `/study/glossary#potOdds` scrolls
-to and flashes a term (from S2 "Open glossary").
+is also tappable wherever it appears in a lesson." Deep link **`/study/glossary?term=potOdds`**
+scrolls to and flashes a term (from S2 "Open glossary"): the screen reads
+`state.uri.queryParameters['term']`, scrolls that row into view and flashes its background
+gold @ 15 % for 600 ms; an unknown or missing id opens the glossary at the top with an empty
+search field, never an error. **It is a query parameter, not a URL fragment.** `go_router` matches
+paths and query strings and never sees a `#fragment`, so the old `/study/glossary#potOdds` would
+have silently opened the glossary at the top for ever — the deep link would have looked
+implemented and done nothing (§2.6, §16.1).
 
 ---
 
@@ -1854,11 +2326,14 @@ or ⓘ opens **T1** with the verbatim tooltip. Charts are scrubbable; nothing de
 │ Your progress                       [⚙]  │ 59–103 title (desktop h1); gear → X0
 │ Decisions, not results — but we track    │ desktop subtitle, muted 14
 │ both.                                    │
-│ ┌────────┬────────┬────────┬────────┬────┐│ KPI row (h-scroll if needed): 5 StatTiles 72 tall
-│ │ Hands  │ Net    │Win rate│Showdown│Read││ label eyebrow · value mono 20 · sub faint
-│ │ 412    │+38.5 bb│ +9.3 ⓘ │ 52 %   │64 %││ Net/Win rate good/bad by sign
-│ │        │        │bb/100  │ won    │19 rd││
-│ └────────┴────────┴────────┴────────┴────┘│
+│ ┌────────────┬────────────┬────────────┐ │ KPI GRID, row 1 of 2: three StatTiles 72 tall,
+│ │ Hands      │ Net        │ Win rate ⓘ │ │ 106 wide at 390 (98 at 360, 122 at 430)
+│ │ 412        │ +38.5 bb   │ +9.3       │ │ label eyebrow · value mono 20 · sub faint
+│ │            │            │ bb/100     │ │ Net / Win rate good/bad by sign
+│ ├────────────┴──────┬─────┴────────────┤ │
+│ │ Showdown          │ Read accuracy    │ │ row 2: two tiles 72 tall, 163 wide at 390
+│ │ 52 %   won        │ 64 %   19 reads  │ │ (151 at 360, 187 at 430)
+│ └───────────────────┴──────────────────┘ │ block height 72 + 8 + 72 = 152
 │ CUMULATIVE WINNINGS (bb)                 │ card: LineChart 170 tall, scrub → T4 value sheet
 │ ┌──────────────────────────────────────┐ │ (touch-and-hold shows a crosshair + "Hand 212 · +31.5 bb"
 │ │      ╱╲    ╱╲╱╲                      │ │  in a floating label instead of a sheet)
@@ -1897,11 +2372,42 @@ or ⓘ opens **T1** with the verbatim tooltip. Charts are scrubbable; nothing de
 
 Tiles *(desktop)*: `Hands` · `Net` (`{fmtSigned(netBb)} bb`) · `Win rate` (`fmtSigned(bb100)`,
 sub "bb/100 (lifetime)", ⓘ) · `Showdown` (`fmtPct(sdWin)`, sub "won") · `Read acc.`
-(`fmtPct(avgAcc)` or "—", sub "{n} reads"). T1 (sheet S) = title + verbatim body; Win rate:
-"Big blinds won per 100 hands — the standard, stake-independent win-rate. Roughly: +5 is a
-strong winner; expect wild swings under a few thousand hands." Every T1 also renders the two
-empty disclosure rows only when there is math behind the stat (Style numbers get "Healthy
-range: 24–32%" as the layer-2 content).
+(`fmtPct(avgAcc)` or "—", sub "{n} reads").
+
+**The five KPIs are a 3 + 2 grid, never a horizontal scroller.** Five 72-wide tiles in an
+h-scrolling row is the shrunken-dashboard tell §1 forbids: it hides two of the five numbers
+off-screen behind a gesture nobody performs on a page that already scrolls vertically, and it
+nests a horizontal scroll view inside a vertical one — the arbitration problem of §6.5 for no
+benefit. Two rows of full-width tiles show all five at once at every supported width (106 / 98 /
+122 pt tiles in row 1, 163 / 151 / 187 in row 2), keep the mono values at 20 pt, and cost 152 pt
+of height against the scroller's 72. The other candidate shape — three tiles plus a "More ›" row —
+is **not** used: `Showdown` and `Read accuracy` are two of the three questions this screen exists
+to answer, and a "More" row would bury them.
+
+**Every T1 renders both disclosure rows, always — no conditions.** Principle 3 is a structural
+promise ("the two rows are always present, even when there is nothing behind them, so the
+structure teaches itself"), and a row that shows up only sometimes teaches nothing and cannot be
+looked for. The earlier "only when there is math behind the stat" wording is **withdrawn** here
+and everywhere it was implied: **§7.4** (style numbers), **§5.1** (the drill source-pill sheet),
+**D3**, **D4**, **H2** and every ⓘ in Study. All of them are the one widget, `ExplainerSheet`
+(§10.5): title + verbatim body + `DisclosureRow("Show me the math")` + `DisclosureRow("Expert
+detail")`. When a stat has no arithmetic behind it, the rows still open — to a written line, never
+to blank space:
+
+| Stat | "Show me the math" opens to | "Expert detail" opens to |
+|---|---|---|
+| Hands | *(new)* "A count — every hand you finished. Imported hands are not counted." | *(new)* "Hands are recorded at hand-over, so leaving a session mid-hand loses only that hand." |
+| Net | *(new)* "The sum of every hand's result in big blinds: {won} won − {lost} lost = {net}." | *(new)* "Play money — and results say less than decisions. Coaching review is the number that moves first." |
+| Win rate | *(new)* "{net} bb over {hands} hands × 100 = {bb100} bb/100." | *(new)* "Under a few thousand hands this is mostly variance; your coached-mistake rate is the honest signal." |
+| Showdown | *(new)* "{won} of the {reached} hands that reached showdown were won." | *(new)* "Only hands that reached showdown count here; hands everyone folded to you are in Net." |
+| Read accuracy | *(new)* "The mean of your last {n} Peek scores: {list}." | *(new)* "Each score is (recall + precision) / 2 against the coach's assumed range — §4.9." |
+| Style numbers (WTSD / W$SD / AF) | *(desktop band)* "Healthy range: 24–32 %" + the metric's own formula | *(desktop footnote)* the metric's caveat line |
+| Anything with genuinely nothing behind it | *(new)* "No math for this one — it's a definition, not a calculation." | *(new)* "Nothing extra here." |
+
+Those last two strings are the same placeholders the coach sheet (§4.8) and the drill panel (§5.3)
+use, so the user meets one vocabulary everywhere. Win rate's verbatim body is unchanged: "Big
+blinds won per 100 hands — the standard, stake-independent win-rate. Roughly: +5 is a strong
+winner; expect wild swings under a few thousand hands."
 
 ### 7.3 Charts
 
@@ -1910,9 +2416,28 @@ range: 24–32%" as the layer-2 content).
   trend." *(desktop)*. **Scrub**: touch-and-hold (200 ms) then drag shows a vertical crosshair
   and a floating mono label "Hand 212 · +31.5 bb" (T4 as an in-chart label; no sheet). Reduced
   motion: no draw-in animation.
+- **The long-press claims the vertical drag — the page cannot scroll while a crosshair is up.**
+  The chart sits inside a vertically scrolling page, so without an explicit rule the page slides
+  out from under a scrubbing thumb. `LineChart` puts a `LongPressGestureRecognizer`
+  (`duration: 200 ms`) into the gesture arena: **before** it wins, a vertical drag scrolls the
+  page exactly as anywhere else (and a horizontal one does nothing — the page has no horizontal
+  axis); **once it wins it holds the pointer until it lifts**, and the enclosing `Scrollable`
+  receives nothing in either axis. Entering scrub fires `selectionClick`; crossing each data point
+  fires another; lifting removes the crosshair. A plain tap or a flick does nothing at all, so
+  scrolling past the card never spawns a value label. This is the same contract as the matrix in a
+  scroll view (§6.5) — one owner per pointer, decided before the first pixel of movement.
 - **Range-read accuracy**: `MiniBars` of the last 30 guesses (bar height `max(3, v×100)%`,
-  `info`, opacity `0.55 + v×0.45`); tap a bar → its value in a 1.5 s label. Empty: "No reads
-  logged yet." *(desktop)*.
+  `info`, opacity `0.55 + v×0.45`). Empty: "No reads logged yet." *(desktop)*.
+- **MiniBars is drag-to-inspect, exactly like the chart — a bar is never a tap target.** Thirty
+  bars across a 326 pt card is ≈ 11 pt per bar; "tap a bar → its value" would be an 11 pt target,
+  a quarter of the §12 floor, on a control that §12 does not exempt. Instead the same 200 ms
+  touch-and-hold claims the pointer and a mono label follows the finger — *(new)*
+  `"Read 14 · 71 % · Ivey, flop, 3 days ago"` — with the bar under the finger at full opacity and
+  the rest dimmed to 40 %. The finger slides across all thirty without lifting. **The target the
+  user must hit is the strip, not a bar**: the whole strip is one 44-tall gesture band (the bars
+  are 32 tall inside it), which is comfortably over the floor. Lifting clears the label after
+  1.5 s. Nothing here is drag-only — the same thirty reads are rows in Stats → All hands, and the
+  caption stays "Last 30 Peek scores."
 
 ### 7.4 Hands vs each style · Winnings by position · Style numbers · Coaching review
 
@@ -1952,6 +2477,7 @@ Push (tab bar hidden) from P10 rows, T0/T2 rows, P2 Log, and Coaching review row
 │ ‹   Hand #41 replay                 ✎ ⇪  │ 59–103 back · title · note · share (this hand's text)
 │ Dwan raises to 3 bb                      │ 103–127 frame text (Inter 15), crossfades per frame
 │   ╭──────────────────────────────────╮   │ 131–491 felt 360: the same table renderer in replay
+│                                          │ (`lib/widgets/table/`, §10.3 — shared with Play,
 │   │        (6 / 2 / 9 seats)         │   │ mode — seats at the live anchors, plates position +
 │   │      PRE-FLOP · 3.5 bb           │   │ "{stack} bb" at hand start, folded 25 %, hole cards
 │   │     ▭   ▭   ▭   ▭   ▭            │   │ when holes[seat] exists && (isHero || revealAll)
@@ -1972,6 +2498,42 @@ Push (tab bar hidden) from P10 rows, T0/T2 rows, P2 Log, and Coaching review row
   note show the strip empty (fixed 48 pt so the scrubber never jumps).
 - Imported hands: no coach notes; the title carries an "imported" badge; stacks in the site's
   units as written.
+
+**Table sizes the replayer must handle — a generic n-seat layout, not the three hand-tuned ones.**
+§4.2 designs exactly three felts (2, 6, 9) because that is all `newSession` can create. The
+replayer is not so constrained: `handHistory.ts:80` accepts any imported hand with
+`seats.length >= 2`, and 3-, 4-, 5-, 7- and 8-handed tables are ordinary on PokerStars and every
+other room (short-handed tables, tables that broke, tournament final tables). A replayer that
+only knows 2 / 6 / 9 would fail on hands the importer happily accepted. So the replayer's felt is
+polar and parametric:
+
+```dart
+// desktop seatPos(n, i) — one formula, any n >= 2. Hero (i = 0) is always at the bottom;
+// increasing i runs counter-clockwise on screen, matching the live table (§4.2).
+Offset seatPos(int n, int i) {
+  final theta = math.pi / 2 + 2 * math.pi * i / n;    // 90 degrees = bottom centre
+  return Offset(0.5 + 0.39 * math.cos(theta), 0.5 + 0.40 * math.sin(theta));
+}
+```
+
+- The result is a fractional anchor in the same coordinate space `FeltCanvas` already uses, and at
+  n = 6 it agrees with §4.2's hand-tuned anchors to within a few points. The tuned tables exist to
+  squeeze pot, board, bet pills, coach chip and action row onto a *live* playing surface; the
+  replayer has none of those, so the formula is enough.
+- **Plate size scales with n**: `n ≤ 4` → the HU plate (160×64) · `5–6` → standard (104×58) ·
+  `7–9` → compact (84×50) · `n = 10` → compact with the name cut to 4 characters and the HUD line
+  dropped. Hole cards run 34×48 → 30×42 → 24×34 on the same schedule.
+- **Bet amounts render on the plate**, as its caption line ("raised to 3 bb"), not at a separate
+  bet spot. No bet anchor exists, so no bet anchor can collide at an unplanned seat count. The
+  board and the pot pill keep the 6-max anchors at every n.
+- **`n > 10`** — a full-ring history with a straddle line, or a malformed file — is the one
+  refusal, and it is a *state*, not an error. The replayer shows the frame text, the board and the
+  hero's cards with the caption *(new)* **"This table had {n} seats — All-In draws up to 10. The
+  action is written out below; the felt is only a picture."** plus the scrubber (which still
+  works) and a "Share this hand's text" button. Nothing is lost and the hand still counts in the
+  importer's summary.
+- The live table is unaffected — it only ever renders 2, 6 or 9 — but it uses the same
+  `FeltCanvas`, so adding a "5-max" table option later is a data change, not a layout project.
 
 ### 7.8 Import hands (T3)
 
@@ -2021,9 +2583,21 @@ erased", T0 shows all empty states, the table route shows State G.
 
 16 weeks × 7, column-major, oldest left, today the last cell of the last column; cells 11 +
 3 gap (the grid is 221 wide, centred); colours `gold` (met) · gold @ 35 % over `ink600` (active)
-· `ink700` (none). Tap a cell → a 1.5 s label "{key}: {count} reps{ · goal met}". Captions
-verbatim (§7.10 of the port doc). The Home mini-heatmap (§3.5) is the last 5 columns of this
-grid.
+· `ink700` (none). Captions verbatim (§7.10 of the port doc).
+
+**Cells are 11 pt, so the heatmap is drag-to-inspect too** — the same mechanism as the chart and
+MiniBars (§7.3), for the same reason: an 11 pt cell is a quarter of the §12 floor and §12 grants
+it no exemption of its own. Touch anywhere on the grid and hold 200 ms: the grid claims the
+pointer from the page scroll, a label follows the finger reading `"{key}: {count} reps{ · goal
+met}"` *(desktop copy)*, and the cell under the finger takes a 1 pt gold outline. Sliding moves
+the label cell by cell (`selectionClick` per cell, throttled to 30 ms); lifting clears it after
+1.5 s. A plain **tap does nothing** — the grid is not a control, it is a picture of a habit, and
+an accidental tap while scrolling should not pop a label. For screen readers the grid is one
+summary node ("Practice heatmap, 41 active days in the last 16 weeks") with 16 column children
+("week of 2026-08-24, 4 active days"), so no information is drag-only.
+
+The Home mini-heatmap (§3.5) is the last 5 columns of this grid and is **not** inspectable at all:
+it is a 12 pt-cell picture inside one 72 pt tap target that opens this screen.
 
 ---
 
@@ -2065,7 +2639,9 @@ presents O0 immediately (no app reload).
 - Pages: `play` "Play against real-ish opponents" · `target` "Drill like chess puzzles" ·
   `book` "Study when you want the why" · `coach` "Judge decisions, not results" — bodies
   verbatim. Horizontal paging (swipe) and the Next button both advance; system back = previous
-  page; on page 1 a subtle shake.
+  page; on page 1 it is the §2.5 **blocked-back** response (4 pt shake + `selectionClick`;
+  **under reduced motion the shake is dropped and the haptic is the whole response**; with Haptics
+  off, nothing — ✕ and "Skip" are both on screen).
 - Page 4's illustration is a live, non-interactive 3-layer coach note (a real `CoachNoteView`
   with the TONE.md example) so the structure is seen before it is met.
 
@@ -2164,7 +2740,7 @@ class names. Variants are constructor parameters or named constructors.
 | `DisclosureRow` | 48 pt row "▸ Show me the math" that expands inline; rotates chevron | `label`, `expandedLabel`, `child`, `tone` (gold/muted), `alwaysRendered: true` |
 | `TermText` | Inline text with dotted-underline glossary terms → `TermPopover` | `text`, `terms` |
 | `TermPopover` | Anchored ≤ 280×180 definition | `termId` |
-| `AllInSheet` | Bottom sheet wrapper: grabber, detents S/M/L, table cap, `dismissible`, `blocking` | `detent`, `child`, `onClose` |
+| `AllInSheet` | Bottom sheet wrapper: grabber, detents **S** (auto-height, capped at 40 % of the viewport) / **M** (55 %) / **L** (92 %); the table cap is a **prop, not a hidden behaviour** | `detent`, `child`, `onClose`, **`maxHeightFraction`** (§2.4's cap — every sheet presented from a `/table*` route passes `(screenH − 120 − bottomInset) / screenH`, which §16.2 supplies; it clamps **all three** detents, S and L included, so a sheet can never cover the context row + action row), `dismissible` (false for the blocking coach note), `showGrabber`, `blocking`, `onDetentChanged` |
 | `AllInDialog` | Adaptive alert (Cupertino / M3) | `title`, `body`, `actions`, `.typed(confirmWord)` |
 | `AllInToast` | 44 pt pill at the top of the content area, 2.5 s | `text` |
 | `ProgressBarThin` | 4/8 pt gold bar | `value`, `max`, `height` |
@@ -2181,11 +2757,14 @@ class names. Variants are constructor parameters or named constructors.
 | `CoachCard` | Home coach's note card with "Show me why ›" |
 | `GoalCard` | Bar + "8 of 20" + caption |
 
-### 10.3 Table & cards
+### 10.3 Table & cards (`lib/widgets/table/`)
+
+Used by **both** `features/play` (the live table) and `features/stats` (the hand replayer, §7.7).
+That is why they are library components and not play's — see §16.3.
 
 | Widget | Purpose | Props |
 |---|---|---|
-| `PlayingCardView` | Card face/back; four-colour aware; sizes XS 22×31 · S 30×42 · M 44×62 · L 52×73 · XL 72×101 · XXL 80×112 | `card`, `size`, `faceDown`, `dimmed`, `glow` |
+| `PlayingCardView` | Card face/back; four-colour aware. **`width` is a double, not an enum**: height = `width × 1.4`, radius = `width × 0.125`, rank Bricolage 800 at `width × 0.36`, suit glyph at `width × 0.50`, all rounded to whole pt. Named constants exist only as shorthands for the widths this spec actually uses — see the call-site table below | `card`, `width`, `faceDown`, `dimmed`, `glow` |
 | `FeltCanvas` | The felt shape (rail, gradient, hairline) + anchor system in fractions | `layout` (hu/six/nine), `child` builder with `anchor(fx, fy)` |
 | `SeatPlate` | Opponent plate (standard 104×58 / compact 84×50 / HU 160×64) with avatar ring, name, position pill, stack, HUD, eye glyph, turn ring, dealer disc, tucked cards | `player`, `variant`, `state` (idle/toAct/folded/allIn/winner), `showEye`, `onTap`, `onEye`, `onLongPress` |
 | `BetPill` | 22 pt chip-glyph + mono amount at a bet spot; also renders action pills (Raise/Call/Check/Fold colours) | `kind`, `amount` |
@@ -2202,17 +2781,54 @@ class names. Variants are constructor parameters or named constructors.
 | `TurnRing` | 2 pt gold ring with breathing / arc modes | `mode` |
 | `ChipStack` | 3-disc chip stack used by bet/pot animations | `amount`, `color` |
 
-### 10.4 Range
+**`PlayingCardView` call sites.** A six-value enum could not hold them; the spec uses sixteen
+widths, and every one of them is a deliberate fit to a felt, a plate or a row:
+
+| width × height | Where |
+|---|---|
+| 22×31 | coach-sheet header cards (§4.8) · results-card reveal rows (§4.12) · hand rows and P12 · 9-max opponent holes at 360 |
+| 24×34 | 9-max opponent holes at 390 (§4.2.2) |
+| 26×36 | Settings four-colour-deck preview (§9) · S5 card-keypad keys (§6.5) |
+| 28×39 | 6-max opponent holes at 360 · 9-max board at 360 (§4.2.3) |
+| 30×42 | 6-max opponent holes at 390 (§4.3) |
+| 32×45 | 9-max board at 390 (§4.2.2) · HandRankings example cards (§6.5) |
+| 34×48 | HU opponent holes at 390 (§4.2.1) · 6-max opponent holes at 430 |
+| 36×50 | 9-max board at 430 · MultiwayTrainer board (§6.5) |
+| 40×56 | 6-max board at 360 (§4.2.3) · MultiwayTrainer hero cards · 9-max hero cards at 360 |
+| 44×62 | 6-max board at 390 (§4.2) · drill-table board (§5.1) |
+| 48×67 | drill-table hero cards (§5.1) |
+| 50×70 | 6-max board at 430 (§4.2.3) |
+| 52×73 | HU board at 390 (§4.2.1) |
+| 64×90 | hero cards at 360 · 9-max hero cards at 390 |
+| 72×101 | hero cards at 390 (§4.4) |
+| 80×112 | hero cards at 430 · HU hero cards at 390 |
+
+Adding a width is a one-line change at the call site and does not touch the widget. Golden tests
+render the whole column in both themes and with the four-colour deck on and off.
+
+### 10.4 Range (`lib/widgets/range/`)
 
 | Widget | Purpose | Props |
 |---|---|---|
-| `RangeMatrix` | The 13×13 grid (CustomPainter + gesture arena) | `.readOnly(highlight)` · `.editable(value, onChanged, undoController)` · `.compare(painted, actual)` · `size` (346 / 260 / 300) · `showHeaders` · `loupe` · `hatchWhenNoColour` |
+| `RangeMatrix` | The 13×13 grid (CustomPainter + gesture arena). **Width-driven**: the caller passes `width` — the box the grid may occupy — and the widget computes `cell = floor((width − headerWidth − 12 × gap) / 13)` per §4.9, asserting `grid ≤ width` in debug. **`cellSize` is never passed in**; the old `size (346 / 260 / 300)` enum described none of the real call sites correctly | `.readOnly(highlight)` · `.editable(value, onChanged, undoController)` · `.compare(painted, actual)` · `width` · `gap` (1 or 2) · `headerWidth` · `hairline` (gap 0 + in-cell 1 pt divider, for tight boxes and large text) · `showHeaders` · `loupe` · `gestureExclusion` (§4.9) · `hatchWhenNoColour` |
 | `RangeLegend` | Pairs/Suited/Offsuit or Correct/Missed/Extra | `mode` |
 | `RangePresetRow` | h-scroll chips (Top n %, position opens, Any two, Clear) | `presets`, `onPick` |
 | `ComboCounter` | "148 combos · 11 % of hands" | `combos` |
 | `RangeMatrixLoupe` | 56 pt magnifier bubble | internal |
 
-### 10.5 Coach
+**`RangeMatrix` call sites** (arithmetic and rationale in §4.9):
+
+| Call site | `width` | header | gap | **cell** | grid |
+|---|---|---|---|---|---|
+| P7 painter @ 360 / 390 / 430 | 352 / 382 / 422 | 20 / 20 / 22 | 1 / 2 / 2 | **24 / 26 / 29** | 344 / 382 / 423 |
+| P7 Peek reveal @ 360 / 390 / 430 | 352 / 382 / 422 | 18 / 20 / 20 | 1 | **19 / 21 / 24** | 277 / 305 / 334 |
+| S6 range editor | = the P7 painter at that width | | | | |
+| P5 assumed range, inside P3 (§4.8) | 326 | 18 | 1 | **23** | 329 |
+| D1 grading range (§5.3) | 326 | 18 | 1 | **18** | 264 |
+| Lessons · RangeExplorer · EquityCalculator · Range-building mini-drill (§6.5) | 326 | 18 | 1 | **23** | 329 |
+| P8 reveal-row inline matrix (§4.12) | 300 | 16 | 1 | **21** | 301 |
+
+### 10.5 Coach (`lib/widgets/coach/`)
 
 | Widget | Purpose |
 |---|---|
@@ -2220,8 +2836,13 @@ class names. Variants are constructor parameters or named constructors.
 | `VerdictBadge` | 24/28/32 disc with ✕ / i / ✓ / eye in verdict colour |
 | `EquityBar` | 10 pt bar + needed marker + caption |
 | `CoachNotesList` | P4 rows |
+| `ExplainerSheet` | **The one-idea explainer**, sheet S: title (Inter 17 semibold) · the verbatim body (Inter 15/1.5) · `DisclosureRow("Show me the math")` · `DisclosureRow("Expert detail")` — both **always** rendered (§7.2) — · optional footer button. This is the single widget behind **T1** (every ⓘ tile and dotted stat label), **D3** (Rating / Today / Accuracy), **D4** (mode blurb), **H2** (the goal), the drill **source-pill** sheet (§5.1), the tool-screen and lesson ⓘ sheets, and About's "How the grading works" rows. Props: `title`, `body`, `math`, `expert`, `footer`. When `math` / `expert` are null the rows open to the standard placeholders, never to blank space. It is `CoachNoteView` with no verdict header — same anatomy, same two labels, same order |
 
-### 10.6 Drills
+### 10.6 Drills (`lib/widgets/drills/`)
+
+`FrameScrubber` is shared with the hand replayer in `features/stats` (§7.7) — same row, same
+long-press-to-frame-list, same haptics — which is why this whole set is a library and not
+`features/drills/widgets/` (§16.3).
 
 | Widget | Purpose |
 |---|---|
@@ -2233,23 +2854,71 @@ class names. Variants are constructor parameters or named constructors.
 | `StatsStrip` | Rating · accuracy · streak · best (+ Today line) |
 | `StacksStrip`, `IcmBanner` | Push/fold extras |
 
-### 10.7 Study & stats
+### 10.7 Study & stats (`lib/widgets/study/`, `lib/widgets/charts/`)
 
-`LessonList`, `LessonReader` (block renderer), `QuizCard`, `PotOddsCalculator`,
-`BluffCalculator`, `MultiwayTrainer`, `RangeExplorer`, `EquityCalculator`, `CardKeypadSheet`
-(S5), `RangeEditorScreen` (S6), `HandRankingsList`, `RangeBoardBreakdownCard`,
-`StudyMiniDrill` (three variants), `KpiRow`, `CoachingReviewCard`, `HandRow`, `TagChips`,
-`HandNoteEditorSheet` (P12), `ReplayerScreen` (P11), `ImportFlow` (T3), `ResetDialog` (X2).
+These are library components too, and §16.3's folder tree places them there. Study's widgets are
+rendered from three different features (the lesson reader, the tool screens, and the drill
+feedback panel's lesson modal); the chart primitives are rendered by Stats, Home and Drills.
+
+**`lib/widgets/study/`**: `LessonList`, `LessonReader` (block renderer), `QuizCard`,
+`PotOddsCalculator`, `BluffCalculator`, `MultiwayTrainer`, `RangeExplorer`, `EquityCalculator`,
+`CardKeypadSheet` (S5), `HandRankingsList`, `RangeBoardBreakdownCard`, `StudyMiniDrill` (three
+variants). **`lib/widgets/charts/`**: `LineChart`, `MiniBars`, `SparkLine`, `DivergingBar`,
+`HeatmapGrid` — rendered by Stats, Home and Drills alike.
+
+Stats' own compositions stay in `features/stats/widgets/`: `KpiGrid` (the 3 + 2 tile block,
+§7.2), `CoachingReviewCard`, `HandRow`, `TagChips`, `HandNoteEditorSheet` (P12), `ImportFlow`
+(T3), `HeatmapCard`. `ResetDialog` (X2) belongs to `features/settings`. `ReplayerScreen` (P11)
+and `RangeEditorScreen` (S6) are **screens**, not widgets — they live in
+`features/stats/screens/` and `features/study/screens/` and are assembled from the library
+(§16.3).
 
 ---
 
 ## 11. MOTION + HAPTICS
 
 Curves: `AllInMotion.ease` (0.2, 0.8, 0.2, 1) for UI; `easeOut` for exits. Durations are the
-`AllInMotion` tokens unless listed. **Reduced motion** (setting or OS): every duration → 0 via
-`AllInMotion.of(context, d, reduced:)`; cards/chips appear in place; rings are static; numbers
-snap; sheets still slide (system-driven) but without spring overshoot; the deal countdown is a
-static caption.
+`AllInMotion` tokens unless listed.
+
+**Reduced motion** is on when **any** of three things is true: Settings → Reduce motion,
+`MediaQuery.disableAnimations`, or `MediaQuery.accessibleNavigation`. Then every duration → 0 via
+`AllInMotion.of(context, d, reduced:)`; cards and chips appear in place; rings are static; numbers
+snap; the deal countdown is a static caption that counts.
+
+**Sheets and route transitions do not opt in by themselves — we pass the zero explicitly.**
+Flutter's `showModalBottomSheet` and the built-in `MaterialPage` / `CupertinoPage` transitions do
+**not** read `MediaQuery.disableAnimations`. Left alone they would keep sliding while everything
+else in the app snapped — which is worse than either extreme, because the one thing still moving
+is the largest thing on screen. So:
+
+- `AllInSheet.show` passes `transitionAnimationController: AnimationController(duration: reduced ?
+  Duration.zero : 250 ms, reverseDuration: reduced ? Duration.zero : 200 ms)` and drops the spring
+  overshoot. The **scrim still fades** — opacity is not motion, and an instantly black scrim reads
+  as a rendering bug.
+- The router builds **every** route through one helper, `allInPage()`, which returns a
+  `CustomTransitionPage` with `transitionDuration: reduced ? Duration.zero : platformDefault` —
+  pushes, `fullscreenDialog` modals and the table alike. Nothing in §16.1 calls `MaterialPage` or
+  `CupertinoPage` directly.
+- `AnimatedPositioned` (the D1 panel), `AnimatedSize` (disclosure rows) and the results card's
+  collapse take the same token.
+
+**Shimmers and indeterminate loops have a static form, not a zero duration.** A shimmer is motion
+with no end state, so zeroing its duration leaves a frozen gradient — a permanent visual artefact
+that looks like a failed render. Each one is *replaced*:
+
+| Shimmer / loop | Normal | Reduced motion |
+|---|---|---|
+| Seat plate "thinking" (Auto pace, §4.3) | three dots pulsing in sequence | the static word **"thinking"** in `textFaint` mono 10 on the HUD line — no dots, no pulse |
+| Chip zone "coach is computing" (§14) | 3-dot shimmer for ≤ 1.5 s | the static caption **"Coach is working…"** in `textMuted` at chip height, replaced in place by the verdict chip |
+| MultiwayTrainer bars awaiting results (§6.5) | bars shimmer | bars at 0 height in `ink700`, number reads **"—"**, then values snap in |
+| Import progress (§7.8) | determinate bar animates | the bar jumps per parsed hand; the mono count **"12 of 40"** carries the progress |
+| Equity "Calculating…" button (§6.5) | busy spinner | the label reads **"Calculating…"** and the button is disabled; no spinner |
+| Lesson read-progress line (§6.2) | grows with scroll | unchanged — it is scroll position, not an animation |
+
+**A refusal is never motion-only.** The blocked-back shake (§2.5: P10-busted page 1, O0 page 1,
+D5 Q1) is dropped entirely under reduced motion and the `selectionClick` is the whole response;
+with Settings → Haptics also off, nothing happens and the screen's own copy carries it. Where
+§5.8 and §8.1 say "a subtle shake" they mean exactly this rule.
 
 | Event | Motion | Duration | Haptic |
 |---|---|---|---|
@@ -2278,6 +2947,14 @@ static caption.
 | Feedback panel | spring up | 280 | success (correct) / warning (wrong) |
 | Rating delta → strip | fly + roll | 600 + 200 | — |
 | Frame scrub | table crossfade | 150 | selectionClick per frame |
+| Session pill appears (a session starts, or the user leaves the table) | slide up 56 from behind the tab bar + fade | 220 | — |
+| Session pill disappears (session ends, or the §2.1 height gate flips) | slide down + fade; when the *gate* is what changed, the Play-tab dot and label cross-fade in as the pill leaves | 180 | — |
+| Tab bar hides (entering table, lesson, replayer, P7, placement, onboarding) | slides down 80 + fades while the incoming route arrives; the incoming route is laid out for a hidden bar from its first frame, so the felt never reflows | 250, with the route | — |
+| Tab bar shows (leaving those routes) | reverse; the outgoing route's final frame still has the bar hidden, so nothing jumps at the hand-off | 200 | — |
+| Results card collapses to the one-line strip (§4.12) | reveal rows fade, then the card's height animates to 44; the coach row does not move | 120 + 200 | — |
+| Results card expands from the strip (tap) | height animates back; reveal rows fade in, 40 ms stagger | 200 + 120 | light |
+| Coach chip → results-card header row (hand-over, §4.12) | the felt chip fades out as the card slides up carrying the same content | 120 / 240 | inherits the verdict's haptic |
+| Hero-strip swipe-up → P2 | the strip follows the finger 1:1; **threshold = 48 pt of travel or 420 pt/s of velocity**, whichever comes first; below both it springs back, past it the sheet takes over the same drag and settles at M | 160 spring-back / 250 sheet | `selectionClick` when the threshold is crossed |
 | Toast | slide down / up | 200 | — |
 | Goal met | bar completes (no confetti) | 300 | light |
 
@@ -2306,23 +2983,40 @@ minute is *stretch*; rarer is anywhere.
 | Tap action pill | Table | Explain last move |
 | Tap chip · swipe chip up / down | Table | P3 M · P3 L · dismiss to badge |
 | Tap title · ticker · long-press ticker | Table | P2 Session · P2 Log · copy log |
-| Swipe up on the hero strip | Table | P2 |
+| Swipe up on the hero strip | Table | P2 (threshold 48 pt of travel or 420 pt/s — §11) |
 | Touch the results card | Table, hand-over | cancels auto-deal countdown |
 | Swipe left / right on the drill table or the replayer felt | Drills, Replayer | previous / next frame |
 | Long-press the frame pill | Drills, Replayer | frame list |
 | Overscroll the expanded feedback panel | Drills | next puzzle |
 | Drag-paint · header tap · header long-press | Range matrix | paint · row/column · "this and better" |
+| Drag starting on a cell of an embedded matrix | Lessons, tools, mini-drill | the grid claims it and paints; the page is scrolled from the headers, the 16 pt margins and the 24 pt gutters (§6.5) |
 | Swipe-left on a row | Summary / hands lists / Session pill | Note · Export · End session |
-| Touch-and-hold + drag on the chart | Stats | scrub crosshair |
+| Touch-and-hold (200 ms) + drag on the cumulative chart, the read-accuracy bars or the practice heatmap | Stats | claims the pointer from the page scroll; a label follows the finger until it lifts (§7.3, §7.11). A plain tap on any of the three does nothing |
 | Re-tap active tab | Tab bar | scroll to top |
 | System back / edge swipe | everywhere | §2.5 |
 
 Never used: pinch-zoom on the matrix, shake, 3D/haptic touch menus, double-tap on cards,
 horizontal swipes between tabs (conflicts with the drill scrubber and back-swipe).
 
-Hit targets: every control ≥ 44×44 (visual ≥ 36 with slop). The two paint surfaces (§4.9 matrix
-cells, S6) are exempt and compensated by drag-paint, loupe and header selectors. Hit-slop is
-never allowed to overlap a neighbouring control's box; gaps of 8 pt between 44-pt controls.
+Hit targets: every control ≥ 44×44 (visual ≥ 36 with slop). **Exactly five surfaces are exempt
+from the floor, each with a named compensating mechanism and each listed here — nothing else
+is:**
+
+| Exempt surface | Element size | Compensation |
+|---|---|---|
+| Range matrix cells, `.editable` (§4.9) | 24–29 pt | drag-paint, touch-down toggle, 56 pt loupe, row/column header selectors, screen-reader row nodes |
+| S6 range editor (§6.5) | as above | as above, full screen |
+| Cumulative-winnings chart (§7.3) | 1 pt columns | 200 ms hold claims the pointer; a label follows the finger; every value is also a hand row |
+| Range-read `MiniBars` (§7.3) | ≈ 11 pt bars | same hold-and-drag; the whole strip is one 44-tall band; values also in All hands |
+| Practice heatmap (§7.11) | 11 pt cells | same hold-and-drag; grid is one gesture band with a semantic summary + per-column nodes |
+
+The 9-max HUD was **not** added to this list: it was moved to P6 instead (§4.2.2). An exemption
+has to buy something the design cannot get another way.
+
+Hit-slop is never allowed to overlap a *neighbouring* control's box; gaps of 8 pt between 44-pt
+controls. The one place two targets share an edge is the seat plate's eye quadrant (§4.3), and
+that is not two widgets: a single detector splits its own area by local position, so no slop
+overlaps anything and no gap is owed.
 
 **Left-handed use**: the action row and rail are symmetric enough (Fold left / Raise right is a
 convention worth keeping for muscle memory across devices); no mirror setting in v1 (§15).
@@ -2382,7 +3076,7 @@ convention worth keeping for muscle memory across devices); no mirror setting in
 | Table | coach off | no badge/chips; price line still on |
 | Table | Auto + any sheet / P7 / blocking note | loop paused (`paused || guess.open`) |
 | Table | backgrounded | paused; "Paused — tap to continue" |
-| Table | 9-max at 360 wide | mid-side bet pills move below plates; names 6 chars |
+| Table | 9-max, **any** width | s5–s2 bet pills hang **below** their plate rather than toward the centre, at 360, 390 *and* 430 — the centre-ward pills landed inside the board rectangle at 390 too, not only at 360 (§4.2.2); at 360 names also truncate to 6 characters |
 | Read range | nothing painted → Peek | actual range + "Paint a guess first next time…" |
 | Read range | hand ends while open (cannot happen: the hand is paused) | — |
 | Coach note | no steps / no expert | disclosure rows open to the "No math…" / "Nothing extra" lines |
@@ -2404,6 +3098,12 @@ convention worth keeping for muscle memory across devices); no mirror setting in
 | Import | no hands parsed | §7.8 failure copy |
 | Import | partial parse | "(k skipped)" in the summary |
 | Import | huge file (> 5 000 hands) | progress sheet with cancel; imports in batches of 200 |
+| Deep link | `/study/lesson/:id` or `/lesson/:id` with an **unknown id** (a link from an old backup, a renamed or removed lesson) | The reader does not open. Study's root shows with a 2.5 s toast *(new)* "That lesson isn't in this version — here's the course."; a `/lesson/:id` modal link falls back to the same place and closes the modal. Never a 404 page; the id goes to the debug console only |
+| Deep link | `/stats/hand/:startedAt` or `/table/hand/:startedAt` for a hand that was **pruned, reset or never saved** | The push happens and the replayer shows its own empty state *(new)*: "Hand not found — it may have been cleared by Reset all progress, or it was never saved." with "All hands ›" (→ T2) and `‹`. Felt, scrubber and timeline are not rendered |
+| Backup restore | valid All-In backup from a **newer schema** (`schemaVersion` > this build) | X3 refuses **before touching anything** *(new)*: "This backup was made by a newer version of All-In (backup v6; this app reads v5). Update the app, then restore." — one button, "OK". Older schemas restore normally through the migration chain |
+| Backup restore / hand import | file picked but **unreadable or not valid UTF-8** (a `.json` that is really a PDF, a truncated download, a cloud file whose permission was revoked) | *(new)* "That file couldn't be read. If it came from a cloud drive, download it to this phone first and try again." — "OK". Deliberately distinct from "That file isn't an All-In backup." below, which means the bytes *were* read and did not parse |
+| Table | **coach isolate crashes, is killed, or a simulation never resolves** | The **5 s give-up rule**: every `evaluateHero` / `explainLastBotMove` is raced against a 5 s timer. On timeout or isolate error the chip zone clears (the shimmer stops), **nothing is recorded** — no `reviewLog` entry, no `hand_json.coachNotes[]`, no Stats decision, no leak card — the hand continues normally and the ticker adds one faint line *(new)* "Coach skipped this one." The isolate respawns once per session; if it dies a second time the coach switches off for the rest of the session with a one-time toast *(new)* "EV Coach turned off for this session — it kept failing. Your hands are unaffected." The **setting** is untouched, so the next session has it back on |
+| Table | a **pending `evaluateHero` in flight** when the app is killed, or a session restored mid-hand | **The verdict is dropped, deliberately.** The snapshot (§4.14) stores `reviewLog` but never a *pending* evaluation, and the engine state it was computed against is gone. On restore there is no chip, no badge increment, no record — the decision is simply uncoached. It is **not** re-run: grading an action from two days ago and attaching a note to a hand the user is no longer looking at would be worse than silence. A blocking verdict lost this way does not re-block; the hand resumes unpaused |
 | Backup restore | wrong file / corrupt | "That file isn't an All-In backup." *(new)* |
 | Reset | typed wrong | "Erase everything" stays disabled; no error text |
 | Storage | quota / DB error | fallback per `persistence-stats-settings.md` §2.1; a one-time toast "Some data couldn't be saved" *(new)* |
@@ -2424,7 +3124,7 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 | Desktop feature | Disposition | Mobile form |
 |---|---|---|
 | Session vs bots, 2 / 6 / 9 seats, optional ante | Kept | Lobby segmented controls (§4.1); three purpose-built felt layouts (§4.2) |
-| Four archetypes with observed HUD (VPIP/PFR after 8 hands) | Kept | HUD on every plate incl. 9-max compact; archetype name only in P6 |
+| Four archetypes with observed HUD (VPIP/PFR after 8 hands) | Kept; **relocated at 9-max** | HUD on the plate at heads-up and 6-max. At **9-max the numbers move to P6** — one tap on the plate — and the compact plate keeps the archetype ring plus the observed-hand count (`· 14h`), because a 9 pt HUD line is below the legibility floor and reads as a shrunken desktop table (§4.2.2). Nothing is lost: the ring is visible from hand 1 and the numbers are gated behind 8 hands anyway. Archetype *name* only in P6, at every table size |
 | Manual step-through (→ key / Next action) | Redesigned | "Next action" + tap-the-felt + hold-to-fast-forward (§4.5 C) |
 | Auto-play, 3 speeds | Kept | Pace pill + Options; ⏭ skip-to-my-turn added (§4.5 D) |
 | Hero actions Fold / Check-Call / Bet-Raise | Kept | Action row, exact-commit labels, 150 ms Fold guard, no confirm steps |
@@ -2455,6 +3155,9 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 | Desktop feature | Disposition | Mobile form |
 |---|---|---|
 | Modes Mixed / Push-Fold / Exploits / Review | Kept | Mode chips with blurbs in D4 |
+| Mixed's five sub-kinds: **pre-flop chart**, **post-flop fundamentals**, **3-bet pots**, **check-raises**, **river-as-aggressor** | Kept, named, not promoted | All five ship inside `Mixed` and are **not** separate mode chips — five more chips would push `Push / Fold` off the h-scroll, and the point of Mixed is that the user does not know which kind is coming. Which one graded the spot is named by the **source pill** ("Pre-flop chart · 100bb baseline" · "Post-flop heuristic · fundamentals") and the situation by the **frame text** ("You 3-bet pre-flop and hold the initiative on this flop." · "Checked to you on the river as the pre-flop aggressor."). The Home quick-set card and Stats' weakest-mode logic bucket by sub-kind, so a leak in check-raises surfaces as a Mixed set weighted toward check-raises |
+| `AnswerRow` labels those sub-kinds need | Kept, extended | Beyond `Fold` / `Call {x}` / `Bet {x}` / `Raise to {x}` / `Shove {x}`, the post-flop sub-kinds require **"Check"** (check-raise and river-as-aggressor spots where checking back is a real option), **"Bet {x}"** (river-as-aggressor, e.g. "Bet 12 bb") and **"Check-raise to {x}"** (the check-raise spots' aggressive option, e.g. "Check-raise to 16 bb"). Every label comes verbatim from `option.label`; `AnswerRow` never composes one. A three-option check-raise spot is `Fold` / `Call {x}` / `Check-raise to {x}` at the usual 28 / 34 / 38 % widths, aggressive rightmost; a two-option one is `Check` / `Check-raise to {x}` at 50/50. "Check-raise to 16 bb" is the longest label in the set and fits a 38 % button at 360 at Inter 17 |
+| Feedback row 3, "See the range it was graded against" | **Deviation** | The row is labelled **"Expert detail"** like every other layer-3 row in the app, and the range lives inside it; the desktop string becomes the row's first body line (§5.3). Layer-3 labels are identical on every three-layer surface — that is what makes the structure learnable (Principle 3) |
 | Move navigator (frame list + 4 buttons) | Redesigned | Scrubber row + swipe on the table + long-press frame list (§5.2) |
 | 2–3 answer options with keycaps | Redesigned | Answer row; no keycaps; keys still work |
 | Feedback: verdict, EV-loss, rationale, outcomes box, Equity/Pot odds line, grading range, lesson link, Drill 5 similar, Next | Kept | Feedback panel with the 3-layer anatomy; equity line becomes layer 2 with steps |
@@ -2472,7 +3175,7 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 | Desktop feature | Disposition | Mobile form |
 |---|---|---|
 | 5 levels / 31 lessons, progress, Mark complete, Next lesson | Kept | S0 list + S1 reader |
-| Range matrices in lessons | Kept | 346 pt editable/readonly matrices |
+| Range matrices in lessons | Kept | Width-driven matrices (§4.9 arithmetic): a 326 pt content box → cell 23, grid 329, inside lessons and tool screens; drag-paint arbitration per §6.5 |
 | Pot-odds, bluff, multiway, equity calculators, range explorer, hand rankings | Kept | Inline + Tool screens (§6.5–6.6) |
 | Equity calculator side-by-side ranges + 52-card grids | Redesigned | Stacked; card keypad sheet; range editor modal |
 | Quizzes | Kept | Quiz card |
@@ -2487,7 +3190,7 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 |---|---|---|
 | KPI row, cumulative chart, read accuracy, vs archetype, positional, style numbers, coaching review, recent hands, heatmap | Kept | Re-ordered cards; scrub instead of hover (§7) |
 | Hand replayer | Kept, extended | P11 with swipe, slider, and the persisted coach-note strip |
-| Notes / bookmarks / tags | Kept | P12 sheet; tag chips; swipe actions |
+| Notes / bookmarks / tags | Kept | P12 sheet; tag chips; swipe actions. **The desktop's "bookmark" *is* the `review later` tag** — there is no separate bookmark flag on either platform. Tapping ✎ → P12 → the `review later` chip is bookmarking; the `review later` filter chip on T0/T2 is the bookmarks list; `hand_json` carries `tags: ["review later"]` and nothing more. Stated explicitly because "bookmarks" appears in the desktop README's feature list and an engineer would otherwise go looking for a field that does not exist |
 | Hand-history export (.txt) | Kept | Share sheet |
 | Hand-history import (.txt) + analyzer | Kept | T3 flow with progress + verbatim summary |
 | Backup (.json) | Kept | Share sheet |
@@ -2535,42 +3238,88 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 
 ```
 StatefulShellRoute.indexedStack (TabScaffold)
-  branch home    /home                         H0  TodayScreen
-    /home/coach-note                            H1  sheet (showModalBottomSheet via AllInSheet)
-    /home/goal                                  H2  sheet
-  branch play    /play                         P0  LobbyScreen
-    /play/session/:id                           P10 SessionSummaryScreen (read-only when ended)
+  branch home    /home                          H0  TodayScreen
+    /home/session/:id                            P10 SessionSummaryScreen (read-only)
+      /home/session/:id/hand/:startedAt          P11 ReplayerScreen (push, tab bar hidden)
+  branch play    /play                          P0  LobbyScreen
+    /play/session/:id                            P10 SessionSummaryScreen (read-only)
+      /play/session/:id/hand/:startedAt          P11 ReplayerScreen
   branch drills  /drills?mode=mixed|pushfold|exploit|leaks&set=10   D0 DrillsScreen
-    (D1 panel, D2/D3/D4 sheets are widgets inside D0, not routes)
-  branch study   /study                        S0  StudyScreen
-    /study/lesson/:id                           S1  LessonReaderScreen (push)
-    /study/tools/:tool                          S3  ToolScreen (range-explorer | equity | pot-odds | bluff | multiway | rankings)
-    /study/glossary#:termId                     S4  QuickReferenceScreen
-  branch stats   /stats                        T0  ProgressScreen
-    /stats/hands?filter=all|played|imported&tag=  T2  AllHandsScreen
-    /stats/hand/:startedAt                      P11 ReplayerScreen (push, tab bar hidden)
-    /stats/settings                             X0  SettingsScreen (push)  — also /home/settings
-    /stats/settings/about                       X1  AboutScreen
-Top-level (outside the shell, `parentNavigatorKey: rootKey`, fullscreenDialog: true):
-  /table                                        P1  TableScreen (modal route; no edge-swipe)
-  /table/read/:seat                             P7  ReadRangeScreen (modal over P1)
-  /table/summary                                P10 SessionSummaryScreen (modal over P1)
-  /placement                                    D5  PlacementScreen
-  /onboarding                                   O0  OnboardingScreen
-  /study/range-editor                           S6  RangeEditorScreen (modal; returns the set via `pop(result)`)
+  branch study   /study                         S0  StudyScreen
+    /study/lesson/:id                            S1  LessonReaderScreen (branch push, tab bar hidden)
+    /study/tools/:tool                           S3  ToolScreen (range-explorer | equity | pot-odds | bluff | multiway | rankings)
+    /study/glossary?term=:termId                 S4  QuickReferenceScreen   ← QUERY, not a fragment
+  branch stats   /stats                         T0  ProgressScreen
+    /stats/hands?filter=all|played|imported&tag= T2  AllHandsScreen
+    /stats/hand/:startedAt                       P11 ReplayerScreen (push, tab bar hidden)
+    /stats/session/:id                           P10 SessionSummaryScreen (read-only)
+      /stats/session/:id/hand/:startedAt         P11 ReplayerScreen
+    /stats/settings                              X0  SettingsScreen (push)   ← CANONICAL Settings
+    /stats/settings/about                        X1  AboutScreen (push)
+Top-level (outside the shell, `parentNavigatorKey: rootKey`, `fullscreenDialog: true`):
+  /table                                         P1  TableScreen (modal route; no edge-swipe)
+    /table/read/:seat                            P7  ReadRangeScreen (modal over P1)
+    /table/hand/:startedAt                       P11 ReplayerScreen (push INSIDE the table modal)
+    /table/summary                               P10 SessionSummaryScreen (modal over P1)
+      /table/summary/hand/:startedAt             P11 ReplayerScreen
+  /lesson/:id                                    S1  LessonReaderScreen (fullscreenDialog, "Done")
+  /placement                                     D5  PlacementScreen
+  /onboarding                                    O0  OnboardingScreen
+  /study/range-editor                            S6  RangeEditorScreen (modal; returns the set via `pop(result)`)
+Redirects (legacy or convenience aliases; nothing inside the app links to them):
+  /settings             → /stats/settings
+  /settings/data        → /stats/settings?section=data
+  /home/settings        → /stats/settings
+  /home/settings/about  → /stats/settings/about
 ```
+
+**Why the duplicated sub-routes.** P10 and P11 are reachable from four hosts on three different
+branches *and* from a root-level modal. A `push` always lands in the **currently active branch**,
+so pushing `/stats/hand/:startedAt` from inside the table modal would tear the table down and
+switch the user to the Stats tab mid-session, and pushing `/play/session/:id` from Home would
+switch tabs mid-gesture. Each host therefore owns a path to the **same screen widget and the same
+providers**, differing only in `parentNavigatorKey`. `/table/hand/:startedAt` exists specifically
+so that P2's Log rows and P10-over-table's rows can open a replay **without dismissing the table
+modal**; §2.2 and §2.3 list the same pairs.
+
+**Settings has exactly one canonical path: `/stats/settings`.** Both gears — Home's and
+Progress's — navigate there. Because it is a Stats-branch push, tapping the gear from Home does
+move the user to the Stats tab, and that is the honest behaviour: Settings is one screen, not two
+copies with two back stacks and two scroll positions. `/home/settings`, `/home/settings/about` and
+the bare `/settings*` are **redirects**, kept only because older builds' deep links used them.
+The import-result and backup toasts deep-link to `/stats/settings?section=data` (§2.6), which
+scrolls to and flashes the DATA group.
+
+**H1 and H2 are not routes.** Earlier drafts listed `/home/coach-note` and `/home/goal` in this
+table and then declared both to be sheets two paragraphs later; they cannot be both. They are
+sheets, opened from H0 with `AllInSheet.show`, and they are gone from the table — as is every
+other sheet.
+
+**There are no fragment routes.** `go_router` matches paths and query strings and never sees a
+`#fragment`, so `/study/glossary#:termId` could not have worked: it would have opened the glossary
+at the top and silently ignored the term. The path is `/study/glossary?term=:termId` (§2.6, §6.7).
 
 Sheets (P2 P3 P4 P6 P9 P12 P13 T1 T3 T4 D2 D3 D4 H1 H2 S5) are **not routes**: open them with
 `AllInSheet.show(context, …)` so they belong to the presenting route and system back pops
 them first. P5 is a nested `Navigator` inside P3's sheet. P8 is table state (an overlay widget),
-never a route. Dialogs (P14, X2, X3, the new-table dialog) use `AllInDialog.show`.
+never a route. D1 is a panel inside D0. Dialogs (P14, X2, X3, the new-table dialog) use
+`AllInDialog.show`.
 
-`GoRouter` config: `Play` tab's `redirect` → `/table` when `sessionProvider.hasSession`. The
-shell hides the `NavigationBar` when the current location matches `/table*`, `/placement`,
-`/onboarding`, `/study/lesson/*`, `/study/range-editor`, `/stats/hand/*`. Android predictive
+**`GoRouter` config.** There is **no redirect from `/play` to `/table`** — §2.1.1 gives the
+reasons (it makes the lobby's Resume card, the "Start a new table over a paused one" dialog and
+Recent sessions unreachable for as long as a session exists, and bounces the user back onto the
+felt the instant they leave it with `‹`). The only session-aware navigation is at launch:
+**on cold start**, if `allin.hints.v1.resumeOnLaunch` is set (the app was killed while `/table`
+was the active location), the router sets `initialLocation = '/table'` **once** and clears the
+flag on the first frame. Every later navigation follows §2.1.1.
+
+The shell hides the `NavigationBar` when the current location matches `/table*`, `/placement`,
+`/onboarding`, `/lesson/*`, `/study/lesson/*`, `/study/range-editor`, `/stats/hand/*`,
+`/home/session/*/hand/*`, `/play/session/*/hand/*`, `/stats/session/*/hand/*`. Android predictive
 back is enabled (`android:enableOnBackInvokedCallback`); `PopScope` on P1 (persist + pop), P3
 blocking (`canPop: false` + `onPopInvokedWithResult → dismissReview`), D1 (collapse), P7
-(closeGuess), S6 (Done), D5/O0 (previous page or shake).
+(closeGuess), S6 (Done), D5/O0 (previous page, or the §2.5 blocked-back response). Every route is
+built through the shared `allInPage()` helper so reduced motion can zero its transition (§11).
 
 ### 16.2 Presentation cheat-sheet
 
@@ -2579,7 +3328,7 @@ blocking (`canPop: false` + `onPopInvokedWithResult → dismissReview`), D1 (col
 | Tab root | branch of the `StatefulShellRoute` |
 | Push | `GoRoute` in the branch; platform transitions (`CupertinoPage` on iOS, `MaterialPage` with fade-through on Android) |
 | Full-screen modal | root-level `GoRoute` with `fullscreenDialog: true`; iOS: slide-up; Android: fade-through; no edge-swipe |
-| Sheet | `AllInSheet.show` → `showModalBottomSheet(isScrollControlled: true, useSafeArea: true)` with a `DraggableScrollableSheet` and snap sizes S/M/L; table-parented sheets pass `maxHeightFraction: (screenH - 120 - inset) / screenH` |
+| Sheet | `AllInSheet.show` → `showModalBottomSheet(isScrollControlled: true, useSafeArea: true)` with a `DraggableScrollableSheet` and snap sizes S/M/L; table-parented sheets pass `maxHeightFraction: (screenH - 120 - inset) / screenH` — the prop is declared on `AllInSheet` itself (§10.1), not hidden inside the show helper |
 | Panel (D1) | `AnimatedPositioned` inside D0's `Stack`; own drag handle; no barrier |
 | Overlay | `Stack` layer inside `FeltCanvas` (chip, results card, captions, coach marks) |
 | Popover | `OverlayPortal` anchored with `CompositedTransformFollower` |
@@ -2596,24 +3345,74 @@ lib/
   data/           generated charts (existing)
   services/       persistence/ (sqflite schema v4 + json stores), haptics.dart, share.dart, files.dart, clock.dart
   widgets/        §10 components, one file per widget, exported by widgets.dart
+    (foundations)   all_in_scaffold, all_in_button, all_in_segmented, all_in_switch, all_in_slider,
+                    all_in_card, eyebrow, stat_tile, disclosure_row, term_text, term_popover,
+                    all_in_sheet, all_in_dialog, all_in_toast, progress_bar_thin      (§10.1)
+    shell/          tab_scaffold_chrome, session_pill, plan_card, coach_card, goal_card (§10.2)
+    table/          felt_canvas, seat_plate, bet_pill, pot_pill, board_row, hero_hand,
+                    hero_strip, sizing_rail, action_row, coach_chip, coach_badge, ticker,
+                    results_card, turn_ring, chip_stack, playing_card_view             (§10.3)
+    range/          range_matrix, range_legend, range_preset_row, combo_counter,
+                    range_matrix_loupe                                                (§10.4)
+    coach/          coach_note_view, verdict_badge, equity_bar, coach_notes_list,
+                    explainer_sheet                                                   (§10.5)
+    drills/         drill_table, frame_scrubber, answer_row, feedback_panel, mode_chips,
+                    stats_strip, stacks_strip, icm_banner                             (§10.6)
+    study/          lesson_blocks, quiz_card, calculators/*, range_explorer,
+                    equity_calculator, card_keypad_sheet, mini_drills/*, hand_rankings_list,
+                    range_board_breakdown_card                                        (§10.7)
+    charts/         line_chart, mini_bars, spark_line, diverging_bar, heatmap_grid     (§10.1)
   features/
-    home/         providers/ (plan_provider, coach_note_provider, goal_provider) · screens/ (today_screen) · widgets/ (plan_card, coach_card, goal_card, mini_heatmap)
+    home/         providers/ (plan_provider, coach_note_provider, goal_provider) · screens/ (today_screen) · widgets/ (mini_heatmap_card — PlanCard/CoachCard/GoalCard are lib/widgets/shell/)
     play/         providers/ (session_provider [game loop + snapshot], coach_provider, guess_provider, pace_provider, table_layout_provider)
                   screens/ (lobby_screen, table_screen, read_range_screen, session_summary_screen)
-                  widgets/ (felt/*, seat_plate, hero_strip, sizing_rail, action_row, coach_chip, results_card, session_sheet, coach_note_sheet, player_sheet, bet_keypad_sheet, ticker, coach_marks)
-    drills/       providers/ (drill_provider, review_provider, leak_provider, srs) · screens/ (drills_screen, placement_screen) · widgets/ (drill_table, frame_scrubber, answer_row, feedback_panel, mode_chips, stats_strip, stacks_strip, icm_banner)
-    study/        content/ (existing) · providers/ (study_progress_provider, quiz_provider) · screens/ (study_screen, lesson_reader_screen, tool_screen, quick_reference_screen, range_editor_screen) · widgets/ (lesson_blocks, quiz_card, calculators/*, range_explorer, equity_calculator, card_keypad_sheet, mini_drills/*)
-    stats/        providers/ (stats_provider, notes_provider, hands_provider, import_provider) · screens/ (progress_screen, all_hands_screen, replayer_screen) · widgets/ (kpi_row, charts/*, coaching_review_card, hand_row, note_editor_sheet, import_flow, heatmap_card)
+                  widgets/ (session_sheet, coach_note_sheet, player_sheet, bet_keypad_sheet, coach_marks, lobby_felt_preview)
+                  — play-only compositions ONLY; every part of the table comes from lib/widgets/table/
+    drills/       providers/ (drill_provider, review_provider, leak_provider, srs) · screens/ (drills_screen, placement_screen) · widgets/ (mode_blurb_sheet, placement_pages)
+                  — the drill table, scrubber, answer row, feedback panel and strips are lib/widgets/drills/
+    study/        content/ (existing) · providers/ (study_progress_provider, quiz_provider) · screens/ (study_screen, lesson_reader_screen, tool_screen, quick_reference_screen, range_editor_screen) · widgets/ (level_header, lesson_row, tools_grid)
+                  — the reader blocks, quiz card, calculators, explorer and keypad are lib/widgets/study/
+    stats/        providers/ (stats_provider, notes_provider, hands_provider, import_provider) · screens/ (progress_screen, all_hands_screen, replayer_screen) · widgets/ (kpi_grid, coaching_review_card, hand_row, note_editor_sheet, import_flow, heatmap_card)
+                  — the replayer's felt is lib/widgets/table/, its scrubber is lib/widgets/drills/frame_scrubber, its charts are lib/widgets/charts/
     settings/     providers/ (settings_provider, theme_provider) · screens/ (settings_screen, about_screen) · widgets/ (setting_rows, reset_dialog, restore_dialog)
     onboarding/   providers/ (onboarding_provider) · screens/ (onboarding_screen) · widgets/ (tour_page)
   l10n/           strings.dart (all user-facing strings, keyed; verbatim desktop copy marked)
 ```
 
-Rules: a feature imports `widgets/`, `engine/`, `services/`, `theme/` and its own folder; never
-another feature's widgets (shared things move to `lib/widgets`). Providers are Riverpod
-without codegen (`NotifierProvider`, `AsyncNotifierProvider`); the game loop lives in
-`SessionNotifier` and exposes `TableState` + `PlaySettings`; the UI never mutates engine
-objects. go_router only; no `Navigator.push` outside `AllInSheet`/`AllInDialog`.
+Rules: a feature imports `widgets/`, `engine/`, `services/`, `theme/` and its own folder; it
+**never** imports another feature's widgets. Because that rule has teeth, anything two features
+need lives in `lib/widgets` — not in whichever feature happened to build it first. Three sets
+that earlier drafts mis-filed, and why each move is forced rather than tidy:
+
+- **The table renderer** (`FeltCanvas`, `SeatPlate`, `BetPill`, `PotPill`, `BoardRow`, `HeroHand`,
+  `HeroStrip`, `SizingRail`, `ActionRow`, `CoachChip`, `CoachBadge`, `Ticker`, `ResultsCard`,
+  `TurnRing`, `ChipStack`, `PlayingCardView`) is **`lib/widgets/table/`**, because **Stats renders
+  a felt too**: `ReplayerScreen` (§7.7) is a `features/stats` screen that draws `FeltCanvas` +
+  `SeatPlate` + `BoardRow` + `PlayingCardView`. Filing them under `features/play/widgets/` — as
+  §16.3 previously did — would make the replayer *illegal under this very rule*, and the only ways
+  out are a second felt implementation or an import that breaks the boundary. Both are worse.
+- **`FrameScrubber`** is **`lib/widgets/drills/`**, because the replayer uses it as well (§7.7):
+  same row, same long-press-to-frame-list, same haptics, same `selectionClick` per frame.
+  `DrillTable`, `AnswerRow`, `FeedbackPanel`, `ModeChips`, `StatsStrip`, `StacksStrip` and
+  `IcmBanner` live beside it — they are declared library components in §10.6, and a component
+  that only one feature uses *today* is still cheaper in the library than in a folder that
+  forbids reuse tomorrow.
+- **Study's widgets** (the `LessonReader` blocks, `QuizCard`, the five calculators,
+  `RangeExplorer`, `EquityCalculator`, `CardKeypadSheet`, the mini-drills) are
+  **`lib/widgets/study/`**, because three features render them: the lesson reader (`features/
+  study`), the tool screens (§6.6), and the drill feedback panel's lesson modal (`features/
+  drills` → `/lesson/:id`).
+
+What stays in `features/*/widgets/` is only what one feature composes out of the library and
+nobody else can use: the table's sheets, the lobby's felt preview, the coach marks, the drills'
+mode-blurb sheet, Study's level headers and tools grid, Stats' KPI grid and hand rows. The test is
+mechanical: **if a widget's name appears in §10, it lives in `lib/widgets` — no exceptions.** A CI
+lint enforces both halves (no `features/*/widgets/` file may export a §10 name; no feature may
+import from another feature's path).
+
+Providers are Riverpod without codegen (`NotifierProvider`, `AsyncNotifierProvider`); the game
+loop lives in `SessionNotifier` and exposes `TableState` + `PlaySettings`; the UI never mutates
+engine objects. go_router only; no `Navigator.push` outside `AllInSheet` / `AllInDialog`.
 
 ### 16.4 Persistence additions (beyond the desktop shapes, which are kept for import parity)
 
