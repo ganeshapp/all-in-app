@@ -818,6 +818,63 @@ void main() {
     });
   });
 
+  test('toJson encodes numbers exactly like JSON.stringify', () {
+    // Regression: `equity`/`potOdds` used to be written as raw doubles, so an
+    // integral value serialised as `0.0`/`1.0` where the desktop's
+    // JSON.stringify writes `0`/`1`. Every numeric field must round-trip to
+    // the same text as the TypeScript so persisted review cards stay
+    // interchangeable (verified against 24 000 Node-generated puzzles).
+    const base = Puzzle(
+      id: 1,
+      kind: PuzzleKind.postflopBet,
+      source: PuzzleSource.heuristic,
+      street: Street.flop,
+      heroPos: Position.btn,
+      hole: ['As', 'Kd'],
+      handLabel: 'AKo',
+      board: ['7h', '2c', '9s'],
+      pot: 10,
+      toCall: 2.5,
+      bb: 1,
+      seats: [],
+      frames: [
+        DrillFrame(
+          text: 'Flop: 7h 2c 9s',
+          street: Street.flop,
+          board: ['7h', '2c', '9s'],
+          pot: 10,
+        ),
+      ],
+      options: [
+        DrillOption(action: DrillAction.fold, label: 'Fold'),
+        DrillOption(action: DrillAction.call, label: 'Call 2.5', amount: 2.5),
+        DrillOption(action: DrillAction.raise, label: 'Raise 12', amount: 12),
+      ],
+      best: DrillAction.call,
+      accept: [DrillAction.call],
+      rationale: 'r',
+      equity: 0,
+      potOdds: 1,
+      difficulty: 2,
+    );
+    final encoded = jsonEncode(base.toJson());
+    expect(encoded, contains('"pot":10,'));
+    expect(encoded, contains('"toCall":2.5,'));
+    expect(encoded, contains('"bb":1,'));
+    expect(encoded, contains('"amount":2.5'));
+    expect(encoded, contains('"amount":12'));
+    expect(encoded, contains('"equity":0,'));
+    expect(encoded, contains('"potOdds":1,'));
+    expect(encoded, isNot(contains('.0')));
+    // Non-integral equities keep full precision.
+    final e = jsonEncode(
+      Puzzle.fromJson(
+        (jsonDecode(encoded) as Map).cast<String, Object?>(),
+      ).toJson(),
+    );
+    expect(e, encoded, reason: 'JSON round-trip is stable');
+  });
+
   test('a 3000-trial flop drill generates in under 400 ms', () {
     // Warm up the JIT, then time the heaviest generator family.
     generatePuzzleOfKind(PuzzleKind.postflopBet, rng: Mulberry32(1));

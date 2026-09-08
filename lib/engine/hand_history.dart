@@ -218,6 +218,11 @@ String _jsNum(num v) {
   return d.toString();
 }
 
+/// JS `SortCompare`: a comparator result of NaN counts as 0 (equal), so a
+/// corrupt hand with NaN amounts sorts in stable input order instead of
+/// throwing the way `NaN.sign.toInt()` would.
+int _jsCompare(num d) => d.isNaN ? 0 : (d < 0 ? -1 : (d > 0 ? 1 : 0));
+
 ({String line, num newStreetBet}) _actionLine(HHAction a, num streetBet) {
   final all = a.allIn ? ' and is all-in' : '';
   switch (a.type) {
@@ -386,10 +391,11 @@ String formatHand(HHHand h) {
 
   // Uncalled bet: on the final betting street, any excess of the top
   // committed amount over the second-highest is returned to its owner.
-  // (Stable sort like JS Array.prototype.sort.)
+  // (Stable sort like JS Array.prototype.sort, which also treats a NaN
+  // comparator result as 0 — corrupt imports can carry NaN amounts.)
   final commits =
       h.seats.map((s) => (seat: s.seat, amt: committed[s.seat] ?? 0)).toList();
-  mergeSort(commits, compare: (a, b) => (b.amt - a.amt).sign.toInt());
+  mergeSort(commits, compare: (a, b) => _jsCompare(b.amt - a.amt));
   final uncalled = commits.length > 1 ? commits[0].amt - commits[1].amt : 0;
   final int? uncalledSeat = uncalled > 0 ? commits[0].seat : null;
   if (uncalledSeat != null) {
@@ -401,8 +407,8 @@ String formatHand(HHHand h) {
   final collected = <int, num>{};
   for (final p in h.potResults) {
     for (final w in p.winners) {
-      collected[w] =
-          (collected[w] ?? 0) + jsRound(p.amount / p.winners.length).toInt();
+      // `Math.round` returns a JS number, so NaN survives instead of throwing.
+      collected[w] = (collected[w] ?? 0) + jsRound(p.amount / p.winners.length);
     }
   }
   if (uncalledSeat != null) {
