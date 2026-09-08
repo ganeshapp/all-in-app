@@ -498,26 +498,53 @@ y  754–810   action row 56       Fold · Call 2 · Raise to 7.5   (8 pt gaps, 
 y  810–844   home indicator
 ```
 
+**Seat numbering and direction of play.** Engine seat ids map 1:1 to felt anchors and the hero is
+always seat 0 at the bottom. **Increasing seat index runs counter-clockwise on screen**: seat 1
+lower-right → seat 2 upper-right → seat 3 top → seat 4 upper-left → seat 5 lower-left (a clock
+face: 4 o'clock → 2 → 12 → 10 → 8). Action therefore travels counter-clockwise *as drawn*, and
+so does the dealer button. This matches the desktop `seatPos()` exactly. **Do not "fix" it by
+mirroring** — a mirrored felt would invert the button's travel relative to the engine, the hand
+histories and the replayer.
+
+**Positions come from the engine, never from the seat's place on screen.** `assignPositions()`
+(`engine.ts:110-124`) computes `off = (seat − button + n) % n` and reads `POS6[off]` with
+`POS6 = [BTN, SB, BB, UTG, MP, CO]` (`engine.ts:27`). With the hero (seat 0) in the big blind,
+`off(0) = 2`, so `button = 4` and the whole table follows:
+
+| seat | screen place | `off` | position | in this wireframe |
+|---|---|---|---|---|
+| 0 | hero, bottom | 2 | **BB** | Q♠Q♥, to act, 1 bb posted |
+| 1 | lower right | 3 | **UTG** | Hellmuth — folded (acted first) |
+| 2 | upper right | 4 | **MP** | Selbst — folded |
+| 3 | top | 5 | **CO** | Negreanu — raised to 3 bb |
+| 4 | upper left | 0 | **BTN** | Ivey — folded; carries the dealer disc |
+| 5 | lower left | 1 | **SB** | Polk — posted 0.5, folded |
+
+Pre-flop order is seat 1 → 2 → 3 → 4 → 5 → 0, i.e. counter-clockwise from the lower right round
+to the hero. Pot = 0.5 (SB) + 1 (BB) + 3 (CO) = 4.5 bb; the hero owes 2 bb.
+
 ```
 ┌──────────────────────────────────────────────┐
 │ ‹   Hand #12 · +4.5 bb          [◉ 3] [▶ Step]│ 59–103
 │  Negreanu raises to 3 bb                     │ 103–121 ticker (tap → P2 Log; long-press = copy)
-│      ╭───────────────┬──┬──┬──────────────╮  │ 121 felt top rim
-│      │            ┌──┴──┴──┴─┐            │  │ 125 top seat's cards peek 24 pt above the plate
-│      │            │(N) Negre. UTG│           │  │ 149–207 seat 3 plate 104×58, centre (195,178)
+│      ╭───────────────┬──┬──┬──────────────╮  │ 121 felt top rim (rail 10 → inner edge 131)
+│      │            ┌──┴──┴──┴─┐            │  │ 135 seat 3's cards peek 24 pt above the plate
+│      │            │(N) Negre. CO│           │  │ 159–217 seat 3 plate 104×58, centre (195,188)
 │      │            │ 98 bb  31/22 │ 👁         │  │        eye glyph at the plate's outer corner
 │      │            └──────────────┘           │  │
-│      │                ● 3 bb                 │  │ 236 seat-3 bet spot (pill 22 tall)
+│      │                ● 3 bb                 │  │ 225–247 seat-3 bet pill (22 tall, centre y 236)
+│      │        PRE-FLOP · Pot 4.5 bb         │  │ 255–279 pot pill (≤ 130 wide, centre y 267)
 │ ┌──┬──┬──────────┐                ┌──┬──┬──────────┐│
-│ │(S) Selbst  MP │                │(P) Polk   CO ││ 243–301 seats 4 (left) & 2 (right), centres
-│ │ 96 bb   –/–   │   Fold         │ 97 bb  24/18 ││ (60,272) / (330,272): plates straddle the rail
-│ └───────────────┘                └───────────────┘│
-│      │        PRE-FLOP · Pot 4.5 bb        │  │ 256–280 pot pill (≤ 130 wide, centre y 268)
-│      │     ▭    ▭    ▭    ▭    ▭           │  │ 306–368 board slots 44×62, x 73–317 (6 gaps)
+│ │(I) Ivey  BTN D│                │(S) Selbst  MP ││ 243–301 seats 4 (left) & 2 (right), centres
+│ │ 100 bb  22/18 │                │ 96 bb   –/–   ││ (60,272) / (330,272); plates straddle the rail
+│ └───────────────┘                └───────────────┘│ D = dealer disc on seat 4 (the button)
+│      │  ● Fold                    ● Fold      │  │ 286–308 upper-side bet pills (centre y 297)
+│      │     ▭    ▭    ▭    ▭    ▭            │  │ 315–377 board slots 44×62, x 73–317
 │ ┌──┬──┬──────────┐                ┌──┬──┬──────────┐│
-│ │(H) Hellmuth UTG│   ● 1 bb (you)  │(I) Ivey  BTN D││ 401–459 seats 5 (left) & 1 (right),
-│ │ 92 bb   12/9  │                │100 bb  22/18  ││ centres (60,430) / (330,430); D = dealer disc
+│ │(P) Polk   SB  │                │(H) Hellm. UTG ││ 415–473 seats 5 (left) & 1 (right),
+│ │ 95.5 bb 18/12 │                │ 92 bb   12/9  ││ centres (60,444) / (330,444)
 │ └───────────────┘                └───────────────┘│
+│      │  ● Fold   ● 1 bb (you)     ● Fold      │  │ 385–407 lower-side pills; hero pill 397–419
 │      │ ┌──────────────────────────────────┐ │  │ 479–519 COACH CHIP zone (300×40, x 45–345)
 │      │ │ ✓ Nice play · Betting with the…  ›│ │  │        (empty felt when no chip)
 │      │ └──────────────────────────────────┘ │  │
@@ -525,7 +552,7 @@ y  810–844   home indicator
 │                 ┌─────┐┌─────┐                 │
 │                 │ Q♠  ││ Q♥  │                 │ 556–657 hero cards (lift 6 + gold glow on turn)
 │                 └─────┘└─────┘                 │
-│  BB · 100 bb          To call 2 bb · need 1 in 4│ 666–694 hero strip
+│ BB · 100 bb   To call 2 bb · need to win 1 in 4│ 666–694 hero strip (long form at ≥ 390)
 │  Min   ⅓    ½    ⅔    ¾   Pot   All-in         │ 698–746 sizing rail (labels 11, rail 6, knob 28)
 │  ○────○────○────●────○────○────────○           │
 │ ┌──────────┐ ┌─────────────┐ ┌───────────────┐ │
@@ -542,33 +569,71 @@ prop anchors are **fractions of the felt canvas** so the same table scales to 36
 
 | Anchor (6-max) | fraction (x, y) | @390 screen (x, y) |
 |---|---|---|
-| seat 3 (top) | (0.50, 0.12) | (195, 178) |
+| seat 3 (top) | (0.50, 0.14) | (195, 188) |
 | seat 2 (upper right) / seat 4 (upper left) | (0.89, 0.315) / (0.11, 0.315) | (330, 272) / (60, 272) |
-| seat 1 (lower right) / seat 5 (lower left) | (0.89, 0.645) / (0.11, 0.645) | (330, 430) / (60, 430) |
-| pot pill centre | (0.50, 0.307) | (195, 268) |
-| board centre | (0.50, 0.45) | (195, 337) |
-| hero bet spot | (0.50, 0.60) | (195, 408) |
+| seat 1 (lower right) / seat 5 (lower left) | (0.89, 0.675) / (0.11, 0.675) | (330, 444) / (60, 444) |
+| pot pill centre | (0.50, 0.305) | (195, 267) |
+| board centre | (0.50, 0.47) | (195, 346) |
+| bet slot, seat 3 | (0.50, 0.24) | (195, 236) |
+| bet slot, seats 2 / 4 | (0.645, 0.368) / (0.355, 0.368) | (245, 297) / (145, 297) |
+| bet slot, seats 1 / 5 | (0.645, 0.575) / (0.355, 0.575) | (245, 396) / (145, 396) |
+| bet slot, hero | (0.50, 0.60) | (195, 408) |
 | coach chip centre | (0.50, 0.79) | (195, 499) |
-| table centre (bet-spot vector origin) | (0.50, 0.44) | (195, 332) |
 
-**Seat order** is counter-clockwise from the hero exactly as the desktop `seatPos()` and the
-engine: seat 1 lower-right, 2 upper-right, 3 top, 4 upper-left, 5 lower-left. Engine seat ids map
-1:1; the dealer button therefore travels the same way as on desktop, in the replayer and in hand
-histories. (No mirroring.)
+**Bet spots are anchors, not an offset.** Earlier drafts placed each bet pill "58 pt from the
+plate centre along the line to the table centre". That is wrong twice over: it is an **absolute**
+length inside an otherwise fractional layout, so the pill drifts as the felt shrinks; and no
+single distance can clear the pot pill, the board and the plate for all five seats at once. The
+arithmetic that killed it: at 390 the seat-2 pill bottom landed at y 306 and the board top at
+y 306 (touching); at 360 the pill bottom was y ≈ 277 against a board top of y ≈ 276 — a 1 pt
+**overlap**, on the most common Android size. So every bet pill now has its own fractional
+anchor, exactly like every other prop, and scales with the felt by construction.
 
-**Bet spots**: each seat's bet pill (§10.3 `BetPill`, 22 tall, mono 11, chip glyph) sits 58 pt
-from the plate centre along the line to the table centre; blinds and antes post there. The hero's
-bet pill sits at the hero bet spot. Computed positions never collide with the pot pill or board at
-any supported width (checked: seat 2 → (277, 295); seat 1 → (283, 395)).
+`BetPill` (§10.3) is 22 pt tall and **capped at 44 pt wide (hero 40; 48/44 at 430, 40/36 at
+360)**; amounts use `fmtBb`, so "3 bb" and "12.5 bb" both fit. Blinds and antes post at the same
+anchors. The **never-collide check**, re-run at all three widths (worst-case gap in each pair,
+pt; a negative number is a bug):
 
-**Opponent hole cards** (30×42 face-down) peek 24 pt above the plate's top edge, tucked behind
-it; a fold slides them 20 pt down behind the plate — no separate card slot exists per seat.
+| Pair | @360×780 | @390×844 | @430×932 |
+|---|---|---|---|
+| seat-3 plate bottom → seat-3 pill top | 8.6 | 8.0 | 13.8 |
+| seat-3 pill bottom → pot pill top | 7.3 | 8.0 | 12.6 |
+| pot pill bottom → seat-2/4 pill top | 6.4 | 7.0 | 11.6 |
+| seat-2/4 pill bottom → board top | 8.5 | 7.0 | 9.9 |
+| seat-2/4 pill right → seat-2 plate left | 9.4 | 10.8 | 13.1 |
+| seat-2/4 plate bottom → board top | 17.2 | 14.0 | 20.0 |
+| board bottom → seat-1/5 pill top | 10.0 | 8.0 | 11.5 |
+| seat-1/5 pill bottom → seat-1 plate top | 8.6 | 8.0 | 13.8 |
+| hero pill right → seat-1 pill left | 7.8 | 8.0 | 9.1 |
+| seat-1/5 plate bottom → coach chip top | 6.5 | 6.0 | 13.1 |
+| coach chip bottom → hero cards top | 37.9 | 36.6 | 51.0 |
+| seat-3 cards top → felt rail inner edge | 4.2 | 4.1 | 12.7 |
 
-**Top bar** (44): `‹` (44×44, leaves the table; §2.5) · centre title "Hand #12 · +4.5 bb"
-(Inter 15 semibold + mono; tap → P2 Session segment; the net is good/bad coloured) · Coach badge
-`[◉ 3]` (44×44; count = notes this hand; dot = latest verdict colour; hidden when coach off) ·
-Pace pill `[▶ Step]` / `[▶▶ Auto]` (64×36 in a 44 hit box; tap toggles; long-press → P2 Options).
-At 360 wide the title truncates to "#12 · +4.5"; nothing else changes.
+**Hole cards never overlap the rail.** Opponent hole cards (30×42 at 390; 28×39 at 360; 34×48 at
+430) peek 24 pt above the plate's top edge, tucked behind it. Seat 3 sits at fraction 0.14 —
+not 0.12 — precisely so the peek clears the rail's inner edge: at 390 the plate top is 159 and
+the cards reach 135 against an inner edge of 131. `FeltCanvas` asserts
+`cardTop ≥ feltTop + railWidth` for every seat in debug builds; a layout that fails the assert
+is a layout bug, not a rendering nicety. A fold slides the cards 20 pt down behind the plate —
+no separate card slot exists per seat.
+
+**Android gesture-navigation exclusion.** On Android the system reserves ≈ 20–24 pt from each
+screen edge for the back gesture. The 6-max side plates reach x 8–382 of 390 (they straddle the
+rail by design), so a thumb landing on the outer third of a side plate would trigger *back* and
+leave the table. `TableScreen` therefore publishes
+`SystemGestureExclusion` rects (`SystemChrome.setSystemUIChangeCallback` +
+`SystemGestureExclusionRects`) covering: the full felt rectangle, the hero card pair, the sizing
+rail band and the action row. Android caps exclusions at 200 pt of vertical edge per side, so
+the rects are prioritised **felt first, then the sizing rail** (the action row is 16 pt clear of
+both edges and does not need one). The same mechanism is used by the range matrix (§4.9). iOS
+needs nothing: the table is a modal route, so the interactive pop gesture is off (§4.14).
+
+**Opponent hole cards** are described above. **Top bar** (44): `‹` (44×44, leaves the table;
+§2.5) · centre title "Hand #12 · +4.5 bb" (Inter 15 semibold + mono; tap → P2 Session segment;
+the net is good/bad coloured) · Coach badge `[◉ 3]` (44×44; count = notes this hand; dot = latest
+verdict colour; hidden when coach off) · Pace pill `[▶ Step]` / `[▶▶ Auto]` (64×36 in a 44 hit
+box; tap toggles; long-press → P2 Options). At 360 wide the title truncates to "#12 · +4.5";
+nothing else changes.
 
 **Ticker** (18): the newest engine `log` line; colour by kind (result gold-light, deal info,
 action muted, info faint). Tap → P2 Log at L. Long-press → copies the hand's log ("Hand log
@@ -587,71 +652,133 @@ The felt keeps its frame; everything grows because there is one opponent:
 │      │      │(D) Dwan · BB    –/–│   │       │ plate 160×64 at (0.50, 0.145) → (195,190)
 │      │      │ 98.5 bb · 4h       │   │       │ HU shows the archetype name spelled out ONLY in P6
 │      │      └────────────────────┘   │       │ cards 34×48 tucked behind the plate
-│      │             ● 1 bb            │       │ bet spot (0.50, 0.27)
+│      │             ● 1 bb            │       │ bet slot (0.50, 0.27)
 │      │        FLOP · Pot 6.5 bb      │       │ pot pill (0.50, 0.37)
 │      │    ┌───┐ ┌───┐ ┌───┐ ▭   ▭    │       │ board 52×73 at (0.50, 0.52)
 │      │    │A♠ │ │7♦ │ │2♣ │          │       │
-│      │             ● 2 bb (you)      │       │ hero bet spot (0.50, 0.67)
+│      │             ● 2 bb (you)      │       │ hero bet slot (0.50, 0.67)
 │      │   [coach chip zone]           │       │ (0.50, 0.79)
 │      ╰───────────────╮ ╭─────────────╯       │
 │                ┌──────┐┌──────┐              │ hero cards 80×112 (top y 545)
-│  BTN/SB · 98.5 bb        To call 2 bb · need 1 in 4 │
+│  BTN/SB · 98.5 bb          To call 2 bb · need 1 in 4 │ short form: the left segment is > 100 pt
 ```
-Position tags follow the HU rule: "BTN/SB" for the button, "BB" for the other seat. The dealer
-disc alternates between the two plates.
+
+**"BTN/SB" is a display mapping, not an engine value.** `assignPositions` special-cases two
+seats and emits exactly **`BTN`** for the button and **`BB`** for the other seat
+(`engine.ts:113-114`) — there is no `SB` position at heads-up. The `"BTN/SB"` string is produced
+by one shared formatter used only by `SeatPlate` and `HeroStrip`:
+
+```dart
+String positionLabel(Position p, int seats) =>
+    (seats == 2 && p == Position.btn) ? 'BTN/SB' : p.name.toUpperCase();
+```
+
+Everything that is not a pixel keeps the engine label `BTN`: the hand record
+(`hand_json.seats[].position`), the exported PokerStars text, the importer, the replayer's plate
+captions, drill grading and every stat bucketed by position (§7.4). Never write `"BTN/SB"` to
+storage or to a file. The dealer disc alternates between the two plates.
 
 ### 4.2.2 9-max (8 opponents)
 
-Compact plates 84×50 keep the HUD (reads matter most at 9-max): row 1 avatar 20 + name (5 chars)
-+ position; row 2 stack mono 11 + HUD mono 9 (`22/18·14h`). Cards 24×34 tucked. Board 40×56
-(five = 220 wide, x 85–305). Anchors (fractions): s5 (0.28, 0.10) · s4 (0.72, 0.10) · s6 (0.11,
-0.28) · s3 (0.89, 0.28) · s7 (0.11, 0.47) · s2 (0.89, 0.47) · s8 (0.11, 0.665) · s1 (0.89,
-0.665) · pot pill (0.50, 0.33) · board (0.50, 0.45) · hero bet spot (0.50, 0.60) · chip
-(0.50, 0.79). Side bet spots are 52 pt toward the centre; at 360 wide the mid-side bet pills
-(s7/s2) move 16 pt below their plate instead so they never touch the board.
+Nine seats on a 346 pt felt is the layout that punishes shortcuts, so the compact plate drops
+the HUD numbers rather than shrinking type below the legibility floor.
+
+**Compact plate 84×50** (78×46 at 360, 92×55 at 430): row 1 = avatar 20 + name (5 chars) +
+position pill; row 2 = stack mono **12** + observed-hands mono **11** (`· 14h`) + the archetype
+ring on the avatar. **VPIP/PFR are not on the 9-max plate.** The earlier draft put them there at
+mono **9 pt**, which is below this spec's 11 pt legibility floor and reads as a shrunken desktop
+HUD — exactly what §1 forbids. The numbers move to **P6**, one tap away on the plate, where they
+get the full StatTile treatment and the verbatim explanation; the plate keeps the two things a
+9-max read actually needs at a glance: *how loose is this seat's style* (ring colour) and *how
+much of a sample do I have* (`14h`). Nothing is lost — §4.3's "reads are earned" rule already
+gates the numbers behind 8 observed hands, and the ring is visible from hand 1.
+
+**Board 5 × 32×45, gap 3 → 172 wide** (28×39 → 152 at 360; 36×50 → 192 at 430). Anchors
+(fractions): s5 (0.28, 0.115) · s4 (0.72, 0.115) · s6 (0.11, 0.28) · s3 (0.89, 0.28) · s7
+(0.11, 0.47) · s2 (0.89, 0.47) · s8 (0.11, 0.665) · s1 (0.89, 0.665) · pot pill (0.50, 0.33) ·
+board (0.50, 0.45) · chip (0.50, 0.79). Bet slots: s5/s4 (0.28/0.72, 0.21) · s6/s3 (0.11/0.89,
+0.375) · s7/s2 (0.11/0.89, 0.565) · s8/s1 (0.30/0.70, 0.60) · hero (0.50, 0.60). Hole cards are
+24×34 and peek **14 pt** (not 24) above the plate, and the top row sits at 0.115 rather than
+0.10, so the peek clears the rail at every width.
+
+**The collision that forced this.** With the earlier numbers — 84-wide plates at (0.11/0.89,
+0.47) and a 40×56 board — the s7/s2 plates spanned x 18–102 and 288–372 against a board at
+x 85–305, **overlapping by 17 pt on each side**, and their bet pills (52 pt "toward the centre")
+landed at x ≈ 87–137 and 253–303, i.e. *inside the board rectangle*. This was not a 360-only
+problem, as the old §14 row claimed: the numbers above are at **390**. Moving s7/s2 down to
+fraction 0.55 does not fix it either — the plate band becomes y 359–409 against a board bottom
+of 365, still 6 pt of vertical overlap, and it squeezes the gap to s8/s1 to 5 pt. Neither does
+a 36×50 board at 390: 5 × 36 + 4 × 3 = 192 wide → x 99–291 against plates ending at 102 and
+starting at 288. The fix is a **narrower board that clears the side plates in x**, plus bet
+pills that hang **below** their plate at every width (not only at 360). Re-run:
+
+| Check (worst-case gap, pt) | @360×780 | @390×844 | @430×932 |
+|---|---|---|---|
+| s7 plate right → board left | 8.2 | 7.0 | 6.2 |
+| board right → s2 plate left | 8.2 | 7.0 | 6.2 |
+| s5/s4 plate bottom → their bet pill | 10.3 | 9.5 | 13.6 |
+| s5/s4 bet pill bottom → pot pill top | 32.9 | 34.5 | 42.7 |
+| s6/s3 plate bottom → their bet pill | 10.3 | 9.5 | 13.6 |
+| s6/s3 bet pill bottom → s7/s2 plate top | 10.3 | 9.5 | 13.6 |
+| s7/s2 plate bottom → their bet pill | 10.3 | 9.5 | 13.5 |
+| s7/s2 bet pill bottom → s8/s1 plate top | 12.6 | 12.0 | 16.3 |
+| s8/s1 bet pill left → s8 plate right | 3.0 | 3.8 | 4.2 |
+| s8/s1 bet pill right → hero bet pill | 27.0 | 29.0 | 32.0 |
+| pot pill bottom → board top | 24.4 | 23.0 | 28.8 |
+| s8/s1 plate bottom → coach chip top | 15.2 | 14.8 | 21.1 |
+| top-row cards top → felt rail inner edge | 8.6 | 6.1 | 9.5 |
 
 ```
-│      ╭───────────────────────────────╮       │
-│   ┌──────┐                     ┌──────┐      │ s5 (top-left) · s4 (top-right), y ≈ 169
-│   │Anton.│UTG                  │Dwan  │UTG   │
-│   │88·12/9│                    │100·34/27│    │
-│ ┌──────┐└──────┘         └──────┘┌──────┐    │
-│ │Galfo.│MP                     │Selbst│MP   │ s6 · s3, y ≈ 255
-│ │95·22/18│    PRE-FLOP · 2.5   │96·–/–│     │ pot pill y ≈ 279
-│ └──────┘ ▭   ▭   ▭   ▭   ▭     └──────┘    │ board y 309–365
-│ ┌──────┐                        ┌──────┐    │
-│ │Chidw.│CO                     │Polk  │CO   │ s7 · s2, y ≈ 346
-│ └──────┘                        └──────┘    │
-│ ┌──────┐         ● 1 bb (you)   ┌──────┐    │
-│ │Bruns.│BTN D                  │Ivey  │SB   │ s8 · s1, y ≈ 439
-│ └──────┘                        └──────┘    │
-│      │        [coach chip zone]        │     │
+│      ╭───────────────────────────────╮       │ 131 rail inner edge
+│   ┌──────┐                     ┌──────┐      │ s5 (top-left) · s4 (top-right), y 161–211
+│   │Anton.│UTG                  │Dwan  │UTG   │ cards peek 14 pt (top 147)
+│   │ 88 bb · 12h│                │100 bb · 9h│  │ no VPIP/PFR here — tap the plate → P6
+│      ● Fold                        ● 2.5 bb  │ 211–233 s5/s4 bet pills
+│ ┌──────┐                          ┌──────┐   │
+│ │Galfo.│MP                       │Selbst│MP  │ s6 · s3, y 230–280
+│ │ 95 bb · 22h│  PRE-FLOP · 2.5 bb │96 bb · 3h│ │ pot pill y 267–291
+│ └──────┘                          └──────┘   │
+│      ● Fold      ▭ ▭ ▭ ▭ ▭          ● Fold   │ 290–312 s6/s3 pills · board y 314–359 (x 109–281)
+│ ┌──────┐                          ┌──────┐   │
+│ │Chidw.│CO                       │Polk  │CO  │ s7 · s2, y 321–371
+│ └──────┘                          └──────┘   │
+│      ● Fold                        ● Fold    │ 381–403 s7/s2 pills (below the plate)
+│ ┌──────┐        ● 1 bb (you)      ┌──────┐   │ hero pill 397–419
+│ │Bruns.│BTN D                     │Ivey  │SB │ s8 · s1, y 415–465
+│ └──────┘                          └──────┘   │
+│      │        [coach chip zone]        │     │ 479–519
 │      ╰──────────────╮ ╭───────────────╯      │
 │                ┌────┐┌────┐                  │ hero cards 64×90
 ```
-Position labels on 9-max are the engine's 6-label approximation (`BTN SB BB UTG UTG MP MP CO
-CO`): two seats may share a label and the plate shows it as-is. The player sheet adds
-"(approximate — 9-max uses 6-max labels)" *(new)* after the position, and the lobby shows the
-verbatim "Coach charts assume 6-max…" note. Never invent UTG+1 / HJ.
+
+Position labels on 9-max are the engine's 6-label approximation (`POS9 = [BTN, SB, BB, UTG, UTG,
+MP, MP, CO, CO]`, `engine.ts:29`): two seats may share a label and the plate shows it as-is. The
+player sheet adds "(approximate — 9-max uses 6-max labels)" *(new)* after the position, and the
+lobby shows the verbatim "Coach charts assume 6-max…" note. Never invent UTG+1 / HJ.
 
 ### 4.2.3 360×780 and 430×932
 
 **360×780** (status 32, gesture inset 24). Bands: top bar 32–76 · ticker 76–94 · felt 94–560
 (316×466; canvas scale 0.913, anchors unchanged as fractions) · hero cards 64×90 (top 520,
 overlap 40) · hero strip 612–640 · context row 644–692 · action row 700–756 · inset. Plates
-96×54 (6-max), 78×46 (9-max, HUD 9 pt kept), HU plate 148×60; board 40×56; names truncate at 6
-characters without ellipsis. Bottom row heights are hard minimums and never shrink. The sizing
-rail keeps all seven ticks (spacing 45 pt, labels 10 pt).
+96×54 (6-max), 78×46 (9-max), HU plate 148×60; 6-max board 40×56 (x 70–290), 9-max board 28×39
+(x 104–256); opponent hole cards 28×39 (6-max) / 22×31 (9-max, peek 12); bet pills ≤ 40 wide
+(hero 36); pot pill ≤ 120; coach chip 274×40. Names truncate at 6 characters without ellipsis.
+Bottom row heights are hard minimums and never shrink. The sizing rail keeps all seven ticks
+(spacing 45 pt, labels 10 pt). The hero strip uses the **short** price line (§4.4).
 
-**430×932**: felt 380×548 (extra height goes to the felt only), board 50×70, hero cards 80×112,
-plates 112×60. The action zone keeps its 390 heights; margins grow to 20.
+**430×932**: felt 380×548 at x 25–405, y 121–669 (extra height goes to the felt only), 6-max
+board 50×70 (x 78–352), 9-max board 36×50 (x 119–311), hero cards 80×112 (top 625), plates
+112×60 / 92×55 (9-max) / 176×70 (HU), bet pills ≤ 48 (hero 44), pot pill ≤ 143, coach chip
+330×40. The action zone keeps its 390 heights; margins grow to 20.
 
 ### 4.2.4 Dynamic type on the table
 
-The felt's text (plate name/stack/HUD, pot, ticker) scales with the system text size up to
+The felt's text (plate name/stack/hands-seen, pot, ticker) scales with the system text size up to
 **1.15×** and then stops; the hero strip, context row and action row scale up to **1.3×** and
-grow in height (the felt shrinks to compensate, never below 400 pt at 390 wide). Above 1.3× the
-action labels drop their amounts into the hero strip ("Call" + strip line "To call 2 bb").
+grow in height (the felt shrinks to compensate, never below 400 pt at 390 wide). Above 1.15× the
+hero strip switches to the short price line at every width; above 1.3× the action labels drop
+their amounts into the hero strip ("Call" + strip line "To call 2 bb").
 
 ### 4.3 Seat component (`SeatPlate`, §10.3)
 

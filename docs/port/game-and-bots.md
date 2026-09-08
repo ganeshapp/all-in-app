@@ -1153,3 +1153,267 @@ consequences of the policy) and should hold with any seed.
 16. **Auto-rebuy**: `startHand` resets any stack ≤ 0 to `startingStack` (including the hero); the store ends the session before this can happen to the hero.
 17. `lastAction` labels persist across streets for folded and all-in players (they are cleared only for players who can still act), so the table can keep showing `Fold` / `All-In` badges.
 18. The `Station` 3-bet override: because the `PREMIUM` clamp runs after the archetype branch, Stations 3-bet AA/KK/QQ/AKs/AKo at ≥ 85% frequency despite the "only raise monsters" comment. Port it as written; the tests were tuned against it.
+
+---
+
+## Appendix A. Errata and under-specified details (read with §1, §5, §6.9, §7)
+
+This appendix pins down details that the sections above stated loosely or not
+at all. Where it contradicts an earlier line, the appendix wins; the four
+lines it supersedes have already been corrected in place and cross-reference
+back here.
+
+### A.1 `botNameFor` — only 8 of the 10 `BOT_NAMES` are reachable
+
+Source: `src/game/archetypes.ts`, `src/game/engine.ts`.
+
+```ts
+const BOT_NAMES = [
+  "Ivey", "Negreanu", "Polk", "Selbst", "Hellmuth",
+  "Brunson", "Antonius", "Dwan", "Galfond", "Chidwick",
+];
+export function botNameFor(seat: number): string {
+  return BOT_NAMES[(seat - 1 + BOT_NAMES.length) % BOT_NAMES.length];
+}
+```
+
+The `+ BOT_NAMES.length` before the `%` exists only to keep `seat = 0` from
+producing a negative JS index; it is never exercised, because the sole caller
+is `createTable`:
+
+```ts
+for (let i = 0; i < config.seats; i++) {
+  ...
+  name: isHero ? "You" : botNameFor(i),      // i === player id; i === 0 is the hero, named "You"
+```
+
+So the `seat` parameter is the **player id** (0-based seat index), and
+`botNameFor` is only ever called with `i >= 1`.
+
+Reachability. The only supported table sizes are `seats ∈ {2, 6, 9}` (§2,
+`GameConfig`; the store coerces anything else to 6). Player ids therefore run
+`0..8` at most, id 0 is always the hero, and the bots occupy ids `1..8`:
+
+| player id | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| `BOT_NAMES` index | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| name | Ivey | Negreanu | Polk | Selbst | Hellmuth | Brunson | Antonius | Dwan |
+
+- 2-max: hero + `Ivey`.
+- 6-max: hero + `Ivey, Negreanu, Polk, Selbst, Hellmuth`.
+- 9-max: hero + `Ivey, Negreanu, Polk, Selbst, Hellmuth, Brunson, Antonius, Dwan`.
+
+**`Galfond` (index 8) and `Chidwick` (index 9) can never appear in the live
+game.** They would require player ids 9 and 10, i.e. a 10- or 11-seat table,
+which the config does not allow. Keep both names in the ported `BOT_NAMES`
+list anyway (the modulo and the list length are load-bearing for the mapping),
+but do not treat their absence at a real table as a seat-indexing bug — a
+9-max table's last bot is `Dwan`, not `Galfond`.
+
+The earlier claim in §5 that seat 9 is `Galfond` is arithmetically correct for
+`botNameFor(9)` and is only relevant to a hypothetical 10-seat table; no live
+table ever calls it with 9.
+
+**The §7.4 hand-history example is not `botNameFor` output.** Its seat list
+`You(BTN) Ivey(SB) Polk(BB) Dwan(UTG) Selbst(MP) Galfond(CO)` is hand-written
+fixture data in `scripts/hh_test.ts` (and likewise in
+`scripts/hhimport_test.ts`), chosen to be readable rather than generated:
+`botNameFor` for a 6-max table would give `Ivey, Negreanu, Polk, Selbst,
+Hellmuth` at ids 1..5. `formatHand` only ever reads `HHSeat.name`, so any
+names are valid input to the exporter. Do not reverse-engineer the seat→name
+mapping from that example, and do not "fix" the fixture to match
+`botNameFor` — the pinned substring assertions in §8.3 quote those exact
+names (`Selbst: shows` must be **absent**, etc.). `scripts/_coach_wide.mts`
+uses a third, different, hand-written name list for the same reason.
+
+Also note the same seat parameter convention in `archetypeForSeat(i)`, called
+with the same `i` (player id) in `createTable`. The live app then throws that
+result away and re-rolls a uniform-random archetype per bot seat (§5.1), so
+`archetypeForSeat` only determines the archetypes of a table built directly
+with `createTable` — which is what the test scripts do.
+
+### A.2 `Dials` (see §1)
+
+Source: `src/types/poker.ts`.
+
+```ts
+dials?: { aggression: number; stickiness: number; cbetFlop: number };
+```
+
+There is no named TS interface — it is an inline object type on `Player`.
+§1 now declares it as an explicit `Dials` class so the domain-types section is
+self-contained. Notes for the port:
+
+- The whole object is optional (`null` for the hero and for any bot built by
+  `createTable` without going through `newSession`), but its three fields are
+  **required** when it is present. Never model it as a partial/patchy map.
+- `cbetFlop` is a **percentage** (`cfg.cbetFlop / 100` at the use site in
+  `botBrain.ts`), and after jitter it is fractional — so it is a `double` in
+  Dart even though `ArchetypeConfig.cbetFlop` is written as an `int`.
+- Consumption is a spread-merge, not a field-by-field null check:
+  `const cfg = { ...ARCHETYPES[p.archetype], ...(p.dials ?? {}) }`. In Dart,
+  resolve it once per decision as
+  `aggression = p.dials?.aggression ?? ARCHETYPES[p.archetype].aggression`
+  (and the same for `stickiness` and `cbetFlop`); every other
+  `ArchetypeConfig` field (`vpip`, `pfr`, `name`, `blurb`, `color`) always
+  comes from the archetype, because `dials` carries only those three keys.
+- Construction and the exact jitter formula are in §5.1; ranges after clamping
+  are `aggression`/`stickiness` `[0.05, 0.95]` and `cbetFlop` `[20, 95]`.
+
+### A.3 `FOLD_STREET_PHRASE` has a `?? "before Flop"` default (§7.3 step 13)
+
+Source: `src/game/handHistory.ts`.
+
+```ts
+const FOLD_STREET_PHRASE: Record<string, string> = {
+  preflop: "before Flop",
+  flop: "on the Flop",
+  turn: "on the Turn",
+  river: "on the River",
+};
+...
+lines.push(`Seat ${seatNo(s.seat)}: ${s.name}${tag} folded ${FOLD_STREET_PHRASE[foldStreet] ?? "before Flop"}`);
+```
+
+The map is keyed by `Street`, whose declared values also include `showdown`
+(§1) — hence the fallback. In practice it is dead code: `foldedOn` is only
+ever written from a `fold` action's `street` (never `showdown`) or from the
+defensive "no actions at all" rule, which writes the literal `"preflop"`
+(§7.3 step 6). The branch is nonetheless reachable in a Dart port for the
+wrong reason: a `Map<Street, String>` lookup on an unmapped street returns
+`null`, and string interpolation of `null` prints the four characters `null`,
+producing `Seat 5: Selbst folded null` instead of a valid PokerStars line.
+
+Port it with the default present:
+
+```dart
+const foldStreetPhrase = <Street, String>{
+  Street.preflop: 'before Flop',
+  Street.flop: 'on the Flop',
+  Street.turn: 'on the Turn',
+  Street.river: 'on the River',
+};
+final phrase = foldStreetPhrase[foldStreet] ?? 'before Flop';
+```
+
+The exact user-facing strings are `before Flop`, `on the Flop`, `on the Turn`,
+`on the River` — capitalised street names, lower-case preposition, no trailing
+punctuation. The full line is
+`Seat ${seat + 1}: ${name}${tag} folded ${phrase}` with `tag` per §7.3 step 13.
+
+### A.4 `psHandName` inputs are the evaluator's exact `name` strings (§7.2)
+
+Source: `src/game/handHistory.ts` (`psHandName`), `src/engine/evaluator.ts`
+(the `name` producers).
+
+The §7.2 table's left column is the **verbatim** output of
+`evaluateCards(...).name`. The evaluator spells ranks out in full:
+
+```ts
+const RANK_NAME = { 14:"Ace", 13:"King", 12:"Queen", 11:"Jack", 10:"Ten",
+                    9:"Nine", 8:"Eight", 7:"Seven", 6:"Six", 5:"Five",
+                    4:"Four", 3:"Three", 2:"Two" };
+const RANK_NAME_PLURAL = { 14:"Aces", 13:"Kings", 12:"Queens", 11:"Jacks",
+                    10:"Tens", 9:"Nines", 8:"Eights", 7:"Sevens", 6:"Sixes",
+                    5:"Fives", 4:"Fours", 3:"Threes", 2:"Twos" };
+```
+
+so a king-high straight flush is named `Straight Flush, King high` — never
+`Straight Flush, K high`. (Single-letter rank codes appear only inside `Card`
+strings such as `"Kd"`, never in a hand name.) The `slice` offsets in
+`psHandName` are the lengths of the matched prefixes, and they are what make
+the transformation lossless:
+
+| prefix test | prefix length / `slice` | remainder for the example |
+|---|---|---|
+| `startsWith("Pair of")` | 7 | `" Queens"` → `a pair of Queens` |
+| `startsWith("Two Pair")` | 8 | `", Aces and Kings"` → `two pair, Aces and Kings` |
+| `startsWith("Three of a Kind")` | 15 | `", Queens"` → `three of a kind, Queens` |
+| `startsWith("Straight Flush")` | 14 | `", King high"` → `a straight flush, King high` |
+| `startsWith("Straight")` | 8 | `", Ten high"` → `a straight, Ten high` |
+| `startsWith("Flush")` | 5 | `", Ace high"` → `a flush, Ace high` |
+| `startsWith("Full House")` | 10 | `", Aces full of Kings"` → `a full house, Aces full of Kings` |
+| `startsWith("Four of a Kind")` | 14 | `", Aces"` → `four of a kind, Aces` |
+| `=== "Royal Flush"` | — | `a royal flush` |
+| `endsWith("High")` | `slice(0, -5)` | `"Ace High"` → `high card Ace` |
+| fallback | — | `n.toLowerCase()` |
+
+`"Straight Flush"` is 14 characters, so `n.slice(14)` on
+`"Straight Flush, King high"` yields `", King high"` and the result is
+`a straight flush, King high` — the offset is correct; §7.2's earlier
+`K high` sample was the malformed part and has been corrected in place.
+
+Two behaviours that are easy to lose in a port:
+
+1. The `" & " → " and "` replacement runs **once, on the whole string, before
+   any prefix test** (`.replace(" & ", " and ")` — JS string-pattern replace
+   replaces only the first occurrence; hand names contain at most one `" & "`,
+   in `Two Pair`).
+2. The check order is exactly as listed above. `Straight Flush` must be tested
+   before `Straight`, and `Flush` after both, or `"Straight Flush, King high"`
+   would match the `Straight` branch and produce `a straight  Flush, King high`.
+   `Royal Flush` is an equality test, and it sits after the `Flush`
+   `startsWith` test in the source — but it is still reachable, because
+   `"Royal Flush"` does not start with `"Flush"`.
+
+### A.5 `narrowRange` aggro slices may overlap — do NOT dedupe (§6.9)
+
+Source: `src/game/botBrain.ts`.
+
+```ts
+if (kind === "aggro") {
+  const top = scored.slice(0, Math.max(5, Math.round(n * 0.45))).map((x) => x.label);
+  const tail = scored.slice(Math.round(n * 0.85)).map((x) => x.label);
+  kept = [...top, ...tail];
+}
+```
+
+This is a plain concatenation with **no dedupe**, so when the two index ranges
+intersect the returned range contains the same `HandLabel` twice. Overlap
+happens when `round(n * 0.85) < max(5, round(n * 0.45))` **and** the tail is
+non-empty (`round(n * 0.85) < n`), where `n = scored.length` — the number of
+stored labels that survived the fully-blocked-by-board filter, which can be
+smaller than `stored.length`:
+
+| `n` | top end `max(5, round(0.45n))` | tail start `round(0.85n)` | duplicated? |
+|---|---|---|---|
+| 1–3 | 5 | ≥ `n` | no — tail slice is empty |
+| 4 | 5 | 3 | **yes** — index 3 appears twice |
+| 5 | 5 | 4 | **yes** — index 4 appears twice |
+| 6 | 5 | 5 | no |
+| 7 | 5 | 6 | no |
+| 8 | 5 | 7 | no |
+| 9 | 5 | 8 | no |
+| ≥ 10 | `round(0.45n)` | `round(0.85n)` | no (`0.45n < 0.85n`) |
+
+The function early-returns for `stored.length <= 8`, so a duplicate requires
+`stored.length >= 9` **and** `n ∈ {4, 5}`, i.e. at least four stored labels
+fully blocked by the board (every combo of the label using a board card).
+That is vanishingly rare with real ranges and does not occur in the recorded
+test runs — the tested invariant "postflop ranges never grow"
+(`postflopGrowths === 0` in `scripts/bot_test.ts`) holds in practice.
+
+Porting rule: **reproduce the concat verbatim; do not wrap it in a `Set`, do
+not call `.toSet().toList()`, and do not use a `LinkedHashSet` accumulator.**
+Reasons:
+
+- `scripts/bot_test.ts` compares `dec.range.length` against the previous
+  stored length to count narrowings and growths (`before > 8 && dec.range.length
+  < before` → `postflopNarrowings`, `> before` → `postflopGrowths`, asserted
+  `> 200` and `=== 0` respectively). A dedupe changes those lengths whenever
+  the stored range itself already contained a duplicate, which flips
+  no-change cases into narrowings and shifts the counts a Dart port is
+  expected to match.
+- The result is written straight back into `botRanges[seat]` and becomes the
+  *next* decision's `stored`, so list-vs-set semantics compound across a hand:
+  a duplicated label is scored twice on the following street and re-duplicated
+  through subsequent slices.
+- The opponent-range equity path reads the same list; `dec.range.length > 0`
+  gates the "vs range" branch (§6.5/§9 note 9).
+
+The final guard is already dedupe-aware and must keep its exact form —
+`if (!kept.includes(actualLabel) && stored.includes(actualLabel)) kept.push(actualLabel)`
+— i.e. it appends the bot's actual label only when the label is missing from
+`kept` **and** was present in `stored`; it never removes anything.
+
+The `call` and `check` kinds take a single slice each and can never duplicate.

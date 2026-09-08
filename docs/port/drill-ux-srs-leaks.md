@@ -1053,3 +1053,155 @@ double rangeF1(Set<String> painted, Set<String> actual) {
 - [ ] Format helpers pins (§8.7).
 - [ ] Study drills: generator ranges, option-set construction (4 distinct, bounds), F1 threshold 0.7, texts.
 - [ ] Persisted JSON shapes round-trip with data exported from the desktop app (including spots lacking `srs`).
+
+---
+
+## 17. Corrections to earlier sections (normative)
+
+Three defects found when this document was re-checked line-by-line against the source repo on 2026-09-07. Where §1, §5.3 or the source-file inventory table at the top disagree with anything below, **this section wins**. Nothing here requires opening the TypeScript; the exact source evidence is reproduced inline.
+
+### 17.1 `Puzzle.frames` — the invariant is `length >= 2`, not `>= 1` (corrects §1)
+
+§1 declares:
+
+```dart
+List<DrillFrame> frames;      // >= 1; LAST frame is the decision point
+```
+
+The `>= 1` is wrong and must be read as **`>= 2`**. The sibling port doc `drills-charts-icm.md` has it right in its §1 (`// >= 2; last frame is the decision point`) and in its invariant list (`frames.length >= 2`). Use:
+
+```dart
+List<DrillFrame> frames;      // >= 2 (see 17.1); LAST frame is the decision point
+```
+
+Why it matters: the pinned test suite `scripts/puzzles_test.ts` rejects a 1-frame puzzle. It asserts, inside a 800-iteration loop over `generatePuzzle()`:
+
+```ts
+ok(p.frames.length >= 2, "has navigator frames");
+```
+
+and again for the leak replay built by `puzzleFromLeak(spot)`:
+
+```ts
+ok(lp.frames.length >= 2, "leak has frames");
+```
+
+A Dart port that trusted `>= 1` could ship a single-frame puzzle that passes its own tests and fails the ported `puzzles_test`. It would also break §8.4 (`MoveNavigator`), whose "First / Previous / Next / Decision" controls and highlighted-last-row list assume at least one non-decision frame ahead of the decision point.
+
+**No generator in the source can emit fewer than 2 frames.** Exhaustive frame counts (`SB = 0.5`, `BBV = 1`, `ORDER = [UTG, MP, CO, BTN, SB, BB]`):
+
+| Generator (kind) | Frame count | Why |
+|---|---|---|
+| `genRfi` (`rfi`) | **2 … 6** | `1 (blinds) + |foldedBefore| + 1 (action)`. `heroIdx = rint(0,4)` → UTG…SB; `foldedBefore = ORDER.slice(0, heroIdx)` minus SB/BB → 0,1,2,3,4 for UTG,MP,CO,BTN,SB. **Hero = UTG gives exactly 2 — the global minimum.** |
+| `genVsRaise` (`vs-raise`) | 4 … 7 | `3 + |ORDER.slice(0, heroIdx) \ {raiserPos, SB, BB}|`. `heroIdx = rint(2,5)` → CO,BTN,SB,BB; `raiserIdx = rint(0, heroIdx-1)`. CO→4, BTN→5, SB→6, BB→6 (7 when the raiser is the SB). |
+| `genPostflopBet` (`postflop-bet`) | exactly 4 | fixed array |
+| `genPostflopCheck` (`postflop-check`) | exactly 3 | fixed array |
+| `genThreeBetPot` (`threebet-pot`) | exactly 3 | fixed array |
+| `genFacingCheckRaise` (`check-raise`) | exactly 3 | fixed array |
+| `genRiverDecision` (`river-decision`) | exactly 3 | fixed array |
+| `generateExploit` template 0 (Station river, `exploit`) | exactly 3 | fixed array |
+| `generateExploit` template 1 (Nit turn raise, `exploit`) | exactly 3 | fixed array |
+| `generateExploit` template 2 (Nit blind steal, `exploit`) | **exactly 2** | fixed array |
+| `generatePushFold` open-shove (`pushfold`) | 3 … 6 | `1 + |foldedBefore| + 1`; `heroPos ∈ {MP, CO, BTN, SB}` → 1,2,3,4 folds |
+| `generatePushFold` BB-call (`pushfold`) | exactly 3 | fixed array |
+| `generateIcmPushFold` SB-shove / BB-call (`pushfold`) | exactly 3 each | fixed array |
+| `puzzleFromLeak` (`leak`) | **exactly 2** | fixed array — see §3.4 |
+
+So `frames.length ∈ [2, 7]` across the whole engine, and the three generators that hit the floor of 2 are: `genRfi` with hero UTG, `generateExploit` template 2, and `puzzleFromLeak`.
+
+The two verbatim frames of the minimal `genRfi` case (hero UTG, `pot = SB + BBV = 1.5` on both frames, `street "preflop"`, `board []`):
+
+```
+frame[0].text = "Blinds posted (0.5/1 bb)."
+frame[1].text = "Folded to you in the UTG. Action on you."     // `Folded to you in the ${heroPos}. Action on you.`
+```
+
+The intermediate fold frames, when hero is not UTG, are `` `${p} folds.` `` — e.g. `UTG folds.` — one per earlier non-blind seat, in `ORDER` sequence, all carrying the same `pot: 1.5`.
+
+The two verbatim frames of `generateExploit` template 2 (hero SB, `pot = 1.5` on both, `street "preflop"`, `board []`):
+
+```
+frame[0].text = "The BB is a NIT — they defend their blind with only ~12% of hands and fold the rest."
+frame[1].text = "Folded to you in the SB with ${label}. Action on you."   // ${label} = hero's HandLabel, e.g. "AJo"
+```
+
+(Note the U+2014 em dash in `frame[0]`.)
+
+Structural rule that follows and is worth asserting in the port: **the last frame is always the "action is on you" prompt**, it always carries the puzzle's decision-point `street`, `board` and `pot`, and every earlier frame is narrative history. `navIndex` therefore initialises to `frames.length - 1` (§6.3, §6.6, §6.7) and that index is always `>= 1`.
+
+Dart guard to put in the `Puzzle` constructor / factory:
+
+```dart
+assert(frames.length >= 2, 'Puzzle.frames must have >= 2 entries: history + decision point');
+assert(frames.last.street == street, 'last frame is the decision point');
+```
+
+Add to the §16 checklist:
+
+- [ ] Every generator emits `frames.length >= 2` (pin the 2-frame floor for `rfi` hero-UTG, `exploit` template 2, and `puzzleFromLeak`); a 1-frame puzzle is rejected.
+
+### 17.2 `scripts/leaks_test.ts` — the exact six assertions (replaces the numbered list in §5.3)
+
+The list in §5.3 does not map 1:1 onto the file's six `ok()` calls: its item 2 silently bundles two separate assertions (the count check and the "fold too often" check), and its item 6 is a placeholder ("implicit in 1") rather than a real assertion. Porting "the six assertions" from that list produces the wrong six. The authoritative list is below — six `ok()` calls, in source order, with the failure message each one prints.
+
+The helper is unchanged from §5.3 and is reproduced verbatim (note there is **no** `position` field on these records):
+
+```ts
+const d = (verdict: DecisionRecord["verdict"], action: DecisionRecord["action"]): DecisionRecord => ({
+  verdict,
+  action,
+  equity: 0.3,
+  potOdds: 0.25,
+  evBb: -1,
+  street: "flop",
+  villainArchetype: "TAG",
+  ts: 0,
+});
+```
+
+Four fixtures are built:
+
+```ts
+const empty  = leaksFromDecisions([]);
+const folds  = leaksFromDecisions([ ...4× d("mistake","fold"), ...6× d("ok","call")   ]);   // n = 10
+const calls  = leaksFromDecisions([ ...4× d("mistake","call"), ...6× d("ok","check")  ]);   // n = 10
+const clean  = leaksFromDecisions([ ...6× d("ok","call"),      ...4× d("great","bet") ]);   // n = 10
+const withInfo = leaksFromDecisions([ d("info","check"), d("info","check"), d("ok","call") ]);
+```
+
+(The `...4×` is shorthand for the source's `...Array(4).fill(0).map(() => d(...))`; the mistake records come **first** in each array, the non-mistakes after.)
+
+The six assertions:
+
+| # | Fixture | Condition (exact) | Failure message |
+|---|---|---|---|
+| 1 | `empty` | `empty.total === 0 && empty.leaks.length === 0` | `empty → no leaks` |
+| 2 | `folds` | `folds.total === 10 && folds.foldMistakes === 4` | `fold counts` |
+| 3 | `folds` | `folds.leaks.some((l) => l.toLowerCase().includes("fold too often"))` | `fold-too-often leak` |
+| 4 | `calls` | `calls.callMistakes === 4 && calls.leaks.some((l) => l.toLowerCase().includes("call too wide"))` | `call-too-wide leak` |
+| 5 | `clean` | `clean.mistakes === 0 && clean.great === 4 && clean.leaks.some((l) => l.includes("No clear"))` | `clean discipline note` |
+| 6 | `withInfo` | `withInfo.total === 1` | `info verdicts excluded from total` |
+
+Points a port must not lose:
+
+- **Assertions 2 and 3 are separate.** They share the `folds` fixture but are two independent `ok()` calls; a Dart port that merges them into one `expect` drops an assertion and the count becomes 5.
+- **Case handling differs between 3/4 and 5.** Assertions 3 and 4 lower-case the leak sentence before the substring test (`l.toLowerCase().includes(...)`); assertion 5 does **not** — it matches the substring `"No clear"` with its original capital `N` against the raw sentence. Do not "tidy" assertion 5 into a case-insensitive match, and do not lower-case the needle in 3/4 into the raw string.
+- **Assertion 4 is a compound of the count and the sentence**, unlike the fold case which splits them. Keep the asymmetry so the assertion count stays 6.
+- **Assertion 1 covers both `total` and `leaks.length`.** There is no separate "empty input has no leaks" assertion; §5.3's item 6 was a duplicate of item 1 and does not exist in the file.
+- **Assertion 6 pins the `info` exclusion.** Two `info` records plus one `ok` gives `total == 1`; because `n = 1 < 8` the report's `leaks` is also empty, but the file does not assert that.
+- The harness counts `passed`/`failed`, prints `` `\nLeak tests: ${passed} passed, ${failed} failed.` `` and exits `failed === 0 ? 0 : 1`. All six pass on the current source.
+
+The four extra boundary pins recommended at the end of §5.3 (n < 8; count < 3; ratio exactly 0.12 not firing; 0.125 firing) remain worth adding in Dart — they are *additional* to these six, not part of them. The §16 checklist item "`leaks_test` 6 assertions (§5.3) plus the four boundary pins" is therefore correct in its arithmetic; only §5.3's enumeration was wrong. Read that checklist item as "§17.2".
+
+### 17.3 Source-file inventory — corrected line counts
+
+Two rows of the table at the top of this document are stale. Metadata only, no behavioural consequence, but they indicate the table was not refreshed after the last source edit; the corrected values are:
+
+| File | Listed | **Actual** |
+|---|---|---|
+| `src/store/reviewStore.ts` | 74 | **71** |
+| `src/store/goalStore.ts` | 76 | **75** |
+
+Every other row verifies against the source as written: `src/lib/srs.ts` 50, `src/lib/leaks.ts` 57, `src/store/leakStore.ts` 59, `src/store/drillStore.ts` 234, `src/views/DrillsView.tsx` 134, `src/components/drills/DrillTable.tsx` 72, `src/components/drills/MoveNavigator.tsx` 64, `src/components/drills/DrillControls.tsx` 198, `src/components/study/Drills.tsx` 315, `scripts/srs_test.ts` 51, `scripts/leaks_test.ts` 56.
+
+The behavioural specs for `reviewStore.ts` (§4) and `goalStore.ts` (§7) were re-checked against the current sources and are accurate — in particular `reviewStore.review` maps first and filters second, so the `isGraduated` test in the filter sees the **new** `SrsState`, which is what §4.2 describes.
