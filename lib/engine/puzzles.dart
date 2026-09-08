@@ -325,8 +325,8 @@ String jsNum(num v) {
 }
 
 /// JSON value for a bb amount: an int when integral (as `JSON.stringify`).
-Object _jsonNum(double v) =>
-    v.isFinite && v == v.truncateToDouble() && v.abs() < 1e15 ? v.toInt() : v;
+/// Delegates to the shared [jsonNum] so every module encodes numbers alike.
+Object _jsonNum(double v) => jsonNum(v);
 
 Map<String, Object?> _optionJson(DrillOption o) => {
   'action': o.action.label,

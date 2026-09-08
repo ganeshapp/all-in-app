@@ -27,6 +27,17 @@ String jsToFixed(double x, int digits) {
   return x.toStringAsFixed(digits);
 }
 
+/// JSON value for a number, encoded the way `JSON.stringify` would: an
+/// integral double becomes an int, so `3.0` is written as `3` and not `3.0`.
+/// Every persisted engine value goes through this, because the desktop app
+/// must be able to read a mobile backup byte-for-byte the same way.
+Object jsonNum(num v) {
+  final d = v.toDouble();
+  return d.isFinite && d == d.truncateToDouble() && d.abs() < 1e15
+      ? d.toInt()
+      : v;
+}
+
 /// JavaScript `String(n)` for an integer-valued double (`-0 → "0"`).
 String jsIntString(double v) {
   if (!v.isFinite || v.abs() >= 1e21) return v.toString();

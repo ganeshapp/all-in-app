@@ -13,6 +13,8 @@
 /// * No Flutter imports anywhere under `lib/engine/`.
 library;
 
+import 'format.dart';
+
 typedef Card = String;
 
 const List<String> kRanks = [
@@ -535,10 +537,12 @@ class DrillOption {
   /// Total bet/raise size (bb in drills, chips in leak spots captured from play) for bet/raise.
   final double? amount;
 
+  /// `amount` is omitted when null so the JSON matches the desktop's
+  /// `JSON.stringify` output (see [LeakSpot.toJson]).
   Map<String, Object?> toJson() => {
     'action': action.label,
     'label': label,
-    'amount': amount,
+    if (amount != null) 'amount': jsonNum(amount!),
   };
   static DrillOption fromJson(Map<String, Object?> j) => DrillOption(
     action: DrillAction.fromLabel(j['action'] as String),
@@ -576,18 +580,21 @@ class SrsState {
     lapses: lapses ?? this.lapses,
   );
 
+  /// Serialised with the DESKTOP key names so a backup round-trips between the
+  /// two apps: the consecutive-correct counter is `reps` on the wire even though
+  /// the Dart field is [wins]. `wins` is accepted on read for older mobile data.
   Map<String, Object?> toJson() => {
     'due': due,
-    'intervalDays': intervalDays,
-    'ease': ease,
-    'wins': wins,
+    'intervalDays': jsonNum(intervalDays),
+    'ease': jsonNum(ease),
+    'reps': wins,
     'lapses': lapses,
   };
   static SrsState fromJson(Map<String, Object?> j) => SrsState(
     due: (j['due'] as num).toInt(),
     intervalDays: (j['intervalDays'] as num).toDouble(),
     ease: (j['ease'] as num).toDouble(),
-    wins: (j['wins'] as num).toInt(),
+    wins: ((j['reps'] ?? j['wins']) as num).toInt(),
     lapses: (j['lapses'] as num).toInt(),
   );
 }
@@ -652,23 +659,27 @@ class LeakSpot {
     srs: clearSrs ? null : (srs ?? this.srs),
   );
 
+  /// Optional fields are OMITTED when null, matching `JSON.stringify` on the
+  /// desktop (which drops `undefined` keys). Writing explicit nulls would make
+  /// the desktop see `equity`/`potOdds`/`srs` as present-but-null and take the
+  /// wrong branch when it reads a backup written here.
   Map<String, Object?> toJson() => {
     'id': id,
     'street': street.label,
     'heroPos': heroPos.label,
     'hole': hole,
     'board': board,
-    'pot': pot,
-    'toCall': toCall,
-    'bb': bb,
+    'pot': jsonNum(pot),
+    'toCall': jsonNum(toCall),
+    'bb': jsonNum(bb),
     'oppActive': oppActive.map((p) => p.label).toList(),
     'options': options.map((o) => o.toJson()).toList(),
     'best': best.label,
     'rationale': rationale,
-    'equity': equity,
-    'potOdds': potOdds,
+    if (equity != null) 'equity': jsonNum(equity!),
+    if (potOdds != null) 'potOdds': jsonNum(potOdds!),
     'ts': ts,
-    'srs': srs?.toJson(),
+    if (srs != null) 'srs': srs!.toJson(),
   };
 
   static LeakSpot fromJson(Map<String, Object?> j) => LeakSpot(
