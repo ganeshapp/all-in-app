@@ -895,6 +895,10 @@ fmtTimes(p): p >= 0.93 -> "almost every time"; p <= 0.04 -> "almost never";
 fmtNeed(potOdds): <= 0 -> "any win rate"; n = 1/potOdds; r = round(n*2)/2;
              "about 1 time in {r as int if integral else r.toFixed(1)}"
 ```
+`round` above is JS `Math.round` (half toward +inf), and `fmtSigned` has a negative-zero
+case this block omits — `fmtSigned(n)` prints `+0.0` for every `n` in `[-0.05, 0)`, which
+the `Calling:` line above reaches. **See §11.3** for the exact behaviour, the two Dart
+traps (`"+-0.0"`, and `round()` being half-away-from-zero), and the `jsRound` fix.
 
 ### 5.3 Navigator and table
 
@@ -920,8 +924,10 @@ PREFLOP_100 = PREFLOP_BY_DEPTH[100]
 ```
 `rfi` keys: `UTG MP CO BTN SB` (no BB). `vsRfi` keys (15): `MP_vs_UTG CO_vs_UTG CO_vs_MP
 BTN_vs_UTG BTN_vs_MP BTN_vs_CO SB_vs_UTG SB_vs_MP SB_vs_CO SB_vs_BTN BB_vs_UTG BB_vs_MP
-BB_vs_CO BB_vs_BTN BB_vs_SB`. Map insertion order = token expansion order (matters only
-for `gradeRange` display order). Convert the file mechanically: the single long line is
+BB_vs_CO BB_vs_BTN BB_vs_SB`. ~~Map insertion order = token expansion order (matters only
+for `gradeRange` display order).~~ **SUPERSEDED by §11.1: both halves of that sentence are
+false — the shipped key order is not the expansion order (18 of 35 charts differ), and no
+consumer reads the order at all. Any label ordering is acceptable.** Convert the file mechanically: the single long line is
 `export const PREFLOP_BY_DEPTH: Record<number, PreflopCharts> = { 100: <JSON> };` — the
 `<JSON>` is valid JSON.
 
@@ -932,7 +938,8 @@ default 1). `RANKS = "AKQJT98765432"` (index 0 = A). Writing into the chart uses
 `chart[label] = max(existing ?? 0, freq)` — overlapping tokens keep the HIGHER frequency.
 
 * Pairs (`core` matches `^([rank])\1`):
-  `TT+` -> every pair from TT up to AA; `77-99` -> the inclusive run (either order);
+  `TT+` -> every pair from TT up to AA; `77-99` -> the inclusive run (either input order —
+  emission order pinned in §11.2: high-to-low, so `88-JJ` -> `JJ TT 99 88`);
   `22` -> that pair only.
 * Two-rank `^([rank])([rank])([so])(\+?)$`: kicker index must be > high index (else error).
   `A2s+` -> `A2s A3s ... AKs` (kicker up to one below the high card); `A5s` -> single.
@@ -1302,6 +1309,249 @@ play = topPercentRange(playPct), raise = topPercentRange(raisePct), each sorted.
 7. **`active` seat flag** is computed but unused by the table UI; keep for fidelity or drop.
 8. **`setMode` does not clear `focusKind/focusLeft`**; a pending "Drill 5 similar" resumes if you return to Mixed.
 9. **ICM blurb text drift** between generator script and shipped data (8.2) — ship the data-file strings.
-10. **Data volume**: preflop.ts ~9 KB JSON, pushfold.ts ~185 KB (400 tables), icmPushfold.ts ~8 KB, equity_matrix.json ~200 KB. Convert to Dart constants or bundled JSON assets; label order inside maps must be preserved only for `gradeRange` display order.
+10. **Data volume**: preflop.ts ~9 KB JSON, pushfold.ts ~185 KB (400 tables), icmPushfold.ts ~8 KB, equity_matrix.json ~200 KB. Convert to Dart constants or bundled JSON assets; ~~label order inside maps must be preserved only for `gradeRange` display order~~ — **corrected in §11.1: label order need not be preserved at all.**
 11. **Persistence keys** `allin.drills.v1`, `allin.review.v1`, `allin.leaks.v1` — review cards store whole `Puzzle` objects (with frames/options/rationale) so old puzzles replay verbatim after upgrades; keep the Puzzle JSON shape stable.
 12. **Puzzle `id`** is a session-local counter (not persisted, restarts at 1); identity for de-duplication uses the review-card key string, not `id`.
+
+---
+
+## 11. Errata and addenda (verified against the shipped TS)
+
+These three sections supersede or complete the paragraphs they name. Everything
+below was checked by running the TS sources and, where a Dart divergence is
+claimed, by running Dart. Nothing here changes the answer key or any width.
+
+### 11.1 SUPERSEDES §6.1 ("Map insertion order = token expansion order") and §10.10
+
+**Correct rule: chart key order is not load-bearing. Any label ordering is
+acceptable in the Dart port.** Use a plain `Map<String, double>` literal, a
+`HashMap`, a sorted map, whatever is convenient. Do not write a golden test that
+asserts key order, and do not try to reproduce the order in the shipped file.
+
+The old note was wrong twice over.
+
+**(a) The shipped key order is NOT the expansion order.** The generator ends with
+`JSON.stringify({ rfi, vsRfi })`, and JS/V8 own-property ordering puts
+*canonical integer-index* string keys first, in ascending numeric order, ahead of
+all other string keys (which then follow in insertion order). `JSON.stringify`
+emits keys in that same order. Among hand labels, exactly eight are
+integer-index-like — the pair labels `22 33 44 55 66 77 88 99`. `TT JJ QQ KK AA`
+are not numeric, and neither are three-character labels such as `98s` / `98o`.
+So in every chart the 22–99 pairs get hoisted to the front in ascending order,
+and everything else keeps insertion order.
+
+Worked examples (`expand` = the order `expandToken` actually calls `put()` in;
+`shipped` = `Object.keys()` of the chart in `src/data/preflop.ts`):
+
+```
+MP_vs_UTG.call   ← "88-JJ 77:0.5 AQs AJs ATs:0.5 KQs QJs:0.5 JTs T9s:0.5 AQo:0.5"
+  expand : JJ TT 99 88 77 AQs AJs ATs KQs QJs JTs T9s AQo
+  shipped: 77 88 99 JJ TT AQs AJs ATs KQs QJs JTs T9s AQo
+
+BTN_vs_CO.call   ← "22-99 A2s+ KTs+ ..."
+  expand : 99 88 77 66 55 44 33 22 A2s A3s ...
+  shipped: 22 33 44 55 66 77 88 99 A2s A3s ...
+
+BB_vs_SB.threebet ← "88+ A9s+ ATo+ KQo A5s-A2s:0.75 KTs+ QJs:0.5 JTs:0.5 T9s:0.5 77:0.5"
+  expand : 88 99 TT JJ QQ KK AA A9s ... QJs JTs T9s 77      (77 emitted LAST)
+  shipped: 77 88 99 TT JJ QQ KK AA A9s ... QJs JTs T9s      (77 ships FIRST)
+```
+
+**18 of the 35 shipped charts** (5 rfi + 15×2 vsRfi) have a key order that differs
+from their expansion order: `MP_vs_UTG.call, CO_vs_UTG.call, CO_vs_MP.call,
+BTN_vs_UTG.call, BTN_vs_MP.call, BTN_vs_CO.call, SB_vs_UTG.call, SB_vs_MP.call,
+SB_vs_CO.threebet, SB_vs_CO.call, SB_vs_BTN.threebet, SB_vs_BTN.call,
+BB_vs_UTG.call, BB_vs_MP.call, BB_vs_CO.call, BB_vs_BTN.call, BB_vs_SB.threebet,
+BB_vs_SB.call`. (The five `rfi` charts happen to match only because every one of
+them starts with `22+`, which already emits 22→AA ascending.)
+
+**(b) Nothing consumes chart key order.** There are exactly three read sites for a
+`ChartFreqs` map, and all three are order-free:
+
+| Site | What it does | Order-sensitive? |
+|---|---|---|
+| `chartLabels05` (`puzzles.ts:91`) | `Object.entries(chart).filter(f >= 0.5).map(l)` → `HandLabel[]` | list order is produced, never read (see below) |
+| `chartToSet` (`ranges.ts:135`) | builds a `Set<HandLabel>` | no |
+| `chartWidth` (`ranges.ts:141`) | `w += f * comboCount(l)`, then `/1326` | no — see the float note below |
+
+The `HandLabel[]` from `chartLabels05` is the only thing that ever reaches the UI,
+as `Puzzle.gradeRange`, and `DrillControls.tsx:161` converts it straight back to a
+set before rendering:
+
+```tsx
+<RangeMatrix highlight={new Set(puzzle.gradeRange)} readOnly size={260} />
+```
+
+`RangeMatrix` then walks its own fixed 13×13 grid and only ever asks
+`highlight?.has(label)` (`RangeMatrix.tsx:77`). The list order is discarded. The
+same applies to the merged forms `[...new Set([...chartLabels05(a), ...chartLabels05(b)])]`
+(`puzzles.ts:270`) and `chartLabels05({ ...call, ...threebet })` (`puzzles.ts:585`,
+`:671`) — for those two the *spread-merge value* precedence still matters (quirk
+§10.4), but the resulting key order still does not.
+
+Float note on `chartWidth`: summing doubles is order-sensitive in general, but not
+here. The only frequencies in the shipped data are `0.25, 0.5, 0.75, 1` and the only
+combo counts are `4, 6, 12`, so every addend is an exact multiple of `0.5` below `12`
+and every partial sum stays well inside the exactly-representable range. Verified:
+all 35 charts give a bit-identical (`Object.is`) width under 400 random key
+shufflings each. So `chartWidth` is safe to compute over an unordered Dart map.
+
+**Porting guidance.** Either paste the JSON from `src/data/preflop.ts` (hoisted
+order and all — harmless) or regenerate the maps from the §6.3 range strings with
+your own expander. Both produce the same map; only iteration order differs, and
+that is unobservable. §10.10's clause *"label order inside maps must be preserved
+only for `gradeRange` display order"* should be read as **"label order inside maps
+need not be preserved at all."**
+
+### 11.2 COMPLETES §6.2 — the pair-run token emits high-to-low
+
+§6.2 pins the emission order of three of the four token forms by example but
+leaves the pair run as "`77-99` -> the inclusive run (either order)". Pinned:
+
+```js
+} else if (core.includes("-")) {
+  const r2 = ri(core.split("-")[1][0]);
+  const [lo, hi] = [Math.max(r, r2), Math.min(r, r2)];   // NB: names are inverted —
+  for (let i = hi; i <= lo; i++) put(RANKS[i] + RANKS[i]); //  `lo` holds the LARGER index
+}
+```
+
+`RANKS = "AKQJT98765432"`, so a larger index is a *lower* rank. The loop walks
+indices ascending, i.e. **ranks descending**:
+
+```
+88-JJ  ->  JJ TT 99 88          (ri('J')=3 .. ri('8')=6)
+77-99  ->  99 88 77
+22-88  ->  88 77 66 55 44 33 22
+```
+
+"Either order" refers only to the *input*: `JJ-88` and `88-JJ` are normalised by
+the `max`/`min` and emit the identical sequence `JJ TT 99 88`. The *output* order
+is fixed.
+
+All four token forms, unified — the `+` forms walk the `RANKS` index **descending**
+(low rank → high rank); the `-` run forms walk it **ascending** (high rank → low rank):
+
+| Form | Loop | Example | Emission order |
+|---|---|---|---|
+| pair `+` | `for (i = r; i >= 0; i--)` | `TT+` | `TT JJ QQ KK AA` (low→high) |
+| pair run `-` | `for (i = hi; i <= lo; i++)` | `88-JJ` | `JJ TT 99 88` (high→low) |
+| kicker `+` | `for (i = l; i > h; i--)` | `A2s+` | `A2s A3s … AKs` (low→high) |
+| kicker run `-` | `for (i = min(a,b); i <= max(a,b); i++)` | `Q9s-Q6s` | `Q9s Q8s Q7s Q6s` (high→low) |
+
+Kicker runs are likewise input-order-agnostic (`Q6s-Q9s` == `Q9s-Q6s`).
+
+Consequence is confined to the JSON key order of the generated file and hence to
+the `chartLabels05` / `gradeRange` list order — which §11.1 shows is cosmetic. The
+expander is now fully specified: matching this table is sufficient, not necessary.
+
+### 11.3 COMPLETES §5.2 — `fmtSigned` and negative zero; JS vs Dart `round`
+
+§5.2's formatter block gives `fmtSigned(n, digits=1): v = round(n*10^d)/10^d;
+(v >= 0 ? "+" : "") + v.toFixed(d)` and omits two behaviours that a literal Dart
+transcription gets wrong. (`drill-ux-srs-leaks.md` §8.7 and §12.11 already carry
+the fix; this section makes this document self-contained and matches it.)
+
+**What JS actually does.** `Math.round(x)` returns `-0` for every `x` in
+`[-0.5, 0)` — including the endpoint, because JS rounds halves toward `+∞`
+(`Math.round(-0.5) === -0`). Then `-0 >= 0` is `true`, so the `"+"` branch is
+taken, and `(-0).toFixed(1) === "0.0"` (no sign). Net effect:
+
+```
+fmtSigned(-0.04)  === "+0.0"       fmtSigned(-0.05)  === "+0.0"
+fmtSigned(-0.049) === "+0.0"       fmtSigned(-0.051) === "-0.1"
+fmtSigned(-0.4, 0) === "+0"        fmtSigned(-0.5, 0) === "+0"
+```
+i.e. **`fmtSigned(n)` prints `+0.0` for every `n` in `[-0.05, 0)`**, and
+`fmtSigned(n, 0)` prints `+0` for every `n` in `[-0.5, 0)`.
+
+**Two distinct Dart traps.**
+
+1. *Sign of zero.* `-0.0 >= 0` is `true` in Dart too, so the `"+"` is prepended —
+   but `(-0.0).toStringAsFixed(1)` is `"-0.0"`, which already carries a sign. A
+   port using `(n * pow(10, d)).roundToDouble() / pow(10, d)` therefore renders the
+   literal string **`"+-0.0"`**, not `"-0.0"`. Verified in Dart for
+   `-0.003, -0.02, -0.049, -0.0`.
+2. *Half-rounding direction.* Dart's `num.round()` rounds halves **away from zero**;
+   JS's `Math.round` rounds them toward `+∞`. They disagree on every negative half:
+   `Math.round(-0.5) === -0` vs `(-0.5).round() == -1`; `Math.round(-1.5) === -1`
+   vs `(-1.5).round() == -2`. Note this also rescues trap 1 by accident when the
+   port uses the *integer*-returning `.round()` (Dart ints have no `-0`), which is
+   why the two traps must be fixed together rather than one at a time.
+
+**The fix** — use `jsRound` (defined in `drill-ux-srs-leaks.md` §12) plus the `-0`
+normalisation from its §8.7:
+
+```dart
+double jsRound(num x) => (x + 0.5).floorToDouble();   // == JS Math.round
+
+String fmtSigned(num n, [int digits = 1]) {
+  var v = jsRound(n * pow(10, digits)) / pow(10, digits);
+  if (v == 0) v = 0;                     // normalise -0.0 → 0.0
+  return (v >= 0 ? "+" : "") + v.toStringAsFixed(digits);
+}
+```
+
+`jsRound` never returns `-0.0` (for `x` in `[-0.5, 0)`, `x + 0.5` is in `[0.0, 0.5)`
+and `floorToDouble()` gives `+0.0`), so the `if (v == 0) v = 0;` line is
+belt-and-braces once `jsRound` is used — keep it anyway, and keep it mandatory if
+you use any other rounding.
+
+**Verification sweep** (`n = i/1000` for `i` in `[-2000, 2000]`, 4001 values, both
+`digits == 1` and `digits == 0`, compared against the TS output):
+
+* `jsRound` + `-0` normalisation: **0 / 4001 mismatches**.
+* naive `(n * pow(10, d)).roundToDouble() / pow(10, d)`: **516 / 4001 mismatches**
+  (the `"+-0.0"` band plus every negative half-step: `-1.95 → "-2.0"` where JS
+  gives `"-1.9"`, `-1.85 → "-1.9"` vs `"-1.8"`, and so on).
+
+**Where this is user-visible.** `DrillControls.tsx:136`, the postflop math block
+shown whenever `equity`, `potOdds` are present and `toCall > 0`:
+
+```
+Calling: {fmtSigned(equity * (pot + toCall) - toCall)} bb per try — …
+```
+
+Marginal calls cluster right at break-even pot odds, so the `[-0.05, 0)` band is
+routinely hit. Concrete reachable case — `equity = 0.333`, `pot = 6`, `toCall = 3`
+(raw EV `-0.003`), which renders verbatim in the TS app as:
+
+```
+Folding: 0 bb — costs nothing more.
+Calling: +0.0 bb per try — your hand wins about 1 time in 3 and you need about 1 time in 3.
+Equity: 33%
+Pot odds: 33%
+```
+
+A naive Dart port renders `Calling: +-0.0 bb per try — …` for the same spot.
+
+The other `fmtSigned` call site, `fmtSigned(ratingDelta, 0)` at
+`DrillControls.tsx:113`, is guarded by `ratingDelta !== 0`, and `-0 !== 0` is
+`false` in JS, so a `-0` Elo delta hides the badge rather than printing `+0`.
+Dart agrees (`-0.0 == 0` is `true`), and an `int` delta can never be `-0`, so
+there is no divergence there — but only if you compare with `!= 0` and not with
+`identical(...)` or a sign test.
+
+**Rest of `src/lib/format.ts`, for completeness** (so the port never needs the TS):
+every remaining helper rounds via `Math.round` and needs the same `jsRound`
+substitution — `fmtBb`, `fmtTimes`, `fmtNeed` (all specified in §5.2 /
+`drill-ux-srs-leaks.md` §8.7), plus one helper this subsystem never calls:
+
+```
+fmtBb(chips, bb):   v = chips/bb; r = round(v*10)/10;
+                    Number.isInteger(r) ? String(r) : r.toFixed(1)     // "12" or "12.5"
+fmtChips(n):        Math.round(n).toLocaleString()                     // NOT USED anywhere
+                    // outside format.ts — the drills/table UI is all bb. If you do port it,
+                    // note toLocaleString() uses the JS runtime's default locale
+                    // (en-US → "1,500"); pick an explicit Dart NumberFormat rather than
+                    // inheriting the device locale.
+```
+
+`fmtPct` (`(frac*100).toFixed(d) + "%"`) does no rounding of its own and ports
+directly to `toStringAsFixed`. JS `Number.prototype.toFixed` and Dart
+`num.toStringAsFixed` agree: both round decimal halves away from zero
+(`(-0.5).toFixed(0) === "-1"`, `(-0.125).toFixed(2) === "-0.13"`, same in Dart).
+Verified over 400,001 values (`n = i/10000`, `i` in `[-200000, 200000]`, at
+`digits` 0, 1 and 2): **0 mismatches**. This is the one rounding path in
+`format.ts` that does NOT need `jsRound` — `Math.round` is half-toward-`+inf`,
+`toFixed` is half-away-from-zero, and only the former diverges from Dart.

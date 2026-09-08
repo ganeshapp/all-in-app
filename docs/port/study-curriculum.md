@@ -21,14 +21,19 @@ Source files (all relative to `/Users/gapp/Documents/Code/poker`):
 | `src/components/study/RangeExplorer.tsx` | 51 | Paintable 13×13 matrix with presets and combo count |
 | `src/components/study/EquityCalculator.tsx` | 256 | Free-form range-vs-range / exact-hand-vs-range calculator with blockers |
 | `src/components/study/RangeBoardBreakdown.tsx` | 122 | "How does this range hit this board" (Flopzilla-style) + draw flags |
+| `src/components/study/Drills.tsx` | 315 | The three Practice-level mini-drills: `PotOddsDrill`, `OutsDrill`, `RangeBuildDrill` (§16) |
 | `src/store/studyStore.ts` | 87 | Progress + quiz-result persistence |
 | `src/views/StudyView.tsx` | 135 | Two-pane Study screen: path nav + lesson body |
 
-Related but **out of scope here** (documented by other port docs): the three drills embedded
-in the Practice level (`PotOddsDrill`, `OutsDrill`, `RangeBuildDrill` from
-`src/components/study/Drills.tsx`), the poker engine (`evaluateInts`, the equity
-Monte-Carlo functions, `topPercentRange`), the 13×13 `RangeMatrix` widget, the pre-flop
-chart data file, and the bot archetypes. Where a lesson depends on those, this document
+The three Practice-level mini-drills (`PotOddsDrill`, `OutsDrill`, `RangeBuildDrill` from
+`src/components/study/Drills.tsx`) are specified in full in **§16** of this document — they
+used to be deferred to the drills port doc, but they are Study-tab widgets and a reader of
+this file alone must be able to build them.
+
+Related but **out of scope here** (documented by other port docs): the poker engine
+(`evaluateInts`, the equity Monte-Carlo functions, `topPercentRange`), the 13×13
+`RangeMatrix` widget (its full contract as used by Study is restated in §6 and §16.5), the
+pre-flop chart data file, and the bot archetypes. Where a lesson depends on those, this document
 states the exact contract and the exact values the lesson displays so the port does not
 need them to be finished first.
 
@@ -99,7 +104,9 @@ deep-link validation. Its length is **31**.
 | 30 | | `drill-outs` | Outs → Equity Drill | 5 |
 | 31 | | `drill-range` | Range-Building Drill | 6 |
 
-Total minutes: 161. Level lesson counts: 3 / 4 / 9 / 9 / 6.
+Total minutes: **160** (level subtotals 13 / 21 / 46 / 50 / 30). Level lesson counts:
+3 / 4 / 9 / 9 / 6. (Earlier revisions of this document said 161; that was a derived-sum
+error — every per-lesson `minutes` value in the table above is correct. See §17.)
 
 ### 1.2 Lesson ids are a public contract
 
@@ -792,17 +799,17 @@ No quiz.
 ### 11.4 `drill-potodds` — Pot-Odds Drill (5 min)
 
 1. Lead: "Random spots — compute the break-even equity in your head, then check yourself."
-2. `PotOddsDrill` widget (documented in the drills port doc).
+2. `PotOddsDrill` widget — full specification in **§16.2**.
 
 ### 11.5 `drill-outs` — Outs → Equity Drill (5 min)
 
 1. Lead: "Practise the 2/4 rule on random draws until it's automatic."
-2. `OutsDrill` widget (drills port doc).
+2. `OutsDrill` widget — full specification in **§16.3**.
 
 ### 11.6 `drill-range` — Range-Building Drill (6 min)
 
 1. Lead: "Paint a position's opening range from memory, then score it against the standard."
-2. `RangeBuildDrill` widget (drills port doc). For reference, its targets are `chartToSet(PREFLOP_100.rfi.UTG)`, `chartToSet(PREFLOP_100.rfi.CO)`, `chartToSet(PREFLOP_100.rfi.BTN)` and the union of `chartToSet(BB_vs_BTN.call)` ∪ `chartToSet(BB_vs_BTN.threebet)`, scored by combo-weighted F1 — the same `chartToSet` described in §13.2.
+2. `RangeBuildDrill` widget — full specification in **§16.4**. Its targets are `chartToSet(PREFLOP_100.rfi.UTG)`, `chartToSet(PREFLOP_100.rfi.CO)`, `chartToSet(PREFLOP_100.rfi.BTN)` and the union of `chartToSet(BB_vs_BTN.call)` ∪ `chartToSet(BB_vs_BTN.threebet)`, scored by combo-weighted F1 — the same `chartToSet` described in §13.2.
 
 ---
 
@@ -1217,7 +1224,7 @@ TT:1 JJ:1 QQ:1 KK:1 AA:1 AJs:1 AQs:1 AKs:1 AKo:1 AQo:0.5 A5s:0.5 A4s:0.5 A3s:0.5
 - `comboCount(label)`: pair 6, suited 4, offsuit 12. `combosInSet(labels)` = sum. `TOTAL_COMBOS = 1326`.
 - `allLabels()`: row-major over the 13×13 grid (`AA AKs AQs … A2s AKo KK KQs … 22`).
 - `labelToCombos(label)` ordering (matters only for determinism of seeded sampling):
-  - pair: for `i < j` over SUITS: `[hi+SUITS[i], hi+SUITS[j]]` → `cd cH cs dh ds hs` (6).
+  - pair: for `i < j` over SUITS: `[hi+SUITS[i], hi+SUITS[j]]` → `cd ch cs dh ds hs` (6).
   - suited: for each suit `s`: `[hi+s, lo+s]` (4).
   - offsuit: for `s1` in SUITS, `s2` in SUITS, `s1 != s2`: `[hi+s1, lo+s2]` (12).
 
@@ -1389,3 +1396,418 @@ Open questions for the product owner:
 - The Opening Ranges diagram titles say "~15%" / "~45%" while the charts are 15.5 % / 49.3 % wide; the Range Explorer preset "UTG ~14%" uses the Chen-formula range while the drills use the authored chart (206 vs 188 combos). Keep as-is for parity or reconcile?
 - Equity calculator: should the board picker disable cards already chosen as hero's exact hand (currently only the reverse is enforced)?
 - Should stale `completed` ids (from renamed lessons) be filtered on load, and should `toggle` (un-complete) be exposed in the UI?
+
+---
+
+## 16. Study-lesson mini-drills — `src/components/study/Drills.tsx` (315 lines)
+
+The three widgets rendered by lessons `drill-potodds` (§11.4), `drill-outs` (§11.5) and
+`drill-range` (§11.6). This section is the complete specification: exports, generators,
+constants, formulas, layout and every user-facing string. Nothing else in the TypeScript
+tree is needed to build them.
+
+**Module exports** (exactly three; everything else is file-private):
+
+```
+export function PotOddsDrill()    // used by lesson drill-potodds
+export function OutsDrill()       // used by lesson drill-outs
+export function RangeBuildDrill() // used by lesson drill-range
+```
+
+Imports it relies on, all already specified elsewhere in this document:
+`chartToSet` and `PREFLOP_100` (§13.2), `combosInSet` / `comboCount` (§13.3),
+`RangeMatrix` / `RangeLegend` (§6, and §16.5 below for compare mode), `Button`, `Icon`,
+`fmtPct` (§12 shared conventions).
+
+**They are stateless across visits.** No store, no persistence, no drill-store / SRS / rating
+interaction, no analytics. `Score` starts at `0/0` every time the widget is mounted, and per
+§15 invariant 4 the widget is re-created whenever the active lesson changes — so navigating
+away and back resets the score. This is deliberate; do not "improve" it into persistence
+without a product decision.
+
+### 16.1 Private helpers and the shared shell
+
+```dart
+/// Uniform integer in [a, b] INCLUSIVE. TS: a + floor(random() * (b - a + 1)).
+int randInt(int a, int b);
+
+/// Fisher–Yates on a copy (descending i from length-1 to 1, j = floor(random()*(i+1))).
+List<T> shuffle<T>(List<T> arr);
+```
+
+`Shell({title, score: {right, total}, children, footer})` — the card every drill sits in:
+
+- Container: `rounded-2xl`, 1 px border in `info` at 25 % alpha, background `info` at 6 %
+  alpha, 20 px padding.
+- Header row (`margin-bottom: 12px`, space-between, centre-aligned):
+  - Left: `Icon("target", size: 16)` + a 2-gap flex, 14 px semibold, colour `info`, showing `title`.
+  - Right: mono, `0.78rem`, muted — the string **`Score {right}/{total}`** (one space after
+    `Score`, slash with no spaces).
+- Body: `children`.
+- Footer: `margin-top: 16px`, right-aligned, containing `footer`.
+
+`Options({options, picked, correct, suffix, onPick})` — the four answer buttons:
+
+- Grid, 8 px gap, **2 columns**, **4 columns at the `sm` breakpoint and up**.
+- Each button label is `"{option}{suffix}"` — both drills pass `suffix: "%"`, so e.g. `25%`.
+- Style: `rounded-lg`, 1 px border, 12 px × 8 px padding, mono, 14 px, bold.
+- Colour, evaluated in this order (`answered = picked != null`):
+
+  | condition | border / background / text |
+  |---|---|
+  | `!answered` | `--line` / `ink-800` / muted (hover `ink-700`) |
+  | `answered && option == correct` | `good` / `good` at 15 % / `--text` |
+  | `answered && option == picked` (i.e. picked and wrong) | `bad` / `bad` at 15 % / `--text` |
+  | `answered`, any other option | unchanged (the un-answered style) |
+
+  Because the `correct` test comes first, a **correct pick renders green, never red**.
+- All four buttons are `disabled` once answered (`disabled:cursor-default`); `onPick` is
+  additionally guarded by an early `if (answered) return;` in both drills.
+
+`Explain({ok, children})` — the feedback paragraph, `margin-top: 12px`, `0.82rem`, relaxed
+line-height, muted, beginning with a semibold coloured run:
+
+- `ok == true` → **`Correct. `** in `good` (trailing space is part of the string).
+- `ok == false` → **`Not quite. `** in `warn` (trailing space is part of the string).
+
+The explanation body follows inline in muted text.
+
+### 16.2 `PotOddsDrill` — title `Pot-odds drill`
+
+Spot generator (a pure function of the RNG; called lazily on mount and on every "New spot"):
+
+```dart
+({int pot, double bet, int correct, List<int> options}) makePotSpot() {
+  final pot   = randInt(4, 40);                       // bb, inclusive
+  const fracs = [0.33, 0.5, 0.66, 1.0];
+  final bet   = max(1.0, jsRound(pot * fracs[randInt(0, 3)] * 2) / 2);  // nearest half-bb
+  final correct = jsRound(bet / (pot + 2 * bet) * 100);                 // integer percent
+  final set = <int>{correct};
+  const deltas = [-15, -10, -7, 7, 10, 15];
+  while (set.length < 4) {                            // rejection sampling
+    final d = correct + deltas[randInt(0, deltas.length - 1)];
+    if (d > 2 && d < 60) set.add(d);                  // strict bounds, exclusive
+  }
+  return (pot: pot, bet: bet, correct: correct, options: shuffle(set.toList()));
+}
+```
+
+`jsRound` = JS `Math.round` = round half **up** (toward +∞). All values here are positive, so
+Dart's `num.round()` (half away from zero) is equivalent; keep a helper anyway if you share
+this code with signed inputs.
+
+Verified properties of the generator (assert these in tests, they are load-bearing):
+
+- `max(1, …)` **never binds**: the smallest reachable bet is `1.5` (pot 4, frac 0.33 →
+  `round(2.64)/2 = 1.5`). Bet range is `[1.5, 40]`, always a multiple of `0.5`.
+- `correct` only ever takes **7 distinct values** across all 37 × 4 = 148 (pot, frac)
+  combinations, because the ratio `bet/(pot+2·bet)` is nearly pot-independent:
+
+  | frac | reachable `correct` |
+  |---|---|
+  | `0.33` | 19, 20, 21 |
+  | `0.5` | 25 (always) |
+  | `0.66` | 28, 29 |
+  | `1` | 33 (always) |
+
+  So the answer set is `{19, 20, 21, 25, 28, 29, 33}`. A player who memorises "half pot = 25 %,
+  pot = 33 %" scores well; that is intended, not a bug — but it means the drill is a poor
+  randomness test, so do not use it to smoke-test your RNG.
+- Every one of those 7 values has **≥ 3 valid distractors** in the delta pool, so the
+  `while` loop always terminates (it is unbounded in principle — a probabilistic loop, not a
+  bounded one; if your lint forbids that, cap it at e.g. 100 iterations and fall back to
+  filling from the valid-delta list in order).
+- `correct` is computed with `round`, while the explanation prints `fmtPct(bet/(pot+2·bet))`
+  (`toFixed(0)`). These agree on **all 148** reachable spots — verified exhaustively — so the
+  displayed percentage never contradicts the highlighted correct button.
+
+Widget state: `spot = makePotSpot()` (lazy, once per mount), `picked: int? = null`,
+`score = (right: 0, total: 0)`.
+
+Body:
+
+1. Paragraph, `0.92rem`, full `--text` colour, with two bold runs (shown `**…**`):
+
+   > The pot is **{pot} bb** and your opponent bets **{bet} bb**. What equity do you need to call?
+
+   Number formatting per §12: `10 bb`, `6.5 bb` (integers print with no decimal point).
+2. `margin-top: 12px`, then `Options(options, picked, correct, suffix: "%")`.
+   `onPick(v)`: if already answered, return; else `picked = v` and
+   `score = (right: right + (v == correct ? 1 : 0), total: total + 1)`.
+3. When answered, `Explain(ok: picked == correct)` with body (note `÷` and `×`, and the
+   single space before the percentage):
+
+   > Break-even = call ÷ final pot = {bet} ÷ ({pot} + 2×{bet}) = {fmtPct(bet / (pot + 2*bet))}.
+
+Footer: a `Button` whose variant is **`primary` once answered, `ghost` before** (a quiet
+nudge that turns gold), labelled **`New spot`** followed by `Icon("refresh", size: 14)`.
+Pressing it sets a fresh `makePotSpot()` and clears `picked` — the score is **not** reset.
+
+Pinned test vectors:
+
+| pot | frac | bet | correct | explanation tail |
+|---|---|---|---|---|
+| 10 | 0.5 | 5 | 25 | `5 ÷ (10 + 2×5) = 25%.` |
+| 7 | 0.66 | 4.5 | 28 | `4.5 ÷ (7 + 2×4.5) = 28%.` |
+| 4 | 0.33 | 1.5 | 21 | `1.5 ÷ (4 + 2×1.5) = 21%.` |
+| 40 | 1 | 40 | 33 | `40 ÷ (40 + 2×40) = 33%.` |
+
+### 16.3 `OutsDrill` — title `Outs → equity drill`
+
+Note the title contains a real right-arrow `→`, not `->`.
+
+`DRAWS` (module constant, order is load-bearing for `randInt(0, 6)` indexing; names are
+verbatim user-facing strings):
+
+| # | `name` | `outs` |
+|---|---|---|
+| 0 | `a flush draw` | 9 |
+| 1 | `an open-ended straight draw` | 8 |
+| 2 | `a gutshot` | 4 |
+| 3 | `two overcards` | 6 |
+| 4 | `a flush draw + gutshot` | 12 |
+| 5 | `a pocket pair hoping to flop/turn a set` | 2 |
+| 6 | `a flush draw + open-ender` | 15 |
+
+```dart
+({Draw d, int mult, String street, int correct, List<int> options}) makeOutsSpot() {
+  final d      = DRAWS[randInt(0, DRAWS.length - 1)];
+  final onFlop = random() < 0.5;                       // fair coin
+  final mult   = onFlop ? 4 : 2;
+  final correct = min(95, d.outs * mult);
+  final set = <int>{correct};
+  const deltas = [-16, -12, -8, 8, 12, 16];
+  while (set.length < 4) {
+    final v = correct + deltas[randInt(0, deltas.length - 1)];
+    if (v > 2 && v < 99) set.add(v);
+  }
+  return (d: d, mult: mult,
+          street: onFlop ? "flop (two cards to come)" : "turn (one card to come)",
+          correct: correct, options: shuffle(set.toList()));
+}
+```
+
+Verified properties:
+
+- The `min(95, …)` clamp is **dead code**: the largest product is `15 × 4 = 60`. Keep it for
+  parity, but do not write a test that expects it to fire.
+- The 14 reachable `(outs, mult)` pairs give `correct ∈ {4, 8, 12, 16, 18, 24, 30, 32, 36, 48, 60}`.
+- Distractor pool sizes range from 6 down to **exactly 3** for `correct == 4` (pocket pair on
+  the turn) and `correct == 8` (gutshot on the turn / pocket pair on the flop). At size 3 the
+  loop must collect all three, so it is a coupon-collector draw (~11 expected iterations);
+  it still terminates almost surely. Same lint note as §16.2.
+- `street` strings are verbatim and are inserted **inside** the prompt's bold run.
+
+Widget state and scoring are identical in shape to §16.2.
+
+Body:
+
+1. Paragraph, `0.92rem`, full `--text` colour, two bold runs:
+
+   > On the **{street}** you have **{d.name}** ({d.outs} outs). Using the rule of thumb, roughly what's your equity?
+
+   e.g. `On the **flop (two cards to come)** you have **a flush draw** (9 outs). Using the rule of thumb, roughly what's your equity?`
+2. `Options(…, suffix: "%")`, same `onPick` logic.
+3. When answered, `Explain(ok: picked == correct)`:
+
+   > Multiply outs by {mult} ({mult == 4 ? "two cards to come" : "one card to come"}): {d.outs} × {mult} ≈ {correct}%. The ×4 rule slightly over-counts big draws, so shade large numbers down a touch.
+
+   e.g. `Multiply outs by 4 (two cards to come): 9 × 4 ≈ 36%. The ×4 rule slightly over-counts big draws, so shade large numbers down a touch.`
+
+Footer: identical to §16.2 — **`New spot`** + refresh icon, `ghost` → `primary` on answer.
+
+Pinned test vectors: flush draw on the flop → 36; 15 outs on the flop → 60; pocket pair on
+the turn → 4; gutshot on the turn → 8; two overcards on the flop → 24.
+
+### 16.4 `RangeBuildDrill` — title `Range-building drill`
+
+`TARGETS` (module constant; order is load-bearing for `randInt(0, 3)`; `desc` strings are
+verbatim). All four sets are built with `chartToSet(chart, min = 0.5)` from §13.2:
+
+| # | `desc` (verbatim) | set | labels / combos / actual % |
+|---|---|---|---|
+| 0 | `UTG opening range (~15% of hands)` | `chartToSet(PREFLOP_100.rfi.UTG)` | 35 / 206 / 15.5 % |
+| 1 | `CO opening range (~26% of hands)` | `chartToSet(PREFLOP_100.rfi.CO)` | 59 / 366 / 27.6 % |
+| 2 | `BTN opening range (~45% of hands)` | `chartToSet(PREFLOP_100.rfi.BTN)` | 97 / 654 / 49.3 % |
+| 3 | `BB continue range vs a BTN open (calls + 3-bets, ~40%)` | `chartToSet(…BB_vs_BTN.call) ∪ chartToSet(…BB_vs_BTN.threebet)` | 87 / 574 / 43.3 % |
+
+(The `~15 %` / `~26 %` / `~45 %` / `~40 %` in the copy are the author's round numbers, not the
+computed widths — same known discrepancy already flagged for the Opening Ranges diagrams in
+§15. Keep the strings verbatim.)
+
+§13.2 already embeds `rfi.UTG` and `rfi.BTN`. The two charts this drill adds are:
+
+`rfi.CO` (59 entries; **none** are below 0.5, so `chartToSet` keeps all 59):
+```
+22:1 33:1 44:1 55:1 66:1 77:1 88:1 99:1 TT:1 JJ:1 QQ:1 KK:1 AA:1
+A2s:1 A3s:1 A4s:1 A5s:1 A6s:1 A7s:1 A8s:1 A9s:1 ATs:1 AJs:1 AQs:1 AKs:1
+K8s:1 K9s:1 KTs:1 KJs:1 KQs:1 K7s:0.5 K6s:0.5 K5s:0.5
+Q9s:1 QTs:1 QJs:1 Q8s:0.5 J9s:1 JTs:1 T8s:1 T9s:1 97s:1 98s:1 87s:1 76s:1 65s:0.5
+A8o:1 A9o:1 ATo:1 AJo:1 AQo:1 AKo:1 A5o:0.5 KTo:1 KJo:1 KQo:1 QTo:1 QJo:1 JTo:1
+```
+
+`vsRfi.BB_vs_BTN.call` (74 entries; at 0.5 it drops `A2s A3s A4s A5s`, all 0.25 → **70 labels, 470 combos, 35.4 %**):
+```
+22:1 33:1 44:1 55:1 66:1 77:1 88:1
+A2s:0.25 A3s:0.25 A4s:0.25 A5s:0.25 A6s:1 A7s:1 A8s:1 A9s:1
+K2s:1 K3s:1 K4s:1 K5s:1 K6s:1 K7s:1 K8s:1 K9s:0.5 KTs:1 KJs:1 KQs:1
+Q4s:1 Q5s:1 Q6s:1 Q7s:1 Q8s:1 Q9s:1 QTs:0.75 QJs:1
+J7s:1 J8s:1 J9s:1 JTs:0.75 T7s:1 T8s:1 T9s:1 96s:1 97s:1 98s:1 86s:1 87s:0.75
+75s:1 76s:0.75 64s:1 65s:1 54s:1 43s:1
+A2o:1 A3o:1 A4o:1 A5o:1 A6o:1 A7o:1 A8o:1 A9o:1 ATo:1
+K9o:1 KTo:1 KJo:1 KQo:0.5 Q9o:1 QTo:1 QJo:1 J9o:1 JTo:1 T8o:1 T9o:1 98o:1 87o:0.5
+```
+
+`vsRfi.BB_vs_BTN.threebet` (23 entries; at 0.5 it drops `QTs JTs 87s 76s`, all 0.25 → **19 labels, 120 combos, 9.0 %**):
+```
+99:1 TT:1 JJ:1 QQ:1 KK:1 AA:1 ATs:1 AJs:1 AQs:1 AKs:1 AJo:1 AQo:1 AKo:1 KQo:0.5
+A5s:0.75 A4s:0.75 A3s:0.75 A2s:0.75 K9s:0.5 QTs:0.25 JTs:0.25 87s:0.25 76s:0.25
+```
+
+Union arithmetic to pin in a test: `70 + 19 = 89`, minus the **2 labels present in both**
+(`K9s`, `KQo`) = **87 labels / 574 combos**. Note the four labels the 3-bet chart drops
+(`QTs JTs 87s 76s`) re-enter the union through the call chart at 0.75/0.75/0.75/0.75, and the
+four the call chart drops (`A2s A3s A4s A5s`) re-enter through the 3-bet chart at 0.75 — so
+the union is *not* `chartToSet` of a merged chart, but the two `chartToSet` results happen to
+cover all eight. Build it exactly as written (two `chartToSet` calls, then union).
+
+Grading — combo-weighted **F1**, in a separately exported pure function:
+
+```dart
+double scoreRange(Set<String> painted, Set<String> actual) {
+  var inter = 0;
+  for (final l in painted) if (actual.contains(l)) inter += comboCount(l); // 6 / 4 / 12
+  final pc = combosInSet(painted);
+  final ac = combosInSet(actual);
+  final precision = pc > 0 ? inter / pc : 0.0;
+  final recall    = ac > 0 ? inter / ac : 0.0;
+  return precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0.0;
+}
+```
+
+Pass threshold is **`>= 0.7`** and it appears twice (the score increment and the colour of the
+match percentage) — define it once. `scoreRange({}, actual) == 0`, and painting the exact set
+gives `1.0`.
+
+Widget state: `target = TARGETS[randInt(0, 3)]` (lazy, once per mount), `painted = {}`,
+`checked = false`, `score = (right: 0, total: 0)`. Derived: `acc = checked ? scoreRange(painted, target.set) : 0`.
+
+Body:
+
+1. Paragraph, `0.92rem`, full `--text` colour, one bold run:
+
+   > Paint the standard **{target.desc}**.
+
+   e.g. `Paint the standard **BTN opening range (~45% of hands)**.`
+2. `margin-top: 12px`, a centred column with 8 px gaps:
+   - `checked == false` → interactive `RangeMatrix(value: painted, onChange: …, size: 400)`.
+   - `checked == true` → `RangeMatrix(compare: (painted: painted, actual: target.set), size: 400)`
+     — **compare implies read-only** (§16.5), so the grid freezes on Check.
+   - A full-width row, space-between:
+     - left: `RangeLegend(mode: checked ? "compare" : "kind")`;
+     - right, only when `checked`: mono 14 px bold **`{fmtPct(acc)} match`** (e.g. `78% match`),
+       coloured `var(--good)` when `acc >= 0.7`, else `var(--warn)`.
+
+Footer (default `primary` variant in both states, unlike the other two drills):
+
+- `checked == false` → **`Check`**, no icon, **disabled while `painted.isEmpty`**. Pressing it
+  sets `checked = true`, recomputes `a = scoreRange(painted, target.set)` and applies
+  `score = (right: right + (a >= 0.7 ? 1 : 0), total: total + 1)`.
+- `checked == true` → **`New drill`** + `Icon("refresh", size: 14)`. Pressing it re-rolls
+  `target = TARGETS[randInt(0, 3)]` (**may repeat the current target** — there is no
+  no-repeat guard), clears `painted`, sets `checked = false`. Score is not reset.
+
+### 16.5 `RangeMatrix` compare mode and `RangeLegend`
+
+§6 documents the read-only-with-highlight and interactive forms. Compare mode is used only by
+this drill and is specified here so §16 is self-contained.
+
+`RangeMatrix` interactivity gate: `interactive = !readOnly && compare == null && onChange != null`.
+Passing `compare` therefore disables painting regardless of the other props.
+
+Per-cell colour in compare mode (`inP = painted.contains(label)`, `inA = actual.contains(label)`):
+
+| case | fill / text | legend name |
+|---|---|---|
+| `inP && inA` | `good` background, `ink-900` text | Correct |
+| `inA && !inP` | `warn` background, `ink-900` text | Missed |
+| `inP && !inA` | `chip-red` background, white text | Extra |
+| neither | `ink-700` background, faint text, 92 % opacity | — |
+
+Geometry is unchanged from §6: 13 × 13 grid, `gridTemplateColumns: repeat(13, 1fr)`, 2 px gap,
+square cells, `borderRadius: 3px`, `fontSize = max(8, (size / 13) * 0.32)` (at `size = 400`:
+cell ≈ 30.8 px, font ≈ 9.8 px), `width: size` with `maxWidth: 100%`, `select-none touch-none`.
+Each cell renders its own label text (`AA`, `AKs`, `AKo`, …).
+
+`RangeLegend({mode = "kind"})` — a wrapping 12 px-gap row of `0.72rem` muted items, each a
+12 × 12 px rounded swatch plus a label:
+
+- `mode: "kind"` → `Pairs` (`--combo-pair`), `Suited` (`--combo-suited`), `Offsuit` (`--combo-offsuit`).
+- `mode: "compare"` → `Correct` (`good`), `Missed` (`warn`), `Extra` (`chip-red`).
+
+### 16.6 Complete user-facing string inventory for `Drills.tsx`
+
+Everything a translator or a copy reviewer must see. Nothing else in the file is rendered.
+
+| string | where |
+|---|---|
+| `Pot-odds drill` | Shell title, §16.2 |
+| `Outs → equity drill` | Shell title, §16.3 |
+| `Range-building drill` | Shell title, §16.4 |
+| `Score {right}/{total}` | Shell header, all three |
+| `New spot` | footer, §16.2 / §16.3 |
+| `Check` | footer, §16.4 (unchecked) |
+| `New drill` | footer, §16.4 (checked) |
+| `Correct. ` | `Explain`, ok |
+| `Not quite. ` | `Explain`, not ok |
+| `The pot is {pot} bb and your opponent bets {bet} bb. What equity do you need to call?` | §16.2 prompt |
+| `Break-even = call ÷ final pot = {bet} ÷ ({pot} + 2×{bet}) = {pct}.` | §16.2 explanation |
+| `On the {street} you have {name} ({outs} outs). Using the rule of thumb, roughly what's your equity?` | §16.3 prompt |
+| `flop (two cards to come)` / `turn (one card to come)` | §16.3 `street` |
+| `Multiply outs by {mult} ({two cards to come\|one card to come}): {outs} × {mult} ≈ {correct}%. The ×4 rule slightly over-counts big draws, so shade large numbers down a touch.` | §16.3 explanation |
+| `a flush draw`, `an open-ended straight draw`, `a gutshot`, `two overcards`, `a flush draw + gutshot`, `a pocket pair hoping to flop/turn a set`, `a flush draw + open-ender` | `DRAWS` names |
+| `Paint the standard {desc}.` | §16.4 prompt |
+| `UTG opening range (~15% of hands)`, `CO opening range (~26% of hands)`, `BTN opening range (~45% of hands)`, `BB continue range vs a BTN open (calls + 3-bets, ~40%)` | `TARGETS` descs |
+| `{pct} match` | §16.4, after Check |
+| `Correct` / `Missed` / `Extra` | compare legend |
+| `Pairs` / `Suited` / `Offsuit` | kind legend |
+| `{n}%` | every answer button (`Options` suffix) |
+
+### 16.7 Mobile-port notes for §16
+
+- The `Options` grid is 2 × 2 on a phone (the 4-column layout is `sm:` and up). Four ~44 px
+  tap targets is fine; keep the mono bold face.
+- `size: 400` for the range matrix must shrink to the viewport — the source already sets
+  `maxWidth: 100%`, so honour the constraint rather than hard-coding 400. At 360 px wide the
+  cells are ~26 px, which is at the edge of a comfortable drag-paint target; consider a
+  pinch-to-zoom or a larger tap slop instead of shrinking further. Painting is drag-based
+  (§6): the first cell decides add-vs-remove for the whole stroke.
+- The footer `ghost → primary` variant flip on answer (§16.2 / §16.3) is the only affordance
+  telling the user the round is over; on a phone also consider scrolling the explanation into
+  view.
+- Nothing here is async: no isolate, no engine call. `chartToSet` runs on four small maps and
+  `scoreRange` is O(169). Compute on the UI thread.
+
+---
+
+## 17. Errata — corrections applied to earlier revisions of this document
+
+Recorded so a reader who has an older copy, or a diff of this file, knows which numbers moved
+and why. Both were derived/transcription errors in this document; **the TypeScript was correct
+in both cases** and no behaviour changed.
+
+1. **§1.1 total minutes: `161` → `160`.** The 31 per-lesson `minutes` values in the table were
+   and are correct, as are the level lesson counts (3 / 4 / 9 / 9 / 6); only the footer sum was
+   wrong. Verified against `src/components/study/lessons.tsx` by summing the `minutes` fields
+   per level: Basics `4+5+4 = 13`, Pre-flop `5+6+5+5 = 21`, Post-flop
+   `5+5+5+6+5+6+4+5+5 = 46`, Advanced `6+7+6+6+5+6+5+6+3 = 50`, Practice `4+5+5+5+5+6 = 30`;
+   `13+21+46+50+30 = 160`. If any UI copy quotes a course length, it should say 160 minutes
+   (2 h 40 m). Suggested Dart test: `LEVELS.expand((l) => l.lessons).fold(0, (a, l) => a + l.minutes) == 160`.
+2. **§13.3 `labelToCombos` pair ordering: `cd cH cs dh ds hs` → `cd ch cs dh ds hs`.** The
+   capital `H` was a typo. `SUITS = ["c", "d", "h", "s"]` and the pair branch emits
+   `[hi+SUITS[i], hi+SUITS[j]]` for every `i < j`, so for rank `A` the six combos come out in
+   the order `AcAd, AcAh, AcAs, AdAh, AdAs, AhAs`. Suit letters are **always lower-case**
+   everywhere in the card encoding (`Ah`, `Td`, `2c`); an upper-case suit would fail
+   `cardToInt` (§13.4). This ordering is load-bearing: §12.6's `expand()` iterates
+   `labelToCombos` in this order, so any seeded / index-based sampling that must reproduce the
+   TypeScript's draws depends on it.

@@ -22,6 +22,8 @@ Source files covered (paths relative to the source repo):
 | `scripts/srs_test.ts` | 51 | 13 assertions — all pass |
 | `scripts/leaks_test.ts` | 56 | 6 assertions — all pass |
 
+> Two counts in this table are stale; corrected in §17.3 (normative): `src/store/reviewStore.ts` is **71** lines (not 74) and `src/store/goalStore.ts` is **75** (not 76). Every other row verifies against the source. Metadata only — no behavioural impact.
+
 Neighbouring subsystems referenced but **not** specified here (they get their own port docs): the puzzle generator/grader (`src/engine/puzzles.ts` — `generatePuzzle`, `generatePushFold`, `generateExploit`, `gradePuzzle`), the EV coach that produces decision verdicts (`src/store/gameStore.ts`), hand-history import (`src/lib/hhImport.ts`), the stats DB, the range matrix widget, Study lessons, onboarding. Where this subsystem *consumes* their types or *produces* data for them, the exact contract is written out below.
 
 There is **no Rust twin** for anything in this subsystem (`poker-core/src/lib.rs` has no SRS/leak/rating code). Everything here is TypeScript-only and must be ported to Dart.
@@ -91,6 +93,9 @@ class Puzzle {
   double bb;                    // 1 for generated puzzles
   List<DrillSeatView> seats;    // always 6, in ORDER
   List<DrillFrame> frames;      // >= 1; LAST frame is the decision point
+  //  ^ WRONG as written — see §17.1 (normative): the invariant is `frames.length >= 2`
+  //    (>= 1 history frame + the decision frame). No generator in the engine emits fewer than 2,
+  //    and `scripts/puzzles_test.ts` asserts `p.frames.length >= 2`.
   List<DrillOption> options;    // 2 or 3
   DrillAction best;
   List<DrillAction> accept;     // answers graded correct (best is always included)
@@ -471,6 +476,8 @@ The Stats page appends a fourth sentence after the report's list when the range-
 - Else three count boxes labelled `Mistakes` (red), `Thin spots` (amber), `Great plays` (green); then the leak sentences each prefixed with a bolt icon; then a `Recent −EV decisions` list of the last 5 `mistake` records, newest first.
 
 ### 5.3 Test cases (`scripts/leaks_test.ts`, 6 assertions)
+
+> **Superseded by §17.2 (normative).** The numbered items below are *not* a 1:1 map of the file's six `ok()` calls: item 2 silently bundles two separate assertions (the counts and the "fold too often" sentence) and item 6 is a placeholder, not an assertion that exists in the file. Port the six assertions from the table in §17.2. The "Extra pins" paragraph at the end of this section is correct and remains additive to those six.
 
 Helper `d(verdict, action)` builds a record with `equity 0.3, potOdds 0.25, evBb -1, street "flop", villainArchetype "TAG", ts 0`.
 
@@ -1205,3 +1212,115 @@ Two rows of the table at the top of this document are stale. Metadata only, no b
 Every other row verifies against the source as written: `src/lib/srs.ts` 50, `src/lib/leaks.ts` 57, `src/store/leakStore.ts` 59, `src/store/drillStore.ts` 234, `src/views/DrillsView.tsx` 134, `src/components/drills/DrillTable.tsx` 72, `src/components/drills/MoveNavigator.tsx` 64, `src/components/drills/DrillControls.tsx` 198, `src/components/study/Drills.tsx` 315, `scripts/srs_test.ts` 51, `scripts/leaks_test.ts` 56.
 
 The behavioural specs for `reviewStore.ts` (§4) and `goalStore.ts` (§7) were re-checked against the current sources and are accurate — in particular `reviewStore.review` maps first and filters second, so the `isGraduated` test in the filter sees the **new** `SrsState`, which is what §4.2 describes.
+
+### 17.4 Ready-to-paste Dart pins for §17.1 and §17.2
+
+Re-verified against the source repo on 2026-09-08: every claim in §17.1–§17.3 still holds byte-for-byte
+(`frames.length >= 2` in `scripts/puzzles_test.ts`; the six `ok()` calls in `scripts/leaks_test.ts`;
+`reviewStore.ts` 71 lines, `goalStore.ts` 75 lines). The three defect sites now carry an inline flag
+pointing here — inside the `Puzzle` class in §1, directly under the §5.3 heading, and directly under the
+source-file inventory table at the top — so a reader who never reaches §17 still sees the correction.
+
+Drop these two groups into the port's test suite; they are the Dart form of the two pinned TypeScript
+assertions and need no reference to the TypeScript.
+
+```dart
+// test/engine/puzzle_frames_test.dart — pins §17.1
+group('Puzzle.frames invariant (>= 2)', () {
+  test('every generated puzzle has >= 2 frames, last frame is the decision point', () {
+    final rng = math.Random(20260908);
+    for (var i = 0; i < 800; i++) {
+      final p = generatePuzzle(rng);
+      expect(p.frames.length, greaterThanOrEqualTo(2), reason: 'has navigator frames');
+      expect(p.frames.length, lessThanOrEqualTo(7));          // engine-wide ceiling (genVsRaise, hero BB vs SB raiser)
+      expect(p.frames.last.street, p.street);                 // decision frame carries the puzzle's street
+      expect(p.frames.last.board, p.board);
+      expect(p.frames.last.pot, p.pot);
+    }
+    for (var i = 0; i < 400; i++) {
+      expect(generatePushFold(rng).frames.length, greaterThanOrEqualTo(3));  // pushfold floor is 3, not 2
+    }
+  });
+
+  test('the 2-frame floor cases are exactly 2 frames, verbatim', () {
+    // rfi, hero UTG (no earlier non-blind seat folds)
+    final rfi = genRfi(fixedRng(heroIdx: 0));
+    expect(rfi.frames.length, 2);
+    expect(rfi.frames[0].text, 'Blinds posted (0.5/1 bb).');
+    expect(rfi.frames[1].text, 'Folded to you in the UTG. Action on you.');
+    expect(rfi.frames.every((f) => f.pot == 1.5 && f.board.isEmpty), isTrue);
+
+    // exploit template 2 (Nit blind steal, hero SB)
+    final ex2 = generateExploit(fixedRng(template: 2));
+    expect(ex2.frames.length, 2);
+    expect(ex2.frames[0].text,
+        'The BB is a NIT — they defend their blind with only ~12% of hands and fold the rest.');
+    expect(ex2.frames[1].text, 'Folded to you in the SB with ${ex2.handLabel}. Action on you.');
+  });
+
+  test('puzzleFromLeak always produces exactly 2 frames', () {
+    final p = puzzleFromLeak(sampleLeakSpot);   // §3.4
+    expect(p.frames.length, 2);
+  });
+});
+```
+
+`fixedRng(...)` stands for whatever seam the port uses to force a generator branch (an injected `Random`
+plus an exposed generator, or a test-only parameter). The point of the second test is that the floor of 2
+is reachable, so a `>= 1` implementation would never be caught by the loop test alone.
+
+```dart
+// test/engine/leaks_test.dart — pins §17.2 (six assertions, in source order)
+DecisionRecord d(String verdict, String action) => DecisionRecord(
+      verdict: verdict, action: action, equity: 0.3, potOdds: 0.25, evBb: -1,
+      street: 'flop', villainArchetype: 'TAG', position: null, ts: 0);
+List<DecisionRecord> rep(int n, String v, String a) => List.generate(n, (_) => d(v, a));
+
+group('leaksFromDecisions', () {
+  test('1. empty -> no leaks', () {                                  // msg: "empty → no leaks"
+    final r = leaksFromDecisions([]);
+    expect(r.total, 0);
+    expect(r.leaks, isEmpty);
+  });
+
+  final folds = leaksFromDecisions([...rep(4, 'mistake', 'fold'), ...rep(6, 'ok', 'call')]);
+  test('2. fold counts', () {                                        // msg: "fold counts"
+    expect(folds.total, 10);
+    expect(folds.foldMistakes, 4);
+  });
+  test('3. fold-too-often leak', () {                                // msg: "fold-too-often leak"
+    expect(folds.leaks.any((l) => l.toLowerCase().contains('fold too often')), isTrue);
+  });
+
+  test('4. call-too-wide leak', () {                                 // msg: "call-too-wide leak"
+    final calls = leaksFromDecisions([...rep(4, 'mistake', 'call'), ...rep(6, 'ok', 'check')]);
+    expect(calls.callMistakes, 4);
+    expect(calls.leaks.any((l) => l.toLowerCase().contains('call too wide')), isTrue);
+  });
+
+  test('5. clean discipline note', () {                              // msg: "clean discipline note"
+    final clean = leaksFromDecisions([...rep(6, 'ok', 'call'), ...rep(4, 'great', 'bet')]);
+    expect(clean.mistakes, 0);
+    expect(clean.great, 4);
+    expect(clean.leaks.any((l) => l.contains('No clear')), isTrue);   // CASE-SENSITIVE on purpose
+  });
+
+  test('6. info verdicts excluded from total', () {                  // msg: "info verdicts excluded from total"
+    final withInfo = leaksFromDecisions([d('info', 'check'), d('info', 'check'), d('ok', 'call')]);
+    expect(withInfo.total, 1);
+  });
+});
+```
+
+Shape rules carried over from §17.2 that the group above preserves deliberately:
+
+- assertions 2 and 3 stay **separate** tests over the same `folds` fixture (merging them makes it five);
+- assertion 4 stays **compound** (count + sentence in one test), matching the file's asymmetry;
+- assertion 5 matches `'No clear'` **case-sensitively** while 3 and 4 lower-case the sentence first;
+- assertion 1 covers `total` and `leaks.length` together — there is no seventh "empty has no leaks" case;
+- the `folds`/`calls`/`clean` fixtures each have `n = 10` with the mistake records **first** in the list;
+  order does not affect the result, but keep it so a diff against the TypeScript stays readable.
+
+The four boundary pins listed at the end of §5.3 (n = 7 with 3 fold mistakes → no leaks; n = 8 with
+2 fold mistakes → no leaks; 3/25 = 0.12 → no fold leak, the comparison is strict `>`; 3/24 = 0.125 →
+fold leak) are extra Dart-side tests, not part of the six.

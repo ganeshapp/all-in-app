@@ -1051,3 +1051,161 @@ Suggested Dart test list:
 8. **`hasOnboarded()` returns true when storage is unavailable** — keep that fail-safe.
 9. **Reduced motion** must merge the user toggle with `MediaQuery.disableAnimations`.
 10. **No StrictMode / double-mount tolerance**: timers in the game loop assume single mount; keep onboarding/shortcut listeners idempotent.
+
+---
+
+## 18. Addenda — layout details omitted earlier
+
+These sections **extend** §1.5 and §13.2; nothing above is superseded. Same conventions: spacing unit `1` = 4px, root font size 16px, so `text-[0.76rem]` = 12.16px.
+
+### 18.1 About page container and scrolling (extends §13.2, source `src/views/AboutView.tsx`)
+
+`AboutView` renders exactly two nested wrappers before any content:
+
+```html
+<div class="h-full overflow-auto">              <!-- the scroller -->
+  <div class="mx-auto max-w-[760px] px-8 py-8"> <!-- the measure -->
+```
+
+- **Outer** — `height: 100%` of the `<main class="min-w-0 flex-1 overflow-hidden">` it sits in (§11.3), `overflow: auto`. This is the *only* scrolling element on the About page: the window itself never scrolls because `body { overflow: hidden }` (§1.5 / §18.5). The scrollbar is the app-wide WebKit one from `tokens.css` (10px, `ink-500` thumb).
+- **Inner** — horizontally centred (`margin-left/right: auto`), **`max-width: 760px`**, `padding: 32px` on all four sides (`px-8` = 32px left/right, `py-8` = 32px top/bottom). Tailwind's preflight sets `box-sizing: border-box`, so the 760px cap **includes** the padding: the content column is at most **760 − 64 = 696px** wide. Below 760px of available width the card simply fills it, and the two `sm:grid-cols-2` grids collapse to one column below the Tailwind `sm` breakpoint (640px).
+
+Flutter equivalent (note the `ConstrainedBox` wraps the `Padding`, not the reverse — that is what reproduces border-box):
+
+```dart
+SingleChildScrollView(                       // h-full overflow-auto
+  child: Center(                             // mx-auto
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 760),
+      child: const Padding(
+        padding: EdgeInsets.all(32),         // px-8 py-8
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [/* … */]),
+      ),
+    ),
+  ),
+)
+```
+
+On a phone, 760px is wider than the viewport, so the constraint never binds — but keep the 32px page padding and keep the single internal scroller.
+
+### 18.2 Section headings (`h2`) on the About page
+
+All six headings — **How to use it**, **Good to know**, **How the grading works**, **On the roadmap**, **Built by** (and any added later) — carry the *identical* class list:
+
+```html
+<h2 class="mb-3 mt-8 font-display text-xl font-bold text-[var(--text)]">
+```
+
+| Property | Value |
+|---|---|
+| `margin-top` | **32px** (`mt-8`) |
+| `margin-bottom` | **12px** (`mb-3`) |
+| Font family | `--font-display` (Bricolage Grotesque) |
+| Font size | `text-xl` = **1.25rem / 20px** |
+| Weight | **700** (`font-bold`; the base layer already sets 700 for `h1–h4`) |
+| Colour | `var(--text)` |
+| Letter-spacing | **−0.01em** = −0.2px at 20px — inherited from the `h1–h4` base rule (§1.5) |
+| Line-height | **1.1** = 22px — same base rule |
+
+Margins do not collapse into anything here (the preceding sibling is always a `div`/`Card` with zero bottom margin), so the rendered rhythm is: 32px gap above every heading, 12px gap between the heading and the block under it.
+
+```dart
+Padding(
+  padding: const EdgeInsets.only(top: 32, bottom: 12),
+  child: Text(title, style: TextStyle(
+    fontFamily: 'BricolageGrotesque', fontSize: 20, fontWeight: FontWeight.w700,
+    letterSpacing: -0.2, height: 1.1, color: tokens.text)),
+)
+```
+
+### 18.3 The two link tiles — exact geometry (extends §13.2)
+
+Wrapper: `mt-4 grid gap-3 sm:grid-cols-2` → **16px** below the hero card, **12px** gap, one column under 640px and two at/above it.
+
+Each tile is a `<button>`: `group flex items-center gap-3 rounded-2xl border p-4 text-left transition`.
+
+| Part | Exact spec |
+|---|---|
+| Tile box | `border-radius: 16px`, 1px border, **padding 16px**, flex row, vertically centred, **12px** gap, text left-aligned |
+| Icon tile | **40 × 40px** (`h-10 w-10`), `rounded-xl` = **12px** radius, `shrink-0`, contents centred (`grid place-items-center`), icon size **18** |
+| Title | `block font-display text-sm font-bold text-[var(--text)]` → display font, **14px**, weight **700**, colour `--text` |
+| Sub-label | `block text-[0.76rem] text-muted` → **0.76rem = 12.16px**, colour `--muted` |
+| Transition | Tailwind `transition`: 150ms `cubic-bezier(0.4, 0, 0.2, 1)` on colour/background/border/opacity/shadow/transform |
+
+Per-tile colours (as already listed in §13.2, repeated here so the tile spec is self-contained):
+
+| Tile | Border | Background | Hover background | Icon tile | Icon |
+|---|---|---|---|---|---|
+| **Play online** | `gold` @30 % | `gold` @6 % | `gold` @12 % | `gold` @15 %, foreground `gold` | `play` 18 |
+| **Download desktop** | `line` | `ink-800` @70 % | `ink-700` | white @5 %, foreground `--text` | `chip` 18 |
+
+Notes an implementer will otherwise trip on:
+- The title and sub-label are two `block` spans inside one wrapper `<span>`, i.e. a left-aligned two-line column beside the icon tile — in Flutter a `Column(crossAxisAlignment: .start)` with `mainAxisSize: .min`.
+- Neither `text-sm` nor `text-[0.76rem]` is paired with a leading utility: the title gets Tailwind's `text-sm` pairing (**line-height 20px**), while the sub-label inherits the browser's `normal` line-height (no explicit value anywhere up the chain) — in Flutter leave `height: null` for the sub-label.
+- The `group` class is present but **no `group-hover:` rule exists inside either tile** — it is a no-op; only the tile's own background changes on hover.
+- Both tiles are buttons calling `openExternal(...)`, not anchors. The one real `<a>` on the page ("Built by" → `www.gapp.in`) also calls `preventDefault()` and routes through `openExternal`, so in Flutter every link on this page is just a tap handler on `url_launcher`.
+
+### 18.4 About page vertical rhythm and remaining type metrics
+
+Everything below is measured from the source and is additive to the verbatim copy in §13.2. Order is top to bottom.
+
+| Block | Metrics not already in §13.2 |
+|---|---|
+| Hero card | `flex flex-col items-center`, **12px gap** between logo / h1 / paragraph / version pill / update notice |
+| Hero `h1` | `font-display text-3xl font-extrabold` → **30px**, weight **800**, colour `--text` (plus base letter-spacing −0.01em, line-height 1.1) |
+| Hero paragraph | `text-sm` 14px, **`leading-relaxed` = line-height 1.625**, `max-width 520px`, muted, centred |
+| Version pill | padding **12px × 4px** (`px-3 py-1`), `tracking-wide` = **letter-spacing 0.025em**, 0.66rem (10.56px), weight 600, uppercase, bg white @5 %, `rounded-full`, colour `--faint` |
+| Link tiles | 16px below hero; see §18.3 |
+| Every `h2` | 32px above, 12px below; see §18.2 |
+| "How to use it" grid | `grid gap-3 sm:grid-cols-2` → **12px** gap, 2 columns at ≥640px |
+| Mode card header | `mb-1.5` = **6px** below the header row; header is flex, items centred, **8px** gap; icon tile **28 × 28px**, `rounded-lg` = 8px, icon size 15 |
+| Mode card body | 0.84rem = **13.44px**, `leading-relaxed` (1.625), muted |
+| "Good to know" list | `space-y-2` = **8px** between items; text 0.86rem = **13.76px**, `leading-relaxed`; each row is flex with **8px** gap; leading icon size **15**, `margin-top 2px` (`mt-0.5`), `shrink-0` |
+| Grading card | intro paragraph `mb-2` = **8px**, 0.84rem `leading-relaxed`; list `space-y-2` (8px), rows flex `gap-2`, icon 15 at `mt-0.5`; bold lead-ins are weight **600** in colour `--text`; the word *and* in the first bullet is `<em>` (italic) |
+| Roadmap card | intro `mb-2` (8px), 0.84rem, **no** relaxed leading; list `space-y-1.5` = **6px**; rows flex `gap-2`, `arrow-right` icon **14** at `mt-0.5`, colour `gold`; footnote `mt-2` = **8px**, 0.74rem = **11.84px**, faint |
+| "Built by" card | `flex flex-col items-center text-center`, **8px** gap; name 24px (`text-2xl`) weight **800** colour `gold-light`; link row inline-flex **6px** gap, 14px, weight 600, `gold` → hover `gold-light`, trailing `arrow-right` **14**; closing paragraph `mt-1` = **4px**, 0.8rem = **12.8px**, `leading-relaxed`, faint, `max-width 460px` |
+| Page footer | `py-8` = **32px** padding top *and* bottom (on top of the container's own 32px bottom padding → 64px of empty space below the last line), centred, 0.66rem = 10.56px, faint |
+
+All cards on this page are the standard `Card` primitive (§4.5): 16px radius, 1px `line` border, **20px** padding, background `ink-800` @80 %.
+
+### 18.5 `index.css @layer base` — the complete block (extends §1.5)
+
+§1.5 lists the `body` rules and the `h1–h4` rule but omits `text-rendering` and the layout scaffold. The base layer of `src/index.css` is, in full and in source order:
+
+```css
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background: var(--ink-900);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;   /* omitted from §1.5 */
+    overflow: hidden;
+  }
+
+  #root {                                  /* omitted from §1.5 */
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+}
+```
+
+That is the whole `@layer base`. The `.mono` / `.numeric` classes, the `:focus-visible` outline and the WebKit scrollbar rules named in §1.5 live in `src/styles/tokens.css`, not here; `index.css` contributes nothing else at base level.
+
+What the two omitted declarations mean for the port:
+
+- **`text-rendering: optimizeLegibility`** asks the engine for kerning and standard ligatures. Flutter already applies kerning and `liga` by default, so this needs **no** code — do not disable them (i.e. do not pass `fontFeatures: [FontFeature.disable('liga')]` or `FontFeature.disable('kern')`). Tabular figures stay opt-in via the `.mono` / `.numeric` equivalents (§1.5) → `FontFeature.tabularFigures()`.
+- **`html, body, #root { height: 100% }` + `#root { display: flex; flex-direction: column }`** is the layout scaffold: the React root fills the viewport exactly and lays its children out as a single vertical column that cannot grow past the screen. Together with `body { overflow: hidden }` this is what forces every view to scroll internally (§18.1) instead of the page scrolling. Flutter equivalent: a full-height root (`Scaffold` body sized by the viewport, no `SingleChildScrollView` at the top level) with a `Column`; scrolling belongs to each view, never to the shell. If any part of the shell is ever wrapped in a scroll view, the fixed sidebar/bottom-nav behaviour of §11 breaks.

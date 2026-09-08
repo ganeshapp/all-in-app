@@ -168,7 +168,7 @@ Engine facts the play loop depends on (from `src/game/engine.ts`):
 | bet "great" | `equity > 0.60`; bet "thin" | `equity < 0.38 && cost > 0.5·pot` | §7.5 |
 | `MIN_SAMPLE` (HUD) | 8 hands | §16 |
 | hero style row | shown when `hero.handsSeen ≥ 8` | §19 |
-| guess grades | ≥0.80 "Sharp read" · ≥0.60 "Solid" · ≥0.40 "Rough" · else "Way off" | §13 |
+| guess grades | ≥0.80 "Sharp read" · ≥0.60 "Solid" · ≥0.40 "Rough" · else "Way off" | end of §12.4 |
 | `DAILY_DRILL_GOAL` | 20 | §22 |
 | `DAILY_HAND_GOAL` | 30 | §22 |
 | stats rolling windows | last 800 hands / guesses / decisions kept in memory | stats store |
@@ -775,7 +775,10 @@ Worked examples (bb = 20, `se = 0` so `margin = 0`, standard strictness):
   with equity 0.30 → EV = +25 chips < 30 → no note.
 * Bet: pot 100, bet 100 (costNow 100), equity 0.20, 1 opponent → betFrac 1, continueFrac 0.42,
   pAllFold 0.58, foldsNeeded 0.5, evBluff = 58 + 0.42·(60 − 100) = 41.2 → not a mistake → `cost > 50` and `equity < 0.38` → **thin** ("This is a bluff…").
-  Same bet with 3 opponents → pAllFold 0.074, evBluff = 7.4 + 0.926·(−40) = −29.6 < −15 → **"Expensive bluff"**.
+  Same bet with 3 opponents → pAllFold = 0.58³ = **0.1951** (the exponent is applied to `1 − continueFrac`,
+  not to `continueFrac`), evBluff = 19.51 + 0.8049·(−40) = **−12.68** (−0.6 bb). That is **not** below
+  −0.75·bb = −15, so the verdict is still **thin** ("This is a bluff…") — *not* "Expensive bluff".
+  Full derivation, an opponent-count table and two spots that *do* trigger "Expensive bluff": **§27.1**.
 
 ---
 
@@ -1307,8 +1310,9 @@ check / bet 120 / call 120 river, board `Ah Kd 7c 2s 9h`, pot result 520 to seat
 Concretely the frame texts are: `Blinds 0.5/1 bb posted.` · `Dwan raises to 3 bb` · `You calls 3 bb` ·
 `Flop: Ah Kd 7c` · `Dwan bets 4 bb` · `You calls 4 bb` · `Turn: Ah Kd 7c 2s` · `Dwan checks` ·
 `You checks` · `River: Ah Kd 7c 2s 9h` · `Dwan checks` · `You bets 6 bb` · `Dwan calls 6 bb` ·
-`You win 26 bb.` (pots: 30 → 90 → 150 → 250 → 330 → 330 → 330 → 450 → 570; final frame pot 570
-because uncalled-bet logic is not applied in frames; `total` 520 → `26 bb`).
+`You win 26 bb.` — **14 frames**, pots `30 · 90 · 150 · 150 · 230 · 310 · 310 · 310 · 310 · 310 · 310 · 430 · 550 · 550`;
+the final frame pot is **550** (the replay pot is only blinds + action amounts, and uncalled-bet
+logic is never applied in frames); `total` 520 → `26 bb`. Frame-by-frame table: **§27.2**.
 
 ---
 
@@ -1439,7 +1443,9 @@ primary `Start session` → `newSession(tableOpts)`. The nav's tip box reads
 
 There are no unit tests for `gameStore`, `format.ts`, `goalStore` or `scoreGuess` in the desktop
 repo; the values tabulated in §11, §12.2, §21, §22 and the worked examples in §7.6 were derived
-by hand from the code and are the recommended pins for the Dart tests. Existing scripts that
+by hand from the code and are the recommended pins for the Dart tests. **Where §27 restates any of
+them it wins**: the §7.6 bluff example and the §21 pot sequence were re-derived (and the replay
+frames actually executed) and the originals were wrong. Existing scripts that
 exercise the pieces this subsystem depends on:
 
 * `scripts/hh_test.ts` — `buildReplayFrames` assertions listed in §21; also pins the PokerStars
@@ -1451,3 +1457,405 @@ exercise the pieces this subsystem depends on:
   6-max+ante 250, 9-max 200, 9-max+ante 150): hand completes, chip conservation, no negative
   stacks, pot fully distributed, valid board lengths {0,3,4,5}; heads-up button posts the SB and
   acts first; antes = `sb + bb + ante × seats` in the pot and count toward `committedTotal` only.
+
+---
+
+## 27. Errata — corrected numeric pins (these values supersede any earlier text)
+
+Verified by re-deriving from the TypeScript and, for §27.2, by executing `buildReplayFrames`
+against the exact fixture in `/Users/gapp/Documents/Code/poker/scripts/hh_test.ts`. The three
+defects have also been corrected in place above; this section carries the derivations so the Dart
+tests can be pinned without opening the TypeScript.
+
+### 27.1 §7.6 — the bet/raise worked example (fold-equity model)
+
+The bug in the old example was the exponent base. `src/store/gameStore.ts` (line 385) reads:
+
+```ts
+const pAllFold = Math.pow(1 - continueFrac, opponents);
+```
+
+`continueFrac` is the probability that **one** opponent continues; `1 − continueFrac` is one
+opponent folding; `(1 − continueFrac)^opponents` is *everyone* folding. Using `continueFrac^n`
+(0.42³ = 0.074) is wrong — the correct value is `0.58³ = 0.195112`.
+
+**Spot (the pin).** Post-flop, pot 100 chips, hero has committed 0 on this street and bets 100
+(`action.amount = 100`, so `cost = costNow = 100`), `equity = 0.20`, `bb = 20`, `se = 0` →
+`margin = 0`, `coachStrictness = standard`.
+
+| quantity | formula | 1 opponent | 3 opponents |
+|---|---|---|---|
+| `betFrac` | `costNow / max(1, pot)` | 1.0 | 1.0 |
+| `continueFrac` | `min(0.75, max(0.30, 0.62 − 0.2·betFrac))` | 0.42 | 0.42 |
+| `pAllFold` | `(1 − continueFrac)^opponents` | 0.58 | **0.195112** |
+| `foldsNeeded` | `costNow / (pot + costNow)` | 0.5 | 0.5 |
+| `evBluff` | `pAllFold·pot + (1−pAllFold)·(equity·(pot + 2·costNow) − costNow)` | `58 + 0.42·(60−100)` = **+41.2** | `19.5112 + 0.804888·(60−100)` = **−12.68432** |
+| `equity + margin < 0.32` | | true | true |
+| `evBluff < −0.75·bb` (= −15) | | false | **false** (−12.68 > −15) |
+| verdict | | **thin** | **thin** |
+
+Both fall through to the `equity < 0.38 && cost > pot * 0.5` branch (`cost` 100 > 50), i.e. the
+**"This is a bluff…"** copy. Neither is a mistake, neither creates a leak.
+
+Exact strings for the 3-opponent case (note `opponents > 1` ⇒ `fieldMode`, so `oppDesc` is
+`the 3-player field`, equity is run vs a random field, and `sourceLine` is the field variant):
+
+* `title`: `Your bet` · `verdict`: `thin` · `blocking`: false · `evChips` = `evAction` = `equity·finalPot − cost` = `0.20·200 − 100` = **−60** (−3.0 bb) · `potOdds` = `100/200` = 0.5
+* plain: `This is a bluff: if you get called, your hand only wins about 1 time in 5. The bet makes money only when opponents fold — fine as a plan, just know that's the plan.`
+* text: `Aggressive: only 20% equity if called. Works as a bluff but relies on folds.`
+* steps[0]: `{heroLabel} vs the 3-player field on {boardStr} → 20% equity when called.`
+* steps[1]: `A bet also wins when opponents fold — fold equity isn't shown here, so treat this as the "called" floor.`
+
+**Opponent-count table** for the same spot (pot 100, costNow 100, equity 0.20, bb 20, margin 0) —
+useful as a parameterised Dart test:
+
+| opponents | `pAllFold` | `evBluff` chips | `evBluff/bb` (`toFixed(1)`) | verdict |
+|---|---|---|---|---|
+| 1 | 0.580000 | +41.20000 | `2.1` | thin |
+| 2 | 0.336400 | +7.09600 | `0.4` | thin |
+| 3 | 0.195112 | −12.68432 | `-0.6` | thin |
+| 4 | 0.113165 | −24.15691 | `-1.2` | **mistake / "Expensive bluff"** |
+| 5 | 0.065636 | −30.81101 | `-1.5` | **mistake / "Expensive bluff"** |
+
+Note `evChips` differs by branch: the "Expensive bluff" return puts **`evBluff`** in `evChips`,
+while every non-mistake bet/raise return puts **`evAction`** there (−60 in every row above).
+
+**Pin A — an "Expensive bluff" that really fires (over-bet).** Pot 100, hero committed 0, raises
+to 200 (`costNow = 200`), `equity = 0.20`, 3 opponents, bb 20, margin 0:
+
+```
+betFrac      = 200 / 100 = 2
+continueFrac = clamp(0.62 − 0.4) = clamp(0.22) → 0.30      // lower clamp bites
+pAllFold     = 0.70^3 = 0.343
+foldsNeeded  = 200 / 300 = 0.666…                          // → 67% when rounded
+evBluff      = 0.343·100 + 0.657·(0.20·(100 + 400) − 200)
+             = 34.3 + 0.657·(100 − 200) = 34.3 − 65.7 = −31.4      // < −15 ✔
+equity + margin = 0.20 < 0.32 ✔   ⇒ verdict "mistake", title "Expensive bluff"
+```
+
+Returned: `blocking: false`, `verdict: "mistake"`, `title: "Expensive bluff"`, `equity 0.20`,
+`potOdds` = `200/300` = 0.6667, `evChips: −31.4`. Verbatim copy:
+
+* plain: `A very expensive bluff: if anyone calls, your hand wins only about 1 time in 5, and with 3 opponents someone usually calls. You'd need folds about 7 times in 10 just to break even — this bet loses money over time.`
+* text: `Bluffing 200% pot with 20% equity vs the 3-player field: estimated EV -1.6 bb.`
+* steps[0]: `{heroLabel} vs the 3-player field on {boardStr} → 20% equity when called.`
+* steps[1]: `Break-even fold rate = bet / (pot + bet) = 67%.`
+* steps[2]: `Assuming each opponent continues ~30% vs this size, everyone folds only 34% of the time.`
+* steps[3]: `EV ≈ 34% × 100 + 66% × (20% × 500 − 200) ≈ -31 chips.`
+
+**Pin B — "Expensive bluff" by opponent count (pot-sized bet, 4 opponents).** Pot 100, bet 100,
+`equity 0.20`, 4 opponents → `pAllFold 0.113165`, `evBluff −24.15691`, `evChips −24.15691`:
+
+* plain: `A very expensive bluff: if anyone calls, your hand wins only about 1 time in 5, and with 4 opponents someone usually calls. You'd need folds about 5 times in 10 just to break even — this bet loses money over time.`
+* text: `Bluffing 100% pot with 20% equity vs the 4-player field: estimated EV -1.2 bb.`
+* steps[1]: `Break-even fold rate = bet / (pot + bet) = 50%.`
+* steps[2]: `Assuming each opponent continues ~42% vs this size, everyone folds only 11% of the time.`
+* steps[3]: `EV ≈ 11% × 100 + 89% × (20% × 300 − 100) ≈ -24 chips.`
+
+Rendering reminders that these pins depend on (all already specified in §7.5/§11, repeated here
+because they are what makes the strings byte-exact):
+
+* `fmtTimes(0.20)` → `about 1 time in 5`; `fmtTimes(0.5)` → `about 5 times in 10`;
+  `fmtTimes(0.6667)` → `about 7 times in 10` (`round(0.6667·10)`).
+* The `%` numbers inside `steps` use `Math.round`; `evBluff` inside `steps[3]` uses
+  `toFixed(0)` (so −31.4 → `-31`, −24.157 → `-24`) and prints an ASCII hyphen-minus, while the
+  surrounding template uses the U+2212 minus sign `−` between the equity term and `costNow`.
+* `text` prints `(evBluff / bb).toFixed(1)` — again an ASCII `-` for negatives (`-1.6`, `-1.2`).
+
+The other four bullets of §7.6 (the two call examples, the fold example and the 1-opponent bet)
+were re-checked against the source and are correct as written.
+
+### 27.2 §21 — the pinned replay frame table (corrected)
+
+`buildReplayFrames` on the `scripts/hh_test.ts` fixture (6 seats, hero seat 0 "You" BTN with
+`As Ks`, Dwan seat 3 UTG with `Qh Qd`, sb 10 / bb 20 at seats 1 / 2, board `Ah Kd 7c 2s 9h`,
+`potResults = [{winners:[0], amount:520, potLabel:"Pot"}]`) produces exactly **14** frames:
+
+| # | `text` | `street` | `pot` | `board` | `folded` | `revealAll` |
+|---|---|---|---|---|---|---|
+| 0 | `Blinds 0.5/1 bb posted.` | preflop | **30** | `[]` | `[]` | – |
+| 1 | `Dwan raises to 3 bb` | preflop | **90** | `[]` | `[]` | – |
+| 2 | `You calls 3 bb` | preflop | **150** | `[]` | `[]` | – |
+| 3 | `Flop: Ah Kd 7c` | flop | **150** | `Ah Kd 7c` | `[]` | – |
+| 4 | `Dwan bets 4 bb` | flop | **230** | `Ah Kd 7c` | `[]` | – |
+| 5 | `You calls 4 bb` | flop | **310** | `Ah Kd 7c` | `[]` | – |
+| 6 | `Turn: Ah Kd 7c 2s` | turn | **310** | `Ah Kd 7c 2s` | `[]` | – |
+| 7 | `Dwan checks` | turn | **310** | `Ah Kd 7c 2s` | `[]` | – |
+| 8 | `You checks` | turn | **310** | `Ah Kd 7c 2s` | `[]` | – |
+| 9 | `River: Ah Kd 7c 2s 9h` | river | **310** | `Ah Kd 7c 2s 9h` | `[]` | – |
+| 10 | `Dwan checks` | river | **310** | `Ah Kd 7c 2s 9h` | `[]` | – |
+| 11 | `You bets 6 bb` | river | **430** | `Ah Kd 7c 2s 9h` | `[]` | – |
+| 12 | `Dwan calls 6 bb` | river | **550** | `Ah Kd 7c 2s 9h` | `[]` | – |
+| 13 | `You win 26 bb.` | **showdown** | **550** | `Ah Kd 7c 2s 9h` | `[]` | **true** |
+
+Pot sequence as a Dart literal:
+
+```dart
+const expectedPots = [30, 90, 150, 150, 230, 310, 310, 310, 310, 310, 310, 430, 550, 550];
+```
+
+Why the pot moves the way it does (this is the part the old numbers got wrong):
+
+* The pot starts at `sb + bb = 30`; `committed` starts at `{1: 10, 2: 20}` and 0 elsewhere.
+* A `raise`/`bet` adds `amount − committed[seat]`, **not** `amount`. Dwan's preflop raise to 60
+  adds 60 (he had committed 0 — he is seat 3, neither blind), giving 90. Hero's call adds its
+  full `amount` 60 → 150.
+* Every non-preflop street frame **first zeroes `committed` for all seats**, then pushes the
+  street frame at the *unchanged* pot — hence the repeated 150 at frame 3 and 310 at frames 6
+  and 9. Those duplicate values are real frames, not rounding.
+* The flop is `80 + 80 = 160` on top of 150 → 310. Turn is checked through. The river adds
+  `120 + 120 = 240` → 550.
+* The final frame's `pot` and its `text` are independent numbers. `pot` is the replay's running
+  total (30 posted blinds + every action amount = 550). The text prints `bb(total)` where
+  `total = Σ potResults.amount` = 520, the fixture's settled pot (Dwan 260 + hero 260, the two
+  dead blinds excluded) → `26 bb`. The 30-chip gap between 550 and 520 is exactly those blinds.
+* `bb(chips)` in the replay is **not** `fmtBb`: `v = chips / h.bb; Number.isInteger(v) ? "$v" : v.toFixed(1)`.
+  So 10 → `0.5`, 20 → `1`, 60 → `3`, 80 → `4`, 120 → `6`, 520 → `26`.
+* The river street frame's board is the full 5-card board (`h.board.slice(0, 5)`), so frames 9–12
+  already show 5 cards; only the *turn* frames show 4.
+* `folded` stays empty in this fixture because the two blinds never act in `h.actions` — the
+  replay only knows about actions that were recorded, so seats that folded silently are never
+  marked folded and keep showing face-down cards. Accepted approximation; do not "fix" it in the
+  port or the frame table above stops matching.
+
+The looser assertions in `scripts/hh_test.ts` (still true): `frames.length > 4`;
+`frames[0].text` contains `Blinds`; last frame board length 5 and `revealAll == true`;
+`last.pot >= frames[0].pot`; some frame has `street == "flop"` and a 3-card board.
+
+### 27.3 §2 — cross-reference fix
+
+The constants table row `guess grades | ≥0.80 "Sharp read" · ≥0.60 "Solid" · ≥0.40 "Rough" · else "Way off"`
+used to point at §13 (the range matrix). The grades live at the **end of §12.4**, and come from
+`grade()` in `src/components/range/GuessModal.tsx`. Fixed in place.
+
+---
+
+## 28. `PlayingCard` — complete style spec (completes §15)
+
+`src/components/table/PlayingCard.tsx`. Props: `card?: Card | null`, `faceDown?: bool`,
+`w: double = 46`, `className`, `style`, `dim?: bool`. There are exactly two render branches and
+the face-down branch wins whenever `faceDown || card == null` (so a null card is a back, and
+`dim` is **ignored** on backs).
+
+### 28.1 Shared geometry
+
+```
+h      = round(w * 1.4)
+radius = max(4, round(w * 0.13))
+```
+
+Both branches set `width: w`, `height: h`, `borderRadius: radius`, the class `relative shrink-0`
+and the `shadow-card` box-shadow. Any incoming `style` is spread **last**, so a caller can
+override every one of these.
+
+`shadow-card` (tailwind.config.js) = `0 2px 6px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25)`.
+
+Pre-computed for every width actually used in the app (board 56 / 44, seat hero 46, seat bot 36,
+action bar 38, replay hero 34, replay other 24):
+
+| `w` | `h` | `radius` | inner `radius−2` | rank font `0.36w` | rank `left 0.12w` | rank `top 0.06h` | suit-sm font `0.26w` | suit-sm `left 0.13w` | suit-sm `top 0.34h` | suit-lg font `0.5w` | suit-lg `right 0.08w` | suit-lg `bottom 0.04h` | circle `0.34w` |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 24 | 34 | 4 | 2 | 8.64 | 2.88 | 2.04 | 6.24 | 3.12 | 11.56 | 12 | 1.92 | 1.36 | 8.16 |
+| 34 | 48 | 4 | 2 | 12.24 | 4.08 | 2.88 | 8.84 | 4.42 | 16.32 | 17 | 2.72 | 1.92 | 11.56 |
+| 36 | 50 | 5 | 3 | 12.96 | 4.32 | 3.00 | 9.36 | 4.68 | 17.00 | 18 | 2.88 | 2.00 | 12.24 |
+| 38 | 53 | 5 | 3 | 13.68 | 4.56 | 3.18 | 9.88 | 4.94 | 18.02 | 19 | 3.04 | 2.12 | 12.92 |
+| 44 | 62 | 6 | 4 | 15.84 | 5.28 | 3.72 | 11.44 | 5.72 | 21.08 | 22 | 3.52 | 2.48 | 14.96 |
+| 46 | 64 | 6 | 4 | 16.56 | 5.52 | 3.84 | 11.96 | 5.98 | 21.76 | 23 | 3.68 | 2.56 | 15.64 |
+| 56 | 78 | 7 | 5 | 20.16 | 6.72 | 4.68 | 14.56 | 7.28 | 26.52 | 28 | 4.48 | 3.12 | 19.04 |
+
+Note the mixed bases: the **rank/suit vertical** offsets are fractions of `h`, the **horizontal**
+offsets and every font size are fractions of `w`, and the centre circle is a square in `w`
+(`w * 0.34` for both width and height — *not* `h`).
+
+### 28.2 Face-down (back)
+
+```
+outer:  class "relative shrink-0 shadow-card ring-1 ring-black/40"
+        background: linear-gradient(135deg, #11805a 0%, #0a4f34 55%, #073a2a 100%)
+        width w · height h · borderRadius radius
+inner:  class "absolute inset-[3px] flex items-center justify-center"
+        borderRadius: radius - 2
+        border: 1px solid rgba(232,194,90,0.45)
+circle: width w*0.34 · height w*0.34 · borderRadius "50%"
+        border: 2px solid rgba(232,194,90,0.6)
+```
+
+* The gradient is a **135°** linear gradient with three stops at **0 % / 55 % / 100 %** — the
+  55 % stop is what makes the back read as a diagonal fold rather than an even blend.
+* `inset-[3px]` = top/right/bottom/left all 3 px, i.e. the inner frame is `(w−6) × (h−6)`.
+* `ring-1 ring-black/40` is Tailwind's ring utility: an **outset** `box-shadow: 0 0 0 1px rgba(0,0,0,0.4)`
+  drawn outside the border box, composed with `shadow-card`. In Flutter: a 1 px
+  `Color(0x66000000)` outline (or a `BoxShadow` with `spreadRadius: 1, blurRadius: 0`).
+* `rgba(232,194,90,·)` is the gold token (`#E8C25A`) at 45 % on the frame and 60 % on the circle.
+* No `overflow: hidden` on this branch, and `dim` has no effect here.
+
+### 28.3 Face-up
+
+```
+outer:  class "relative shrink-0 overflow-hidden shadow-card ring-1 ring-black/15"
+        background: linear-gradient(180deg, #ffffff 0%, #eef2f6 100%)
+        opacity: dim ? 0.55 : 1
+        width w · height h · borderRadius radius
+rank:   class "absolute font-display font-extrabold leading-none"
+        left w*0.12 · top h*0.06 · color var(--suit-{s}) · fontSize w*0.36
+suit-s: class "absolute leading-none"
+        left w*0.13 · top h*0.34 · color var(--suit-{s}) · fontSize w*0.26
+suit-l: class "absolute leading-none"
+        right w*0.08 · bottom h*0.04 · color var(--suit-{s}) · fontSize w*0.5 · opacity 0.92
+```
+
+* Face-up uses a **vertical (180°) two-stop** gradient `#ffffff → #eef2f6`, and the ring is the
+  much lighter `ring-black/15` (`0 0 0 1px rgba(0,0,0,0.15)`) — face-down uses `/40`.
+* Face-up adds `overflow-hidden` (the big corner pip is clipped by the rounded rect); face-down
+  does not.
+* Rank text: `cardRank(card)`, with `"T"` rendered as `"10"` (`rankText = r === "T" ? "10" : r`).
+  Font family `font-display` = `'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif`,
+  weight 800, `line-height: 1`.
+* Both suit glyphs are `SUIT_SYMBOL[s]` from `src/engine/cards.ts`: `s → ♠`, `h → ♥`, `d → ♦`,
+  `c → ♣` (U+2660, U+2665, U+2666, U+2663). Default weight, `line-height: 1`.
+* Colours resolve through CSS variables, defined in `src/index.css` / `src/styles/tokens.css`:
+
+```
+:root      --suit-h: var(--suit-red);   --suit-d: var(--suit-red)
+           --suit-s: var(--suit-black); --suit-c: var(--suit-black)
+           --suit-red   = rgb(216 58 58)     // #D83A3A
+           --suit-black = rgb(27 34 48)      // #1B2230
+.four-color (settings toggle) overrides only:
+           --suit-d: #2f7fd6            --suit-c: #2fa066
+```
+
+  So the four-colour deck is diamonds blue `#2F7FD6`, clubs green `#2FA066`, hearts unchanged
+  red, spades unchanged near-black.
+* `dim` (used for dead/mucked cards) multiplies the **whole card** by 0.55 opacity; it stacks
+  with the 0.92 opacity of the large corner pip.
+
+---
+
+## 29. `HandReplayModal` — exact seat rendering (completes §21)
+
+`src/components/play/HandReplayModal.tsx`. Only the parts §21 left implicit are restated.
+
+### 29.1 Seat order and position
+
+```
+hero    = hand.seats.firstWhere(isHero, orElse: hand.seats[0])
+ordered = [hero, ...hand.seats.where((s) => !s.isHero)]      // hero first, others in seat order
+
+seatPos(n, i):
+  rad  = π/2 − 2π·i/n
+  left = "{(50 + 42·cos(rad)).toFixed(1)}%"
+  top  = "{(46 + 41·sin(rad)).toFixed(1)}%"
+```
+
+`i` is the index **into `ordered`**, not the seat id — so the hero is always drawn at
+`i = 0` (bottom-centre) no matter which seat they occupied. Each seat wrapper is
+`absolute … -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1` (i.e. `left`/`top`
+address the seat's centre; 4 px between the card row and the plate). Note the replay uses
+`46 + 41·sin`, one point higher than the live table's `48 + 41·sin`.
+
+### 29.2 Hole cards — the sizes §21 omitted
+
+```
+folded   = frame.folded.contains(s.seat)
+hole     = hand.holes[s.seat]                    // may be null
+showHole = hole != null && (s.isHero || frame.revealAll)
+
+if (showHole)      → two face-UP cards, w = s.isHero ? 34 : 24
+else if (!folded)  → two face-DOWN cards, w = 24        (also 24 for the hero)
+else               → nothing at all (folded and not revealed ⇒ no card row content)
+```
+
+* **The hero's revealed cards are `w = 34`; every other seat's revealed cards are `w = 24`.**
+  Face-down placeholders are always `w = 24`, including the hero's (a hero with no entry in
+  `hand.holes` gets 24 px backs, not 34 px). Sizes flow through §28: 34 → 48 px tall / radius 4;
+  24 → 34 px tall / radius 4.
+* The card row is `flex gap-0.5` (2 px between the two cards).
+* Folded seats: the whole card row gets `opacity-25 grayscale` — 25 % opacity, full greyscale.
+  (The live table's `Seat` uses 30 %; the replay is deliberately fainter.)
+* Because `showHole` requires `frame.revealAll`, only the **final** frame reveals villains; the
+  hero's cards are visible from frame 0.
+
+### 29.3 Plate
+
+```
+width 88 px · rounded-lg · px-2 py-1 · text-center · backdrop-blur
+hero:  bg-ink-800/90  ring-2 ring-gold
+other: bg-ink-800/80  ring-1 ring-[var(--line)]
+folded: + opacity-50
+line 1: s.position           — 0.7rem, bold, var(--text)
+line 2: "{fmtBb(s.stack, hand.bb)} bb"  — mono, 0.62rem, gold-light at 90% opacity
+```
+
+`s.stack` is the seat's stack **at the start of the hand** (recorded in the hand history); it does
+not change across frames.
+
+### 29.4 Felt, centre column and controls
+
+* Stage: `relative mx-auto h-[330px] w-full`. Felt: absolutely centred, `h 80% × w 90%`,
+  `border-radius 46%/50%`, `border-[9px] border-[#241509]`, `felt-surface`, `shadow-table`
+  (the live table uses a 12 px rim; the replay's is 9 px).
+* Centre column at `left 50% / top 40%`, `-translate-x-1/2 -translate-y-1/2`, `flex-col items-center gap-2`:
+  `Pot(pot: frame.pot, bb: hand.bb, street: frame.street)` then `Board(cards: frame.board, w: 44)`.
+* Modal: `maxWidth 760`, `title "Hand #{hand.id} replay"`, `description = frame.text` (the frame
+  caption is the modal description, not a separate line).
+* `idx` is local state; a `useEffect` keyed on `hand` sets `idx = buildReplayFrames(hand).length − 1`,
+  so opening a hand lands on the **last** frame. `last = frames.length − 1`;
+  `frame = frames[min(idx, last)] ?? frames[0]`.
+* Control row (`mt-3 flex items-center gap-3`): first (`setIdx(0)`, icon 14 px rotated 180°),
+  previous (`max(0, i−1)`, icon 15 px rotated 180°), the slider (`flex-1`), next
+  (`min(last, i+1)`, icon 15 px), last (`setIdx(last)`, icon 14 px). All four are 32 × 32
+  (`h-8 w-8`) `rounded-lg bg-ink-600` buttons that render the **same** `chevron-right` icon,
+  rotated for the two "back" buttons, and go to `opacity-40` when disabled
+  (first/previous disabled at `idx == 0`, next/last at `idx >= last`).
+
+---
+
+## 30. Accessible names, tooltips and title attributes (completes §9, §17, §20, §21)
+
+Every accessible name and hover tooltip in this subsystem, verbatim. §17/§20/§21/§9 describe
+these controls but name none of them; a screen-reader user reaches several of them (icon-only
+buttons, two sliders) with no other label, so the Dart port must set `Semantics(label: …)` /
+`tooltip:` to exactly these strings.
+
+### 30.1 Inventory
+
+| Control | Source | Attribute | Verbatim string |
+|---|---|---|---|
+| Note button on a hand row in the session summary (§20 block 4) | `components/play/SessionSummaryModal.tsx:133` | `title` | `Add a note / tag` |
+| …the same button | `SessionSummaryModal.tsx:134` | `aria-label` | `Add note` |
+| Raise-size slider in the action bar (§17) | `components/table/ActionBar.tsx:213` | `ariaLabel` → slider thumb `aria-label` | `Bet size` |
+| Numeric bb field next to it (§17, 46 px wide) | `ActionBar.tsx:219` | `aria-label` | `Bet size in big blinds` |
+| "Explain last move" button (§17) | `ActionBar.tsx:99` | `title` | `Ask the coach to interpret the last action` |
+| Replay scrubber slider (§21/§29.4) | `components/play/HandReplayModal.tsx:85` | `ariaLabel` → thumb `aria-label` | `Replay step` |
+| Coach panel close "×" (§9, rendered only when `!review.blocking`) | `components/coach/EVCoachPanel.tsx:65` | `aria-label` | `Dismiss` |
+| Pot-odds marker on the equity bar (§9 step 2) | `EVCoachPanel.tsx:98` | `title` | `Need {oddsPct}%` |
+| Seat "eye" / guess button (§12.3) | `components/table/Seat.tsx:69` | `title` | `Guess {player.name}'s range` |
+| Every modal's "×" (§10, §12.4, §20, §21 — suppressed by `hideClose`) | `components/ui/Dialog.tsx:53` | `aria-label` | `Close` |
+| Any `Slider` with no `ariaLabel` passed | `components/ui/Slider.tsx:29` | `aria-label` fallback | `Value` |
+| Every `Icon` glyph | `components/ui/Icon.tsx:133` | `aria-hidden` | `"true"` — icons are decorative; the label always lives on the enclosing button |
+
+The two icon-only buttons that have **no** accessible name in the source and therefore need one
+invented in the port: the "Replay" button in the summary hand row carries the visible text
+`Replay`, so it is fine; the four replay transport buttons (first / previous / next / last in
+§29.4) render only a rotated `chevron-right` with `aria-hidden`, so they are currently unlabelled.
+Give them `First frame` / `Previous frame` / `Next frame` / `Last frame` in the port — that is new
+copy, not ported copy, and it is the only place where this document invents a user-facing string.
+
+### 30.2 The two rich tooltips (already specified in §9/§16) use a component, not `title`
+
+`components/ui/Tooltip.tsx` wraps Radix: `delayDuration 250 ms`, `side` default `top`,
+`sideOffset 6`, content panel `max-width 260 px`, `rounded-lg`, 1 px `--line-strong` border,
+`bg-ink-700`, `px-3 py-2`, `text-xs`, pop animation `.14s`, with an arrow filled `--ink-700`.
+Used for: the coach panel's **Win chance (equity)** and **Pot odds** explanations (§9), and the
+HUD's archetype card (§16, `side="bottom"`). These are hover/focus popovers, not `title`
+attributes — in Flutter they are a custom overlay, not `Tooltip(message:)`, because the content is
+rich (a bold heading line plus a paragraph).
+
+### 30.3 Slider semantics worth copying
+
+`Slider` clamps its rendered value: `safeMax = max(min, max)` and
+`value = min(safeMax, max(min, value))`, so an out-of-range `raiseTo` (e.g. `minRaiseTo > maxRaiseTo`
+when the hero is nearly all-in) never throws and never renders off-track. Track 6 px tall
+(`h-1.5`), thumb 16 × 16 with a 2 px `ink-900` border, gold fill, gold glow on focus. The Dart
+port should expose `min`, `max`, `value` and the label above to the accessibility tree
+(`Semantics(slider: true, value: …)`), matching Radix's `aria-valuemin/max/now`.

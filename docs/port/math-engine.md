@@ -481,6 +481,11 @@ return mcResult(win, tie, lose)
 ```
 Never exact (even on the river). `samples` may be less than `iters`.
 
+**NOTE — the 3000 default is the CORE default only.** The engine-client
+wrapper `engine.equityRangeVsRange` overrides it with `iters = 5000`
+(section 9.2), and every real caller passes 5000 explicitly. A Dart port that
+merges the two layers into one function must default to **5000**. See 14.2.
+
 ### 5.6 `equityVsField(hero, board, numOpponents, iters = 1500, seed?)` (multiway)
 
 Hero vs N uniformly random opponents; ties split the pot.
@@ -582,6 +587,7 @@ it is load-bearing.
 
 | function | semantics |
 |---|---|
+| `ComboKind` (exported type alias, `notation.ts:12`) | `"pair" \| "suited" \| "offsuit"` — the declared return type of `kindOf`; closed 3-member union, see 14.1 |
 | `kindOf(label)` | `label.length == 2 ? "pair" : label.endsWith("s") ? "suited" : "offsuit"` |
 | `comboCount(label)` | pair 6, suited 4, offsuit 12 |
 | `combosInSet(labels)` | sum of `comboCount` |
@@ -883,6 +889,11 @@ engine.equityRangeVsRange(heroCombos: [int,int][], boardInts: int[], villCombos:
 Note the mixed argument conventions: the first three take card STRINGS and
 LABELS; range-vs-range takes already-expanded INT combos and an int board.
 
+**NOTE — `iters = 5000` here intentionally differs from the `iters = 3000`
+default of the core `equityRangeVsRange` in section 5.5.** The wrapper never
+reads the core default; it always forwards a bound `iters`. This is the only
+default that diverges between the two layers. See 14.2.
+
 `expandRange(range, hero, board)` (TS path only): for each label, each
 `labelToCombos` pair, skip combos containing a hero or board card, map to ints.
 (The Rust path gets raw labels and filters inside.)
@@ -1154,9 +1165,11 @@ async equityRangeVsRange(heroCombos, boardInts, villCombos, iters = 5000, seed?)
 or, as a last resort, straight to `tsEquityRangeVsRange(job.heroRange,
 job.board, job.villRange, job.iters)`. In both paths `job.iters` is a concrete
 number, so **the 3000 default in `equity.ts` is unreachable through the client
-and is in fact never exercised anywhere in the repo**: the only two call sites
-of the core function both pass `iters` explicitly (`equityWorker.ts:41` forwards
-`job.iters`; `scripts/multiway_test.ts:39-40` passes `8000`), and the only call
+and is in fact never exercised anywhere in the repo**: all three call sites
+of the core function pass `iters` explicitly (`equityWorker.ts:41` and
+`engineClient.ts:118` — the sync-TS last resort, imported under the alias
+`tsEquityRangeVsRange` — both forward `job.iters`; `scripts/multiway_test.ts:39-40`
+passes `8000`), and the only call
 site of the wrapper — `src/components/study/EquityCalculator.tsx:63` — passes
 `5000` explicitly too:
 
@@ -1198,3 +1211,56 @@ Consequences for the port:
   with exactly one decimal. The `exact` branch says `matchups`, the sampled
   branch says `trials`. Range-vs-range is never exact, so it always takes the
   `trials` branch.
+
+### 14.3 Complete `iters` inventory — every default, every call site
+
+Companion table to 14.2, so a porter never has to guess which number a given
+entry point uses. **Verified exhaustively: no call site anywhere in the repo
+relies on any default — every one of the 30+ calls passes `iters` explicitly.**
+The defaults therefore only matter for a *new* Dart caller that omits the
+argument, and only the range-vs-range pair disagrees.
+
+Layer defaults (the two tables in sections 5.x and 9.2, side by side):
+
+| function | core `equity.ts` | client `engineClient.ts` | agree? |
+|---|---|---|---|
+| `equityVsRange` | `1500` (line 124) | `1500` (line 152) | yes |
+| `equityVsField` | `1500` (line 192) | `1500` (line 191) | yes |
+| `equityRangeVsRange` | `3000` (line 259) | **`5000`** (line 228) | **NO — use 5000** |
+| `equityVsRandom` | `1200` (line 317) | `1200` (line 174) | yes |
+
+Every explicit call site, by iteration count (int-combo core calls unless the
+row says `math.` / client):
+
+| iters | call sites |
+|---|---|
+| `10` | `parity_test.ts:86,87` (forces exact enumeration on both TS and Rust); `engine_test.ts:130,137`; `puzzles.ts:680,765,766,822,823` (river spots — exact, so `iters` is ignored) |
+| `80` | `botBrain.ts:397`, `puzzles.ts:482` — per-combo range narrowing, seeded with `hashSeed("<label>\|<board>")` |
+| `260` / `320` | `botBrain.ts:226` (`equityVsRange`) / `botBrain.ts:227,229` (`equityVsRandom`) — bot decision, unseeded |
+| `1200` | `MultiwayEquityTrainer.tsx:34` — `math.equityVsField(hero, board, n, 1200)` for n = 1..5 |
+| `2000` | `engine_test.ts:118,119,121,122,124,143` — determinism/seed tests |
+| `2500` | `hhImport.ts:254-258` — `equityVsRandom(hole, boardNow, 2500, hashSeed("imp\|<startedAt>\|<street>\|<amount>"))`; a leak is flagged only when `r.equity + 2 * r.se + 0.08 < needed` |
+| `3000` | `puzzles.ts:309,398,514,596` — `equityVsRange(..., 3000, hashSeed(...))`. Coincidentally equal to the core range-vs-range default, but unrelated: these are hand-vs-range calls |
+| `5000` | `EquityCalculator.tsx:57` (`math.equityVsRange`) and `:63` (`math.equityRangeVsRange`) — the study calculator, unseeded |
+| `6000` / `8000` | `engine_test.ts:107` / `engine_test.ts:111,115`, `multiway_test.ts:16,39,40` — loose statistical assertions |
+| `1600` / `4000` (+ `x4` retry) | EV coach, `gameStore.ts:223-226`: `baseIters = simQuality == "high" ? 4000 : 1600`, re-run at `baseIters * 4` with `seed + 1` when the decision is close (section 9.4) |
+
+Two things this table pins that 14.2 alone does not:
+
+* `puzzles.ts` uses `3000` for **`equityVsRange`**, not for range-vs-range. Do
+  not "unify" the two 3000s in the port — they are unrelated numbers.
+* The sync-TS last resort is a genuine third caller of the core
+  `equityRangeVsRange`: `engineClient.ts:118`, via the import alias
+  `tsEquityRangeVsRange` (`engineClient.ts:8`). It forwards `job.iters` (so the
+  3000 default stays unreachable) but drops `job.seed` — the same seed-loss bug
+  noted in section 9.1, which affects all four job kinds on that path:
+
+  ```ts
+  // engineClient.ts:110-119 — note: no seed argument on any branch
+  case "range":        return tsEquityVsRange(job.hero, job.board, job.range, job.iters);
+  case "random":       return tsEquityVsRandom(job.hero, job.board, job.iters);
+  case "field":        return tsEquityVsField(job.hero, job.board, job.opponents, job.iters);
+  case "rangeVsRange": return tsEquityRangeVsRange(job.heroRange, job.board, job.villRange, job.iters);
+  ```
+
+  The port has a single in-process path, so pass the seed on all four.

@@ -834,7 +834,7 @@ for l in stored:
 scored.sort(descending by v)            // JS sort is stable; ties keep stored order
 n = scored.length
 kept =
-  kind == "aggro" ? scored[0 : max(5, round(n * 0.45))] ++ scored[round(n * 0.85) : n]   // value region + thin bluff tail
+  kind == "aggro" ? scored[0 : max(5, round(n * 0.45))] ++ scored[round(n * 0.85) : n]   // value region + thin bluff tail; PLAIN CONCAT, never deduped — see Appendix A.5
   kind == "call"  ? scored[0 : max(6, round(n * 0.65))]                                   // middle-and-up
   /* check */     : scored[round(n * 0.12) : n]                                           // sheds the very top
 if (!kept.contains(actual) && stored.contains(actual)) kept.add(actual)
@@ -916,7 +916,7 @@ psHandName(hole, board) = PokerStars-style lower-case descriptor of evaluateCard
 | `Ace High` | `high card Ace` (`endsWith("High")` → drop the last 5 chars) |
 | anything else | lower-cased |
 
-Check order matters: `Pair of`, `Two Pair`, `Three of a Kind`, `Straight Flush`, `Straight`, `Flush`, `Full House`, `Four of a Kind`, exact `Royal Flush`, `endsWith High`.
+Check order matters: `Pair of`, `Two Pair`, `Three of a Kind`, `Straight Flush`, `Straight`, `Flush`, `Full House`, `Four of a Kind`, exact `Royal Flush`, `endsWith High`. See Appendix A.4 for the evaluator's exact `name` strings (ranks are always spelled out: `King`, never `K`) and for every prefix length.
 
 ```
 FOLD_STREET_PHRASE = { preflop: "before Flop", flop: "on the Flop", turn: "on the Turn", river: "on the River" }
