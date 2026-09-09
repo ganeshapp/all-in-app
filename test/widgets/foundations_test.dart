@@ -790,4 +790,69 @@ void main() {
       handle.dispose();
     });
   });
+
+  group('AllInButton label width (§10.1)', () {
+    /// Regression: an `expand: true` button kept the 24 pt `lg` padding on
+    /// each side, so a full-width action-row button ellipsised its own label
+    /// ("Raise to 7.5" → "Raise to …"). The padding on an expanded button is
+    /// breathing room only and must stay small.
+    testWidgets('an expanded button leaves its label the width', (
+      tester,
+    ) async {
+      await pumpAllIn(
+        tester,
+        SizedBox(
+          width: 130,
+          child: AllInButton.primary(
+            label: 'Raise to 7.5',
+            expand: true,
+            onPressed: () {},
+          ),
+        ),
+      );
+      final button = tester.getSize(find.byType(AllInButton)).width;
+      final label = tester.getSize(find.text('Raise to 7.5')).width;
+      expect(button, 130);
+      expect(
+        label,
+        greaterThanOrEqualTo(button - 2 * 8),
+        reason: 'the label must get all but 8 pt of padding a side',
+      );
+    });
+  });
+
+  group('ProgressBarThin fill (§10.1)', () {
+    /// Regression: the fill sat under the bar's own tight width constraints,
+    /// so every bar rendered 100 % full whatever its value.
+    Future<double> fillWidth(WidgetTester tester, double value) async {
+      await pumpAllIn(
+        tester,
+        SizedBox(
+          width: 200,
+          child: ProgressBarThin(value: value, max: 20, height: 8),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return tester
+          .getSize(
+            find.descendant(
+              of: find.byType(ProgressBarThin),
+              matching: find.byType(AnimatedContainer),
+            ),
+          )
+          .width;
+    }
+
+    testWidgets('is empty at 0', (tester) async {
+      expect(await fillWidth(tester, 0), 0);
+    });
+
+    testWidgets('is a quarter at 5 of 20', (tester) async {
+      expect(await fillWidth(tester, 5), closeTo(50, 0.5));
+    });
+
+    testWidgets('is full at 20 of 20', (tester) async {
+      expect(await fillWidth(tester, 20), closeTo(200, 0.5));
+    });
+  });
 }

@@ -180,11 +180,18 @@ class _AllInButtonState extends State<AllInButton> {
       AllInButtonSize.md => 15.0,
       AllInButtonSize.lg => 17.0,
     };
-    final pad = switch (widget.size) {
-      AllInButtonSize.sm => AllInSpace.md,
-      AllInButtonSize.md => AllInSpace.lg,
-      AllInButtonSize.lg => AllInSpace.xl,
-    };
+    // An `expand: true` button is sized by its parent, so this padding is only
+    // breathing room around a centred label — it must not eat the width the
+    // label needs (§4.5: "Raise to 7.5" is always the exact commit, never
+    // "Raise to …").
+    final pad =
+        widget.expand
+            ? AllInSpace.sm
+            : switch (widget.size) {
+              AllInButtonSize.sm => AllInSpace.md,
+              AllInButtonSize.md => AllInSpace.lg,
+              AllInButtonSize.lg => AllInSpace.xl,
+            };
 
     final children = <Widget>[
       if (widget.leading != null) ...[

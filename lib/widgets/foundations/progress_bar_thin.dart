@@ -49,21 +49,28 @@ class ProgressBarThin extends StatelessWidget {
               color: trackColor ?? c.ink600,
               borderRadius: radius,
             ),
-            child: LayoutBuilder(
-              builder:
-                  (context, constraints) => AnimatedContainer(
-                    duration: AllInMotion.of(
-                      context,
-                      AllInMotion.base,
-                      reduced: reducedMotion,
+            // The fill must be aligned inside loose constraints: `DecoratedBox`
+            // forwards the (tight) incoming width, which would clamp the fill
+            // back up to 100 % however small the fraction is.
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: LayoutBuilder(
+                builder:
+                    (context, constraints) => AnimatedContainer(
+                      duration: AllInMotion.of(
+                        context,
+                        AllInMotion.base,
+                        reduced: reducedMotion,
+                      ),
+                      curve: AllInMotion.ease,
+                      width: constraints.maxWidth * _fraction,
+                      height: height,
+                      decoration: BoxDecoration(
+                        color: color ?? c.gold,
+                        borderRadius: radius,
+                      ),
                     ),
-                    curve: AllInMotion.ease,
-                    width: constraints.maxWidth * _fraction,
-                    decoration: BoxDecoration(
-                      color: color ?? c.gold,
-                      borderRadius: radius,
-                    ),
-                  ),
+              ),
             ),
           ),
         ),

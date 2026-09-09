@@ -28,6 +28,7 @@ import 'package:allin/features/study/screens/range_editor_screen.dart';
 import 'package:allin/features/study/screens/study_screen.dart';
 import 'package:allin/features/study/screens/tool_screen.dart';
 import 'package:allin/services/persistence/key_value_store.dart';
+import 'package:allin/services/persistence/onboarding_store.dart';
 import 'package:allin/services/persistence/settings_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,7 +53,15 @@ void main() {
     final router = createRouter(initialLocation: location);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [routerProvider.overrideWithValue(router), ...overrides],
+        overrides: [
+          routerProvider.overrideWithValue(router),
+          // §8's gate pushes O0 over everything on a store that has never
+          // seen the tour; these tests are about routing, not first run.
+          keyValueStoreProvider.overrideWithValue(
+            MemoryKeyValueStore(const {kOnboardedKey: '1'}),
+          ),
+          ...overrides,
+        ],
         child: const AllInApp(),
       ),
     );
@@ -313,7 +322,13 @@ void main() {
     testWidgets('re-tapping the active tab signals scroll-to-top', (
       tester,
     ) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          keyValueStoreProvider.overrideWithValue(
+            MemoryKeyValueStore(const {kOnboardedKey: '1'}),
+          ),
+        ],
+      );
       addTearDown(container.dispose);
 
       tester.view.devicePixelRatio = 1;

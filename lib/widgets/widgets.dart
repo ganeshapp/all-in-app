@@ -31,11 +31,10 @@ export 'charts/mini_bars.dart';
 export 'charts/spark_line.dart';
 
 // §10.2 Navigation & shell — lib/widgets/shell/
-// export 'shell/coach_card.dart';
-// export 'shell/goal_card.dart';
-// export 'shell/plan_card.dart';
-// export 'shell/session_pill.dart';
-// export 'shell/tab_scaffold_chrome.dart';
+export 'shell/coach_card.dart';
+export 'shell/goal_card.dart';
+export 'shell/plan_card.dart';
+// `SessionPill` and the tab-bar chrome ship inside app/shell/tab_scaffold.dart.
 
 // §10.3 Table & cards — lib/widgets/table/
 export 'table/action_row.dart';
@@ -70,4 +69,13 @@ export 'coach/explainer_sheet.dart';
 export 'coach/verdict_badge.dart';
 
 // §10.6 Drills — lib/widgets/drills/
+export 'drills/answer_row.dart';
+export 'drills/drill_table.dart';
+export 'drills/feedback_panel.dart';
+export 'drills/frame_scrubber.dart';
+export 'drills/icm_banner.dart';
+export 'drills/mode_chips.dart';
+export 'drills/stacks_strip.dart';
+export 'drills/stats_strip.dart';
+
 // §10.7 Study — lib/widgets/study/

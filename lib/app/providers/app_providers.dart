@@ -10,9 +10,19 @@
 /// shell changes.
 library;
 
+import 'package:allin/features/drills/providers/review_provider.dart';
+import 'package:allin/features/play/providers/session_provider.dart';
+import 'package:allin/services/file_service.dart';
+import 'package:allin/services/haptics.dart';
 import 'package:allin/services/persistence/app_database.dart';
+import 'package:allin/services/persistence/backup_service.dart';
+import 'package:allin/services/persistence/hints_store.dart';
 import 'package:allin/services/persistence/key_value_store.dart';
+import 'package:allin/services/persistence/onboarding_store.dart';
+import 'package:allin/services/persistence/session_repository.dart';
 import 'package:allin/services/persistence/settings_store.dart';
+import 'package:allin/services/persistence/stats_repository.dart';
+import 'package:allin/services/share_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,6 +43,65 @@ final settingsStoreProvider = Provider<SettingsStore>(
 
 final themeStoreProvider = Provider<ThemeStore>(
   (ref) => ThemeStore(ref.watch(keyValueStoreProvider)),
+);
+
+/// `allin.onboarded.v1` — the O0 gate (§8) and Settings → "Run again" (§9).
+final onboardingStoreProvider = Provider<OnboardingStore>(
+  (ref) => OnboardingStore(ref.watch(keyValueStoreProvider)),
+);
+
+/// `allin.hints.v1` — the O1 coach-mark counters (§4.15, §16.4).
+final hintsStoreProvider = Provider<HintsStore>(
+  (ref) => HintsStore(ref.watch(keyValueStoreProvider)),
+);
+
+/// What actually vibrates the phone. Overridden with a
+/// [RecordingHapticDriver] in tests (§16.6 platform adapter).
+final hapticDriverProvider = Provider<HapticDriver>(
+  (ref) => const PlatformHapticDriver(),
+);
+
+/// The app's [Haptics], already gated by Settings → Haptics (§9, §11). It is
+/// rebuilt when the setting flips, so no call site has to re-read the flag.
+final hapticsProvider = Provider<Haptics>(
+  (ref) => Haptics(
+    enabled: ref.watch(hapticsEnabledProvider),
+    driver: ref.watch(hapticDriverProvider),
+  ),
+);
+
+/// Stats, hands, reads and decisions. When the database could not be opened
+/// the repository is handed a fresh (unopened) handle and pins itself to the
+/// key-value fallback on its first call (§14 "Storage · quota / DB error").
+final statsRepositoryProvider = Provider<StatsRepository>(
+  (ref) => StatsRepository(
+    database: ref.watch(appDatabaseProvider) ?? AppDatabase(),
+    store: ref.watch(keyValueStoreProvider),
+  ),
+);
+
+/// The paused-session snapshot and the ended-session table (§16.4).
+final sessionRepositoryProvider = Provider<SessionRepository>(
+  (ref) => SessionRepository(
+    database: ref.watch(appDatabaseProvider) ?? AppDatabase(),
+    store: ref.watch(keyValueStoreProvider),
+  ),
+);
+
+/// Backup export / inspect / restore behind X0 Data (§7.9, X3).
+final backupServiceProvider = Provider<BackupService>(
+  (ref) => BackupService(
+    stats: ref.watch(statsRepositoryProvider),
+    sessions: ref.watch(sessionRepositoryProvider),
+  ),
+);
+
+/// The system file picker (§7.8 import, §7.9 restore).
+final fileServiceProvider = Provider<FileService>((ref) => FileService());
+
+/// The share sheet (§4.13, §7.9).
+final shareServiceProvider = Provider<ShareService>(
+  (ref) => ShareService(files: ref.watch(fileServiceProvider)),
 );
 
 /// The live settings object. Every change persists the whole object, like the
@@ -118,6 +187,25 @@ final hapticsEnabledProvider = Provider<bool>(
   (ref) => ref.watch(settingsProvider.select((s) => s.haptics)),
 );
 
+/// A pending "open the hand-history import flow" request (T3, §7.8).
+///
+/// X0's Data group can reach T3 but must not own it: the picker → progress →
+/// result flow, the Review-queue hand-off and the "See hands" button are all
+/// `features/stats`. So Settings raises this counter and navigates to T0,
+/// which watches it and presents T3 (§2.6 does the same job for the reverse
+/// direction with `/stats/settings?section=data`).
+class ImportRequestNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  /// Ask the Stats tab to open T3 on its next build.
+  void request() => state = state + 1;
+}
+
+final importRequestProvider = NotifierProvider<ImportRequestNotifier, int>(
+  ImportRequestNotifier.new,
+);
+
 // ---------------------------------------------------------------- shell stubs
 
 /// What the shell needs to know about a live session to render `SessionPill`
@@ -142,16 +230,25 @@ class ShellSession {
   int get hashCode => Object.hash(hands, netBb);
 }
 
-/// The live session, or null when there is none. Stub: null.
-final shellSessionProvider = Provider<ShellSession?>((ref) => null);
-
-/// Whether a session snapshot exists. Stub: false.
-final hasSessionProvider = Provider<bool>(
-  (ref) => ref.watch(shellSessionProvider) != null,
+/// The live session, or null when there is none. Delegates to
+/// `features/play`'s `SessionNotifier`, so the pill, the Play-tab dot and the
+/// lobby's Resume card can never disagree (§2.1). Tests still override it with
+/// `overrideWithValue`.
+final shellSessionProvider = Provider<ShellSession?>(
+  (ref) => ref.watch(playShellSessionProvider),
 );
 
-/// Review cards due — the badge on the Drills tab. Stub: 0.
-final drillsDueBadgeProvider = Provider<int>((ref) => 0);
+/// Whether a session exists — paused or on screen (§2.1, §4.1).
+final hasSessionProvider = Provider<bool>(
+  (ref) => ref.watch(sessionProvider.select((s) => s.active)),
+);
+
+/// Review cards due — the badge on the Drills tab (§5.4). Delegates to the
+/// Drills feature's live count over `allin.leaks.v1` + `allin.review.v1`, so
+/// the badge, the Review chip's pill and the empty state can never disagree.
+final drillsDueBadgeProvider = Provider<int>(
+  (ref) => ref.watch(drillsDueCountProvider),
+);
 
 /// Bumped every time the already-active tab is tapped; a tab root watches it
 /// and scrolls itself to the top (§2.1, §12).

@@ -11,6 +11,8 @@ library;
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/app/routes.dart';
 import 'package:allin/engine/format.dart';
+import 'package:allin/features/play/providers/lobby_providers.dart';
+import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/theme/motion.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:allin/theme/typography.dart';
@@ -102,35 +104,49 @@ class TabScaffold extends ConsumerWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: IgnorePointer(
-              ignoring: hidden,
-              child: AnimatedSlide(
-                offset: hidden ? const Offset(0, 1) : Offset.zero,
-                duration: AllInMotion.of(
-                  context,
-                  hidden ? _kBarHide : _kBarShow,
-                  reduced: reduced,
-                ),
-                curve: AllInMotion.ease,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showPill)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: AllInSpace.lg,
-                          right: AllInSpace.lg,
-                          bottom: pillGap,
+            // `NavigationBar` wraps itself in a `SafeArea`, and this bar is a
+            // raw `Positioned` inside the Scaffold body, so that SafeArea also
+            // applied the *status bar* inset — padding ~50 pt of dead space
+            // above the bar and making it that much taller than
+            // [chromeHeight] says. Routes that budget against `chromeHeight`
+            // (Drills, §5.1) then lost their bottom band behind the bar.
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: IgnorePointer(
+                ignoring: hidden,
+                child: AnimatedSlide(
+                  offset: hidden ? const Offset(0, 1) : Offset.zero,
+                  duration: AllInMotion.of(
+                    context,
+                    hidden ? _kBarHide : _kBarShow,
+                    reduced: reduced,
+                  ),
+                  curve: AllInMotion.ease,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showPill)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: AllInSpace.lg,
+                            right: AllInSpace.lg,
+                            bottom: pillGap,
+                          ),
+                          child: SessionPill(
+                            session: session,
+                            onResume: () => context.go(AllInRoutes.tablePath),
+                            onEndSession: () => _endSession(context, ref),
+                          ),
                         ),
-                        child: _SessionPillSlot(session: session),
+                      _TabBar(
+                        currentIndex: navigationShell.currentIndex,
+                        due: due,
+                        session: pillFits ? null : session,
+                        onSelected: (index) => _onSelected(context, ref, index),
                       ),
-                    _TabBar(
-                      currentIndex: navigationShell.currentIndex,
-                      due: due,
-                      session: pillFits ? null : session,
-                      onSelected: (index) => _onSelected(context, ref, index),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -145,6 +161,26 @@ class TabScaffold extends ConsumerWidget {
     // `initialLocation: true` pops the branch back to its root on a re-tap.
     navigationShell.goBranch(index, initialLocation: reselected);
     if (reselected) ref.read(tabReselectProvider.notifier).bump(index);
+
+    // §2.1: when the pill is height-gated out, the Play tab carries the
+    // session — "tapping Play opens the lobby with the Resume card focused
+    // and ringed gold for 2 s".
+    if (index == 1 && ref.read(hasSessionProvider)) {
+      ref.read(resumeFocusProvider.notifier).request();
+    }
+  }
+
+  /// §4.13: the pill's swipe-left action. The session is written to the
+  /// `sessions` table and its read-only P10 opens in the current branch.
+  Future<void> _endSession(BuildContext context, WidgetRef ref) async {
+    final id = await ref.read(sessionProvider.notifier).closeCurrentSession();
+    if (!context.mounted || id == null) return;
+    final branch = switch (navigationShell.currentIndex) {
+      0 => AllInRoutes.todayPath,
+      4 => AllInRoutes.progressPath,
+      _ => AllInRoutes.lobbyPath,
+    };
+    context.push(AllInRoutes.sessionPath(branch, '$id'));
   }
 }
 
@@ -254,12 +290,22 @@ class _SessionDot extends StatelessWidget {
   }
 }
 
-/// Stand-in for `SessionPill` (§10.2) until `features/play` wires the real
-/// one: same 56 pt height, same copy, tap → the table.
-class _SessionPillSlot extends StatelessWidget {
-  const _SessionPillSlot({required this.session});
+/// `SessionPill` (§10.2): 56 pt, "● 12 hands · +4.5 bb   Resume ›", tap → the
+/// table, swipe-left → End session (§4.13).
+///
+/// It lives here rather than in `lib/widgets/shell/` because that folder does
+/// not exist yet; move it verbatim when the shell components land.
+class SessionPill extends StatelessWidget {
+  const SessionPill({
+    super.key,
+    required this.session,
+    required this.onResume,
+    required this.onEndSession,
+  });
 
   final ShellSession session;
+  final VoidCallback onResume;
+  final VoidCallback onEndSession;
 
   @override
   Widget build(BuildContext context) {
@@ -270,39 +316,61 @@ class _SessionPillSlot extends StatelessWidget {
     return Semantics(
       button: true,
       label: 'Session in progress, $hands, $net. Resume',
-      child: Material(
-        color: colors.ink800,
-        borderRadius: BorderRadius.circular(AllInRadius.lg),
-        child: InkWell(
+      // The swipe never removes the pill: it runs "End session" and springs
+      // back, so a session can never be lost by a stray gesture (§2.1).
+      child: Dismissible(
+        key: const ValueKey('session-pill'),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (_) async {
+          onEndSession();
+          return false;
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: AllInSpace.lg),
+          decoration: BoxDecoration(
+            color: colors.ink700,
+            borderRadius: BorderRadius.circular(AllInRadius.lg),
+          ),
+          child: Text(
+            'End session',
+            style: AllInText.body(15, color: colors.bad),
+          ),
+        ),
+        child: Material(
+          color: colors.ink800,
           borderRadius: BorderRadius.circular(AllInRadius.lg),
-          onTap: () => context.go(AllInRoutes.tablePath),
-          child: Container(
-            height: TabScaffold.pillHeight,
-            padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AllInRadius.lg),
-              border: Border.all(color: colors.line),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.circle, size: 8, color: colors.gold),
-                const SizedBox(width: AllInSpace.sm),
-                Expanded(
-                  child: Text(
-                    '$hands · $net',
-                    style: AllInText.mono(14, color: colors.text),
-                    overflow: TextOverflow.ellipsis,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AllInRadius.lg),
+            onTap: onResume,
+            child: Container(
+              height: TabScaffold.pillHeight,
+              padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AllInRadius.lg),
+                border: Border.all(color: colors.line),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.circle, size: 8, color: colors.gold),
+                  const SizedBox(width: AllInSpace.sm),
+                  Expanded(
+                    child: Text(
+                      '$hands · $net',
+                      style: AllInText.mono(14, color: colors.text),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                Text(
-                  'Resume ›',
-                  style: AllInText.body(
-                    15,
-                    weight: FontWeight.w600,
-                    color: colors.gold,
+                  Text(
+                    'Resume ›',
+                    style: AllInText.body(
+                      15,
+                      weight: FontWeight.w600,
+                      color: colors.gold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

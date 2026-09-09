@@ -34,7 +34,17 @@ class AllInSwitch extends StatelessWidget {
         child: Center(
           child: Switch.adaptive(
             value: value,
-            activeColor: c.gold,
+            // The thumb must contrast with the gold track — `activeColor`
+            // alone paints a gold thumb on a gold track, i.e. no thumb at all.
+            thumbColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? c.ink900 : c.text,
+            ),
+            trackOutlineColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? c.gold : c.lineStrong,
+            ),
+            activeColor: c.ink900,
             activeTrackColor: c.gold,
             inactiveTrackColor: c.ink600,
             onChanged:

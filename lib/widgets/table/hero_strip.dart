@@ -185,15 +185,23 @@ class _HeroStripState extends State<HeroStrip> {
                   child: ExcludeSemantics(child: left),
                 ),
               ),
-              const Spacer(),
-              Flexible(
+              const SizedBox(width: 12),
+              // `Expanded`, not `Spacer` + `Flexible`: two flex children would
+              // split the free space in half and push the right text off the
+              // edge of the strip.
+              Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     rightText,
                     maxLines: 1,
                     softWrap: false,
-                    overflow: TextOverflow.visible,
+                    // The price line is never ellipsised (§4.4); the hand
+                    // label may be, so it can never spill off-screen.
+                    overflow:
+                        widget.priceLine != null || widget.allIn
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
                     style: rightStyle,
                   ),

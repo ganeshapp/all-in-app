@@ -6,6 +6,7 @@ library;
 
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/app/router.dart';
+import 'package:allin/features/onboarding/widgets/onboarding_gate.dart';
 import 'package:allin/theme/app_theme.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,13 @@ class AllInApp extends ConsumerWidget {
       routerConfig: router,
       builder: (context, child) {
         final media = MediaQuery.of(context);
-        final content = child ?? const SizedBox.shrink();
+        // §8: first launch mounts O0 over the tab scaffold. The gate has to
+        // sit here, above the routed subtree, and it was never mounted — so
+        // the tour and the placement test never ran on a fresh install.
+        final content = OnboardingGate(
+          router: router,
+          child: child ?? const SizedBox.shrink(),
+        );
         return MediaQuery(
           data: media.copyWith(
             textScaler: media.textScaler.clamp(maxScaleFactor: maxTextScale),

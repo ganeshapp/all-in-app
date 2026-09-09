@@ -6,6 +6,11 @@ class AllInFonts {
   static const String display = 'Bricolage Grotesque';
   static const String body = 'Inter';
   static const String mono = 'JetBrains Mono';
+
+  /// Inter and JetBrains Mono ship without the Number Forms block, so the
+  /// sizing rail's `⅓` / `⅔` (§4.5) render as tofu without a fallback.
+  /// Bricolage Grotesque carries them, so every family falls back to it.
+  static const List<String> fallback = <String>[display];
 }
 
 class AllInText {
@@ -16,6 +21,7 @@ class AllInText {
     double? height,
   }) => TextStyle(
     fontFamily: AllInFonts.display,
+    fontFamilyFallback: AllInFonts.fallback,
     fontSize: size,
     fontWeight: weight,
     color: color,
@@ -30,6 +36,7 @@ class AllInText {
     double? height,
   }) => TextStyle(
     fontFamily: AllInFonts.body,
+    fontFamilyFallback: AllInFonts.fallback,
     fontSize: size,
     fontWeight: weight,
     color: color,
@@ -42,6 +49,7 @@ class AllInText {
     Color? color,
   }) => TextStyle(
     fontFamily: AllInFonts.mono,
+    fontFamilyFallback: AllInFonts.fallback,
     fontSize: size,
     fontWeight: weight,
     color: color,
@@ -51,6 +59,7 @@ class AllInText {
   /// Small uppercase label ("HANDS", "NET", "BB/100").
   static TextStyle eyebrow(Color color) => TextStyle(
     fontFamily: AllInFonts.body,
+    fontFamilyFallback: AllInFonts.fallback,
     fontSize: 10.5,
     fontWeight: FontWeight.w600,
     letterSpacing: 1.1,
