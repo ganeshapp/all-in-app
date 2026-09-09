@@ -90,12 +90,9 @@ class HeroStrip extends StatefulWidget {
   }) {
     final amount = '${fmtBb(toCall, bigBlind)} bb';
     if (potOdds <= 0) return 'To call $amount';
-    // Same rounding as fmtNeed: nearest half.
-    final rounded = jsRound(1 / potOdds * 2) / 2;
-    final times =
-        rounded == rounded.truncateToDouble()
-            ? jsIntString(rounded)
-            : jsToFixed(rounded, 1);
+    // The engine owns the rounding, so the strip and the coach note can never
+    // quote two different prices for the same call.
+    final times = fmtNeedTimes(potOdds);
     return short
         ? 'To call $amount · need 1 in $times'
         : 'To call $amount · need to win 1 in $times';

@@ -139,10 +139,25 @@ void main() {
       // And the same string Home would print for its card.
       final container = homeContainer(store: store);
       addTearDown(container.dispose);
-      expect(
-        container.read(planProvider).entry(PlanCardKind.lesson)!.title,
-        'Continue: Playing 3-Bet Pots',
-      );
+      final card = container.read(planProvider).entry(PlanCardKind.lesson)!;
+      expect(card.title, 'Continue: Playing 3-Bet Pots');
+      // The card says *why* this lesson, and does not open a first run with a
+      // scoreboard reading "0/31 done".
+      expect(card.subtitle, startsWith('Picked from your placement · '));
+      expect(card.subtitle, isNot(contains('0/31')));
+    });
+
+    test('after the first lesson the subtitle is §3.2\'s own string', () async {
+      final store = await _placedAt(1250);
+      final container = homeContainer(store: store);
+      addTearDown(container.dispose);
+      await container
+          .read(studyProgressProvider.notifier)
+          .complete(kAllLessonIds.first);
+
+      final card = container.read(planProvider).entry(PlanCardKind.lesson)!;
+      expect(card.subtitle, contains('1/31 done'));
+      expect(card.subtitle, isNot(contains('placement')));
     });
 
     testWidgets('S0 falls back to path order when nothing placed it', (

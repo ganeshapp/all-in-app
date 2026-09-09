@@ -82,6 +82,40 @@ void main() {
       expect(second.read(coachMarksProvider).markForThisHand, CoachMark.swipe);
     });
 
+    test('heads-up owes its own three hands (§4.2.1)', () async {
+      final store = KeyValueStore.memory();
+      final container = containerOver(store);
+      final marks = container.read(coachMarksProvider.notifier);
+
+      // Four 6-max hands: the lifetime counter is spent, and the button
+      // explainer has not been shown once, because it never applied.
+      for (var hand = 1; hand <= 4; hand++) {
+        await marks.handStarted(hand);
+      }
+      expect(container.read(coachMarksProvider).armed, isFalse);
+      expect(container.read(coachMarksProvider).headsUpArmed, isFalse);
+
+      // The user now sits heads-up for the first time.
+      for (var hand = 5; hand <= 7; hand++) {
+        await marks.handStarted(hand, headsUp: true);
+        expect(
+          container.read(coachMarksProvider).headsUpArmed,
+          isTrue,
+          reason: 'heads-up hand ${hand - 4} is still owed the explainer',
+        );
+      }
+
+      // And it stops after three, on this run and the next.
+      await marks.handStarted(8, headsUp: true);
+      expect(container.read(coachMarksProvider).headsUpArmed, isFalse);
+      final relaunched = containerOver(store);
+      expect(relaunched.read(coachMarksProvider).headsUpArmed, isFalse);
+      expect(
+        store.getJsonMap(kHintsKey)['headsUpHands'],
+        lessThanOrEqualTo(kFirstHandsHintLimit + 1),
+      );
+    });
+
     test('the same hand number never counts twice', () async {
       final container = containerOver(KeyValueStore.memory());
       final marks = container.read(coachMarksProvider.notifier);

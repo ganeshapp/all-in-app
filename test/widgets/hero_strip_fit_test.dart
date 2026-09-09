@@ -103,10 +103,11 @@ void main() {
   setUpAll(_loadFonts);
 
   // 2 bb is the ordinary case; 37.5 bb is §4.4's own worst example; 98.8 bb
-  // is a near-shove call, the widest amount the string can carry. 1 in 1.5
-  // is the widest "need" tail (`fmtNeed`'s half-step form).
+  // is a near-shove call, the widest amount the string can carry. The "need"
+  // tail is a whole count (`fmtNeed`), so its widest form is the two-digit
+  // one a cheap call produces — 0.05 → "1 in 20".
   const amounts = <int>[40, 750, 1975];
-  const potOdds = <double>[0.25, 0.31, 0.67];
+  const potOdds = <double>[0.05, 0.25, 0.31, 0.67];
 
   for (final width in const [360.0, 390.0, 430.0]) {
     for (final scale in const [1.0, 1.15, 1.3]) {

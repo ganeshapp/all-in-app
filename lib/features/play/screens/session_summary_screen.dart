@@ -562,7 +562,7 @@ class _Tiles extends StatelessWidget {
               child: StatTile(
                 label: 'Net',
                 value: '${fmtSigned(summary.netBb)} bb',
-                tone: summary.netBb >= 0 ? StatTone.good : StatTone.bad,
+                tone: StatTone.money(summary.netBb),
               ),
             ),
             const SizedBox(width: AllInSpace.sm),
@@ -570,6 +570,10 @@ class _Tiles extends StatelessWidget {
               child: StatTile(
                 label: 'bb / 100',
                 value: fmtSigned(summary.bb100),
+                // NET and bb/100 are the same signed money quantity at two
+                // scales; painting one and not the other gave one card two
+                // colour rules (§13 / principle 8).
+                tone: StatTone.money(summary.bb100),
               ),
             ),
           ],
@@ -584,9 +588,8 @@ class _Tiles extends StatelessWidget {
                 // A session with no winning hand reads "+0.0 bb"; colouring
                 // that green (and the matching "Biggest loss +0.0 bb" red)
                 // states an outcome that never happened, so a zero stays
-                // neutral — the same rule "Net" already follows.
-                tone:
-                    summary.biggestWinBb > 0 ? StatTone.good : StatTone.neutral,
+                // neutral — which is exactly what `StatTone.money` encodes.
+                tone: StatTone.money(summary.biggestWinBb),
               ),
             ),
             const SizedBox(width: AllInSpace.sm),
@@ -594,8 +597,7 @@ class _Tiles extends StatelessWidget {
               child: StatTile(
                 label: 'Biggest loss',
                 value: '${fmtSigned(summary.biggestLossBb)} bb',
-                tone:
-                    summary.biggestLossBb < 0 ? StatTone.bad : StatTone.neutral,
+                tone: StatTone.money(summary.biggestLossBb),
               ),
             ),
           ],

@@ -50,13 +50,6 @@ String heroHandLabel(List<Card>? hole) {
   return '${prettyCard(a)} ${prettyCard(b)} · ${suited ? 'suited' : 'offsuit'}';
 }
 
-/// "Ks" → "K♠" for display only; storage always keeps the engine's form.
-String prettyCard(Card card) {
-  const glyphs = {'c': '♣', 'd': '♦', 'h': '♥', 's': '♠'};
-  if (card.length < 2) return card;
-  return '${card[0]}${glyphs[card[1]] ?? card[1]}';
-}
-
 /// The made hand shown at hand-over ("Two pair, queens and sevens").
 String heroMadeHand(TableState table) {
   final hero = table.players[0];

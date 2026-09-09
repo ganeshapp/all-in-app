@@ -92,6 +92,43 @@ void main() {
     expect(find.textContaining('Blinds'), findsWidgets);
   });
 
+  testWidgets('steps to the hand either side without leaving P11', (
+    tester,
+  ) async {
+    // Reviewing a session means reading its hands in order; the only route to
+    // the next one used to be back out to the list and find your place again.
+    final fixture = StatsFixture();
+    final older = sixMaxHand(
+      startedAt: hand.startedAt - 60000,
+      id: hand.id - 1,
+    );
+    await fixture.addHand(older, netBb: -2);
+    await fixture.addHand(hand, netBb: 13);
+
+    await pumpStats(
+      tester,
+      ReplayerScreen(startedAt: hand.startedAt),
+      fixture: fixture,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(StatsCopy.replayTitle(hand.id)), findsOneWidget);
+    // Newest hand: there is nothing newer to step to.
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(StatsCopy.replayNewerHand)),
+      isNot(matchesSemantics(hasEnabledState: true, isEnabled: true)),
+    );
+
+    await tester.tap(find.text(StatsCopy.replayOlderHand));
+    await tester.pumpAndSettle();
+    expect(find.text(StatsCopy.replayTitle(older.id)), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text(StatsCopy.replayNewerHand));
+    await tester.pumpAndSettle();
+    expect(find.text(StatsCopy.replayTitle(hand.id)), findsOneWidget);
+  });
+
   testWidgets('long-pressing the pill lists every frame', (tester) async {
     final fixture = StatsFixture();
     await fixture.addHand(hand, netBb: 13);

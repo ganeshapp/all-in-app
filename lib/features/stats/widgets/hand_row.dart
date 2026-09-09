@@ -1,8 +1,15 @@
 /// One replayable hand as a row (DESIGN.md §7.5) and the swipe container it
 /// sits in.
 ///
-/// Row 56, two lines when a note exists: "Hand #41 · Today 18:10" · signed net
-/// · ✎ (gold when a note exists) · an "imported" badge when `h.imported`.
+/// Row 56, two lines when a note exists: "Hand #41 · Today 18:10" · the hero's
+/// own cards · the coach's verdict dot · signed net · ✎ (gold when a note
+/// exists) · an "imported" badge when `h.imported`.
+///
+/// The cards and the dot are what make a list of 500 rows scannable: a date
+/// and an amount do not say *which* hand this was, and nothing said which of
+/// them the coach flagged — the session log (§4.13) already shows both, and
+/// T2 is the screen where the same list is longest.
+///
 /// Swipe-left reveals "Note" and "Export" — 72 pt each, both over the 44 pt
 /// floor, and the row itself stays a tap target for the replayer.
 library;
@@ -13,7 +20,8 @@ import '../../../services/persistence.dart';
 import '../../../theme/motion.dart';
 import '../../../theme/tokens.dart';
 import '../../../theme/typography.dart';
-import '../../../engine/engine.dart' show fmtSigned;
+import '../../../engine/engine.dart' show Verdict, fmtSigned, prettyHoleCards;
+import '../../../widgets/widgets.dart' show VerdictBadge, VerdictDot;
 import '../stats_copy.dart';
 import '../stats_format.dart';
 
@@ -50,6 +58,8 @@ class HandRow extends StatelessWidget {
     final c = context.colors;
     final net = fmtSigned(hand.netBb);
     final time = handTimeLabel(hand.startedAt);
+    final cards = prettyHoleCards(hand.heroCards);
+    final Verdict? verdict = hand.worstVerdict;
 
     // The row is two targets, not one: the body opens P11 and the ✎ opens
     // P12. Only the body's own text is excluded from semantics — wrapping the
@@ -60,6 +70,8 @@ class HandRow extends StatelessWidget {
         'Hand ${hand.hand.id}',
         time,
         '$net big blinds',
+        if (cards.isNotEmpty) cards,
+        if (verdict != null) VerdictBadge.labelOf(verdict),
         if (hand.imported) StatsCopy.importedBadge,
         if (_hasNote) 'has a note',
       ].join(', '),
@@ -91,8 +103,21 @@ class HandRow extends StatelessWidget {
                                 style: AllInText.body(14, color: c.text),
                               ),
                             ),
-                            if (hand.imported) ...[
+                            if (cards.isNotEmpty) ...[
                               const SizedBox(width: AllInSpace.sm),
+                              Text(
+                                cards,
+                                maxLines: 1,
+                                style: AllInText.mono(13, color: c.textMuted),
+                              ),
+                            ],
+                            // The dot reserves its box either way, so a
+                            // column of rows keeps its alignment when only
+                            // some hands were coached.
+                            const SizedBox(width: 2),
+                            VerdictDot(verdict: verdict),
+                            if (hand.imported) ...[
+                              const SizedBox(width: AllInSpace.xs),
                               const _ImportedBadge(),
                             ],
                           ],
@@ -110,10 +135,7 @@ class HandRow extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 18),
                   child: Text(
                     '$net bb',
-                    style: AllInText.mono(
-                      14,
-                      color: hand.netBb >= 0 ? c.good : c.bad,
-                    ),
+                    style: AllInText.mono(14, color: c.money(hand.netBb)),
                   ),
                 ),
               ],

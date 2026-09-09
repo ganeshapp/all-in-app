@@ -15,7 +15,7 @@ library;
 
 import 'dart:convert';
 
-import '../../engine/engine.dart' show HHHand, ImportedHand;
+import '../../engine/engine.dart' show Card, HHHand, ImportedHand, Verdict;
 import 'notes_repository.dart';
 import 'serialization.dart';
 import 'stats_repository.dart';
@@ -52,6 +52,22 @@ class StoredHand {
 
   /// Hero net in big blinds. Imported hands report winnings only.
   double get netBb => hand.bb == 0 ? 0 : hand.heroNet / hand.bb;
+
+  /// The hero's two cards, or null when the payload never carried them (an
+  /// import that hid them, or a hand the hero was not dealt into).
+  List<Card>? get heroCards {
+    final cards = hand.holes[0];
+    return cards == null || cards.length < 2 ? null : cards;
+  }
+
+  /// The single verdict that stands for the hand in a list row: the most
+  /// severe one the coach left in `hand_json.coachNotes[]` (§16.4). Null on an
+  /// imported hand, a hand played with the coach off, and a hand where the
+  /// coach only ever said "fine".
+  Verdict? get worstVerdict => Verdict.worst(<Verdict>[
+    for (final n in coachNotes)
+      if (Verdict.fromLabelOrNull(n.verdict) case final v?) v,
+  ]);
 }
 
 class HandsRepository {

@@ -14,6 +14,7 @@ import 'package:allin/features/study/providers/study_providers.dart';
 import 'package:allin/features/study/widgets/lesson_blocks.dart';
 import 'package:allin/features/study/widgets/study_chrome.dart';
 import 'package:allin/features/study/widgets/study_path.dart';
+import 'package:allin/features/study/widgets/study_text.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:allin/theme/typography.dart';
 import 'package:allin/widgets/widgets.dart';
@@ -109,13 +110,22 @@ class ToolScreen extends ConsumerWidget {
                       ),
                       children: <Widget>[
                         if (lead != null) ...<Widget>[
-                          Text(
+                          // The lead is lesson prose, so it has to go through
+                          // the lesson's own renderer: a plain `Text` printed
+                          // "**equity**" with the asterisks and swallowed the
+                          // `{{term}}` glossary links the lesson gives the
+                          // same paragraph (§6.2, §6.6).
+                          LessonRichText(
                             lead,
                             style: AllInText.body(
                               16,
                               color: c.textMuted,
                               height: 1.55,
                             ),
+                            onOpenGlossary:
+                                (termId) => context.push(
+                                  AllInRoutes.glossaryPath(term: termId),
+                                ),
                           ),
                           const SizedBox(height: kLessonBlockGap),
                         ],

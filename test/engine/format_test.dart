@@ -104,15 +104,34 @@ void main() {
   });
 
   group('fmtNeed', () {
-    test('pinned against the TypeScript (${kFmtNeedRef.length} cases)', () {
+    // The desktop rounds to the nearest *half*, so it can print "about 1 time
+    // in 3.5". TONE.md's layer-1 rule is "chances as counts", and half a time
+    // is not a count — mobile rounds to the nearest whole instead. The two
+    // still have to agree everywhere the desktop's own answer was a count.
+    test('agrees with the TypeScript on every whole-count case '
+        '(${kFmtNeedRef.length} cases)', () {
+      var whole = 0;
       for (final (p, want) in kFmtNeedRef) {
-        expect(fmtNeed(p), want, reason: 'fmtNeed($p)');
+        final got = fmtNeed(p);
+        if (!want.contains('.')) {
+          whole += 1;
+          expect(got, want, reason: 'fmtNeed($p)');
+        } else {
+          expect(got, isNot(contains('.')), reason: 'fmtNeed($p)');
+        }
+      }
+      expect(whole, greaterThan(10));
+    });
+    test('never quotes half a time', () {
+      for (var i = 1; i <= 1000; i++) {
+        expect(fmtNeed(i / 1000), isNot(contains('.')), reason: 'p = $i/1000');
       }
     });
     test('documented examples', () {
       expect(fmtNeed(0), 'any win rate');
       expect(fmtNeed(0.25), 'about 1 time in 4');
-      expect(fmtNeed(0.3), 'about 1 time in 3.5');
+      expect(fmtNeed(0.3), 'about 1 time in 3');
+      expect(fmtNeed(0.22), 'about 1 time in 5');
       expect(fmtNeed(1 / 3), 'about 1 time in 3');
     });
   });

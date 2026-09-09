@@ -70,6 +70,17 @@ class TableContextRow extends StatelessWidget {
 
   static const double height = 48;
 
+  /// The visible label on `⏭`. The whole sentence ([skipSemanticLabel],
+  /// "Skip to my turn") does not fit beside "{name} is thinking…" at 360, so
+  /// the verb is on the felt and the sentence is on the button's semantics.
+  static const String skipLabel = 'Skip';
+
+  /// At 1.3× "Explain last move" alone eats the 360 pt row, so `⏭` falls back
+  /// to its glyph — still gold, still 44 pt, still labelled for the screen
+  /// reader. Same step §4.2.4 takes on the action row's amounts.
+  static bool dropsSkipLabel(TextScaler scaler) =>
+      scaler.scale(13) >= 13 * 1.3 - 0.01;
+
   @override
   Widget build(BuildContext context) {
     final row = SizedBox(
@@ -200,28 +211,60 @@ class _GhostExplain extends StatelessWidget {
   }
 }
 
-/// `⏭` — 44×44 (§4.5 D, and §4.5 C once the hero is out of the hand).
+/// "Skip ⏭" — ≥ 44 tall (§4.5 D, and §4.5 C once the hero is out of the hand).
+///
+/// It used to be a bare 22 pt `textMuted` glyph at the far right of an ink900
+/// row: the single most valuable control of an Auto-pace grind read as
+/// decoration, and nothing told a returning user it was there. It now gets the
+/// same gold-on-ink treatment and the same shape as "Explain last move", the
+/// live control it sits beside.
 class _SkipButton extends StatelessWidget {
   const _SkipButton({required this.label, this.onPressed});
 
+  /// The full sentence ("Skip to my turn") — the screen reader keeps it; the
+  /// row only has room for the verb.
   final String label;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final enabled = onPressed != null;
     return Semantics(
       button: true,
+      enabled: enabled,
       label: label,
-      child: SizedBox(
-        width: 44,
-        height: 44,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.40,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(AllInRadius.md),
             onTap: onPressed,
-            child: Icon(Icons.skip_next_rounded, size: 22, color: c.textMuted),
+            child: Container(
+              height: 44,
+              constraints: const BoxConstraints(minWidth: 44),
+              padding: const EdgeInsets.symmetric(horizontal: AllInSpace.sm),
+              alignment: Alignment.center,
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!TableContextRow.dropsSkipLabel(
+                      MediaQuery.textScalerOf(context),
+                    )) ...[
+                      Text(
+                        TableContextRow.skipLabel,
+                        maxLines: 1,
+                        style: AllInText.body(13, color: c.gold),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Icon(Icons.skip_next_rounded, size: 18, color: c.gold),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -178,6 +178,21 @@ extension AllInThemeContext on BuildContext {
   AllInColors get colors => Theme.of(this).extension<AllInTheme>()!.colors;
 }
 
+/// The one place the signed-money colour rule lives (§13 / principle 8).
+///
+/// A win is [AllInColors.good], a loss is [AllInColors.bad] and **zero is
+/// neither** — painting "+0.0 bb" in the win green (or "0 great plays" in it)
+/// draws the eye to nothing having happened, so a flat result is muted like
+/// any other neutral fact. Every signed money number in the app resolves its
+/// colour through here so the rule cannot drift between screens.
+extension AllInMoneyColour on AllInColors {
+  Color money(num value) => value > 0 ? good : (value < 0 ? bad : textMuted);
+
+  /// The same rule for a count whose non-zero state carries a verdict colour
+  /// ("3 mistakes" in [AllInColors.bad]): zero is not a verdict.
+  Color countTone(int value, Color nonZero) => value == 0 ? textMuted : nonZero;
+}
+
 /// The felt is a **theme-invariant dark material**: `FeltCanvas` paints
 /// [AllInColors.felt] in both themes, so everything that sits on it has to be
 /// read against dark green. Without this, Light flips seat plates to a

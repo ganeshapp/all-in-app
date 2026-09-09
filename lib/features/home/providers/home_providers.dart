@@ -72,13 +72,24 @@ final homeGoalProvider = Provider<HomeGoal>((ref) {
 /// none has ended (the row is hidden then, §3.6).
 @immutable
 class HomeLastSession {
-  const HomeLastSession({required this.id, required this.line, this.costliest});
+  const HomeLastSession({
+    required this.id,
+    required this.line,
+    required this.netBb,
+    this.costliest,
+  });
 
   /// The `sessions` row id — the read-only P10 at `/home/session/:id`.
   final int? id;
 
   /// "+12.5 bb · 41 hands · 2 mistakes".
   final String line;
+
+  /// The signed result the line opens with, carried as a number so the card
+  /// colours it through the one money helper (§13). The card used to sniff a
+  /// leading "−" off [line], which painted a flat "+0.0 bb" session in the
+  /// win green.
+  final double netBb;
 
   /// "Costliest: a river call (−3.1 bb)", or null when nothing was flagged.
   final String? costliest;
@@ -104,6 +115,7 @@ final homeLastSessionProvider = Provider<HomeLastSession?>((ref) {
       hands: row.hands,
       mistakes: row.mistakes,
     ),
+    netBb: row.netBb,
     costliest: costliest,
   );
 });

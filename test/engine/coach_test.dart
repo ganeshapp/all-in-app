@@ -347,12 +347,33 @@ void main() {
     expect(firstOpponentInHand(makeState(flopVs1)), kCoachRef['firstOpp']);
   });
 
+  // `fmtNeed` deliberately rounds the break-even price to a whole count where
+  // the desktop rounds to the nearest half (TONE.md: "chances as counts").
+  // That is the *only* licensed difference from the reference, so the
+  // comparison blanks the price token out of both sides and then checks, on
+  // our side alone, that no half ever survives.
+  final priceToken = RegExp(r'about 1 time in \d+(\.5)?');
+  Object? blankPrices(Object? v) {
+    if (v is String) return v.replaceAll(priceToken, 'about 1 time in <n>');
+    if (v is List) return v.map(blankPrices).toList();
+    if (v is Map) {
+      return {for (final e in v.entries) e.key: blankPrices(e.value)};
+    }
+    return v;
+  }
+
   group('evaluateHero matches the desktop review', () {
     for (final entry in scenarios.entries) {
       test(entry.key, () async {
         final expected = refScenarios[entry.key] as Map<String, Object?>;
         final (review, calls) = await runScenario(entry.value);
-        expect(review?.toJson(), expected['review']);
+        final got = review?.toJson();
+        expect(blankPrices(got), blankPrices(expected['review']));
+        expect(
+          got.toString(),
+          isNot(matches(RegExp(r'time in \d+\.\d'))),
+          reason: 'every break-even price is a whole count',
+        );
         expect(calls.map(callJson).toList(), expected['calls']);
       });
     }

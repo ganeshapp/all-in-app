@@ -275,7 +275,13 @@ class _VerdictBox extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('$value', style: AllInText.mono(22, color: color)),
+              // "0 great plays" in the win green and "0 thin spots" in the
+              // warn gold both drew the eye to nothing having happened. Zero
+              // is not a verdict, so it is muted like any neutral fact (§13).
+              Text(
+                '$value',
+                style: AllInText.mono(22, color: c.countTone(value, color)),
+              ),
               const SizedBox(height: 2),
               Eyebrow(label, color: c.textFaint, textAlign: TextAlign.center),
             ],
@@ -349,8 +355,7 @@ class _DecisionRow extends StatelessWidget {
     // muted; only the money is coloured, and it is coloured on the *money*
     // scale — painting "+4.5 bb" in the loss red said the opposite of what
     // the number meant.
-    final money =
-        decision.evBb < 0 ? c.bad : (decision.evBb > 0 ? c.good : c.textMuted);
+    final money = c.money(decision.evBb);
 
     return Semantics(
       button: onTap != null,

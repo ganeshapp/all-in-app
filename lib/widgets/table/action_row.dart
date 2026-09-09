@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../../engine/format.dart';
 import '../../engine/types.dart';
+import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
 import '../foundations/all_in_button.dart';
 
@@ -165,6 +166,73 @@ class ActionRow extends StatefulWidget {
 
   static final RegExp _amountRun = RegExp(r'\d[\d.]*(?: bb)?$');
 
+  /// The width a commit label needs: the text plus the button's own 8 pt of
+  /// breathing room each side, never under the 44 pt hit floor (§12).
+  @visibleForTesting
+  static double labelWidth(String label, TextScaler scaler) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: AllInText.body(17, weight: FontWeight.w600, height: 1.1),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    // 4 pt of slack: the row's own `TextPainter` and the one inside the
+    // button do not agree to the last tenth (theme merging, hinting), and a
+    // label laid out at *exactly* its intrinsic width still reports as
+    // overflowing. Cheaper than an ellipsis on the commit button.
+    return math.max(44.0, painter.width + 2 * AllInSpace.sm + 4);
+  }
+
+  /// §4.5's 28 / 34 / 38 split, **as a floor rather than a straitjacket**.
+  ///
+  /// The percentages are how the row is *meant* to look; the promise they
+  /// exist to keep is the one §4.5 states outright — "the label is always the
+  /// exact commit", never "Raise to …". Once the amounts carry their unit
+  /// ("Raise to 2.7 bb", so a beginner knows 2.7 of what), 38 % of a 328 pt
+  /// row is 119 pt for a 136 pt label and the gold button ellipsised at every
+  /// supported width. So each button gets **the larger of its share and what
+  /// its label needs**, and whatever is left over is handed back in the
+  /// spec's own proportions — at 430 the result is exactly 28 / 34 / 38 again.
+  ///
+  /// Returns null when even the natural widths do not fit, which is the
+  /// caller's signal to shorten a label ([dropAmounts]' ladder).
+  @visibleForTesting
+  static List<double>? commitWidths({
+    required double content,
+    required List<double> natural,
+    required List<double> shares,
+  }) {
+    final total = natural.fold<double>(0, (a, b) => a + b);
+    if (total > content + 0.01) return null;
+    final want = <double>[
+      for (var i = 0; i < natural.length; i++)
+        math.max(natural[i], shares[i] * content),
+    ];
+    var wanted = want.fold<double>(0, (a, b) => a + b);
+    if (wanted <= content) {
+      // Hand the surplus back in the spec's proportions.
+      final surplus = content - wanted;
+      return <double>[
+        for (var i = 0; i < want.length; i++) want[i] + surplus * shares[i],
+      ];
+    }
+    // Over budget only because of the floors: take the excess back from the
+    // buttons that still have slack above their own label.
+    final slack = <double>[
+      for (var i = 0; i < want.length; i++) want[i] - natural[i],
+    ];
+    final slackTotal = slack.fold<double>(0, (a, b) => a + b);
+    final excess = wanted - content;
+    if (slackTotal <= 0) return natural;
+    return <double>[
+      for (var i = 0; i < want.length; i++)
+        want[i] - excess * (slack[i] / slackTotal),
+    ];
+  }
+
   @override
   State<ActionRow> createState() => _ActionRowState();
 }
@@ -214,14 +282,14 @@ class _ActionRowState extends State<ActionRow> {
 
   String _bb(num chips) => fmtBb(chips, widget.bigBlind);
 
-  String _callLabel(LegalActions legal, bool dropAmounts) {
+  String _callLabel(LegalActions legal, bool dropAmounts, {bool units = true}) {
     if (legal.canCheck) return 'Check';
     final commitsStack =
         widget.heroStack > 0 && legal.callAmount >= widget.heroStack;
     if (dropAmounts) return commitsStack ? 'Call all-in' : 'Call';
-    return commitsStack
-        ? 'Call all-in ${_bb(legal.callAmount)} bb'
-        : 'Call ${_bb(legal.callAmount)} bb';
+    final amount =
+        units ? '${_bb(legal.callAmount)} bb' : _bb(legal.callAmount);
+    return commitsStack ? 'Call all-in $amount' : 'Call $amount';
   }
 
   /// §4.5 / DESIGN.md:1839 write these as "Call 2.5 bb" / "Raise to 7.5 bb".
@@ -229,14 +297,19 @@ class _ActionRowState extends State<ActionRow> {
   /// dropped it — inside the same row, next to a felt that says "Pot 4 bb". A
   /// beginner reading "Raise to 2.7" has no idea 2.7 of what. The narrow-width
   /// `dropAmounts` fallback (§4.2.3) still drops the number entirely.
-  String _raiseLabel(LegalActions legal, bool dropAmounts) {
+  String _raiseLabel(
+    LegalActions legal,
+    bool dropAmounts, {
+    bool units = true,
+  }) {
     final to = widget.raiseTo ?? legal.minRaiseTo;
     final isAllIn = to >= legal.maxRaiseTo;
-    if (isAllIn) return dropAmounts ? 'All-in' : 'All-in ${_bb(to)} bb';
+    final amount = units ? '${_bb(to)} bb' : _bb(to);
+    if (isAllIn) return dropAmounts ? 'All-in' : 'All-in $amount';
     if (legal.canBet && legal.toCall == 0) {
-      return dropAmounts ? 'Bet' : 'Bet ${_bb(to)} bb';
+      return dropAmounts ? 'Bet' : 'Bet $amount';
     }
-    return dropAmounts ? 'Raise' : 'Raise to ${_bb(to)} bb';
+    return dropAmounts ? 'Raise' : 'Raise to $amount';
   }
 
   @override
@@ -313,90 +386,136 @@ class _ActionRowState extends State<ActionRow> {
     if (legal == null) return const SizedBox.shrink();
 
     final scaler = MediaQuery.textScalerOf(context);
-    final drop = ActionRow.dropAmounts(scaler);
     final showFold = legal.canFold && legal.toCall > 0;
     final showRaise =
         state == ActionRowState.heroToAct && (legal.canBet || legal.canRaise);
 
-    final callLabel = _callLabel(legal, drop);
-    final call = AllInButton(
-      label: callLabel,
-      variant: AllInButtonVariant.secondary,
-      size: AllInButtonSize.lg,
-      expand: true,
-      semanticLabel:
-          legal.canCheck ? 'Check' : 'Call ${_bb(legal.callAmount)} big blinds',
-      onPressed: widget.onCheckCall,
-      enableHaptics: widget.enableHaptics,
-      reducedMotion: widget.reducedMotion,
-    );
+    // §4.5's shares for the shape this row is in.
+    final shares = <double>[
+      if (showFold) 0.28,
+      if (showFold && showRaise)
+        0.34
+      else if (showRaise)
+        0.45
+      else if (showFold)
+        0.72
+      else
+        1.0,
+      if (showRaise) (showFold ? 0.38 : 0.55),
+    ];
 
-    final children = <Widget>[];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gaps = ActionRow.gap * (shares.length - 1);
+        final content =
+            constraints.maxWidth.isFinite
+                ? constraints.maxWidth - gaps
+                : double.infinity;
 
-    if (showFold) {
-      children.add(
-        Expanded(
-          flex: 28,
-          child: AllInButton(
-            label: 'Fold',
-            variant: AllInButtonVariant.danger,
+        // The label ladder (§4.2.4 / §4.5): the full label, then the same
+        // amounts without their unit, then no amounts at all. The first rung
+        // that fits is the one rendered, so the exact commit survives as long
+        // as it possibly can.
+        var drop = ActionRow.dropAmounts(scaler);
+        var units = true;
+        List<double>? widths;
+        var callLabel = _callLabel(legal, drop);
+        var raiseLabel = _raiseLabel(legal, drop);
+
+        List<double> naturalFor(String call, String raise) => <double>[
+          if (showFold) ActionRow.labelWidth('Fold', scaler),
+          ActionRow.labelWidth(call, scaler),
+          if (showRaise) ActionRow.labelWidth(raise, scaler),
+        ];
+
+        if (content.isFinite) {
+          for (final rung in const <int>[0, 1, 2]) {
+            drop = rung == 2 || ActionRow.dropAmounts(scaler);
+            units = rung == 0;
+            callLabel = _callLabel(legal, drop, units: units);
+            raiseLabel = _raiseLabel(legal, drop, units: units);
+            widths = ActionRow.commitWidths(
+              content: content,
+              natural: naturalFor(callLabel, raiseLabel),
+              shares: shares,
+            );
+            if (widths != null) break;
+          }
+          // Nothing fits even stripped: render the shortest form and let the
+          // buttons share what there is.
+          widths ??= <double>[for (final share in shares) share * content];
+        }
+
+        final isAllIn = raiseLabel.startsWith('All-in');
+        if (showRaise) {
+          if (isAllIn &&
+              _lastRaiseLabel != null &&
+              !_lastRaiseLabel!.startsWith('All-in')) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _armAllInGuard(),
+            );
+          }
+          _lastRaiseLabel = raiseLabel;
+        } else {
+          _lastRaiseLabel = null;
+        }
+
+        final buttons = <Widget>[
+          if (showFold)
+            AllInButton(
+              label: 'Fold',
+              variant: AllInButtonVariant.danger,
+              size: AllInButtonSize.lg,
+              expand: true,
+              semanticLabel: 'Fold',
+              // The button stays live-looking; the guard swallows the tap.
+              onPressed: () {
+                if (_guarded) return;
+                widget.onFold?.call();
+              },
+              enableHaptics: widget.enableHaptics,
+              reducedMotion: widget.reducedMotion,
+            ),
+          AllInButton(
+            label: callLabel,
+            variant: AllInButtonVariant.secondary,
             size: AllInButtonSize.lg,
             expand: true,
-            semanticLabel: 'Fold',
-            // The button stays live-looking; the guard swallows the tap.
-            onPressed: () {
-              if (_guarded) return;
-              widget.onFold?.call();
-            },
+            semanticLabel:
+                legal.canCheck
+                    ? 'Check'
+                    : 'Call ${_bb(legal.callAmount)} big blinds',
+            onPressed: widget.onCheckCall,
             enableHaptics: widget.enableHaptics,
             reducedMotion: widget.reducedMotion,
           ),
-        ),
-      );
-    }
+          if (showRaise)
+            _RaiseButton(
+              label: raiseLabel,
+              semanticLabel: '$raiseLabel big blinds',
+              onPressed: () {
+                if (isAllIn && _allInGuarded) return;
+                widget.onBetRaise?.call();
+              },
+              onAmountTap: widget.onRaiseAmountTap,
+              onLongPress: widget.onRaiseLongPress,
+              enableHaptics: widget.enableHaptics,
+              reducedMotion: widget.reducedMotion,
+            ),
+        ];
 
-    if (showRaise) {
-      final raiseLabel = _raiseLabel(legal, drop);
-      final isAllIn = raiseLabel.startsWith('All-in');
-      if (isAllIn &&
-          _lastRaiseLabel != null &&
-          !_lastRaiseLabel!.startsWith('All-in')) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _armAllInGuard());
-      }
-      _lastRaiseLabel = raiseLabel;
-
-      if (children.isNotEmpty) {
-        children.add(const SizedBox(width: ActionRow.gap));
-      }
-      children.add(Expanded(flex: showFold ? 34 : 45, child: call));
-      children.add(const SizedBox(width: ActionRow.gap));
-      children.add(
-        Expanded(
-          flex: showFold ? 38 : 55,
-          child: _RaiseButton(
-            label: raiseLabel,
-            semanticLabel: '$raiseLabel big blinds',
-            onPressed: () {
-              if (isAllIn && _allInGuarded) return;
-              widget.onBetRaise?.call();
-            },
-            onAmountTap: widget.onRaiseAmountTap,
-            onLongPress: widget.onRaiseLongPress,
-            enableHaptics: widget.enableHaptics,
-            reducedMotion: widget.reducedMotion,
-          ),
-        ),
-      );
-    } else {
-      _lastRaiseLabel = null;
-      if (children.isNotEmpty) {
-        children.add(const SizedBox(width: ActionRow.gap));
-      }
-      // Facing an all-in (or B): Call grows to fill the remaining width.
-      children.add(Expanded(flex: showFold ? 72 : 100, child: call));
-    }
-
-    return Row(children: children);
+        final children = <Widget>[];
+        for (var i = 0; i < buttons.length; i++) {
+          if (i > 0) children.add(const SizedBox(width: ActionRow.gap));
+          children.add(
+            widths == null
+                ? Expanded(flex: (shares[i] * 100).round(), child: buttons[i])
+                : SizedBox(width: widths[i], child: buttons[i]),
+          );
+        }
+        return Row(children: children);
+      },
+    );
   }
 }
 

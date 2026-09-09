@@ -57,6 +57,34 @@ Future<StatsFixture> _seeded() async {
 Color? _rowMoneyColour(WidgetTester tester, String text) =>
     tester.widget<Text>(find.text(text).first).style?.color;
 
+/// The colour of a `StatTile`'s big mono value, found by its label.
+Color? _tileValueColour(WidgetTester tester, String label) {
+  final tile = find.ancestor(
+    of: find.text(label.toUpperCase()),
+    matching: find.byType(StatTile),
+  );
+  final value = tester.widget<StatTile>(tile.first).value;
+  return tester
+      .widget<Text>(find.descendant(of: tile.first, matching: find.text(value)))
+      .style
+      ?.color;
+}
+
+/// The colour of a coaching-review verdict count, found by its eyebrow.
+Color? _verdictColour(WidgetTester tester, String label) {
+  final box =
+      find
+          .ancestor(
+            of: find.text(label.toUpperCase()),
+            matching: find.byType(Column),
+          )
+          .first;
+  return tester
+      .widget<Text>(find.descendant(of: box, matching: find.byType(Text)).first)
+      .style
+      ?.color;
+}
+
 void main() {
   testWidgets('first run shows every card\'s verbatim empty line', (
     tester,
@@ -157,6 +185,48 @@ void main() {
     final facts = StatsCopy.decisionNumbers(equity: 0.17, potOdds: 0.25);
     expect(_rowMoneyColour(tester, facts), colours.textMuted);
     expect(_rowMoneyColour(tester, StatsCopy.decisionAmount(-2)), colours.bad);
+  });
+
+  testWidgets('a zero is never painted as a win, a loss or a verdict', (
+    tester,
+  ) async {
+    // §13 / principle 8: "+0.0 bb" in the win green and "0 GREAT PLAYS" in it
+    // drew the eye to nothing having happened. Zero is a neutral fact.
+    final fixture = StatsFixture();
+    await fixture.addHand(sixMaxHand(), netBb: 0, position: Position.btn);
+    for (var i = 0; i < 4; i++) {
+      await fixture.addDecision(_decision('mistake', 'fold', i));
+    }
+    await pumpStats(tester, const ProgressScreen(), fixture: fixture);
+    await _settle(tester);
+
+    final colours = AllInColors.dark;
+    // The NET tile and the win-rate tile both read zero here.
+    expect(_tileValueColour(tester, StatsCopy.kpiNet), colours.textMuted);
+    expect(_tileValueColour(tester, StatsCopy.kpiWinRate), colours.textMuted);
+
+    // Only the verdict that actually happened keeps its colour.
+    expect(_verdictColour(tester, StatsCopy.verdictMistakes), colours.bad);
+    expect(
+      _verdictColour(tester, StatsCopy.verdictThinSpots),
+      colours.textMuted,
+    );
+    expect(
+      _verdictColour(tester, StatsCopy.verdictGreatPlays),
+      colours.textMuted,
+    );
+  });
+
+  test('the money helper makes zero neutral in both directions', () {
+    final colours = AllInColors.dark;
+    expect(colours.money(4.5), colours.good);
+    expect(colours.money(-0.4), colours.bad);
+    expect(colours.money(0), colours.textMuted);
+    expect(colours.countTone(0, colours.good), colours.textMuted);
+    expect(colours.countTone(2, colours.good), colours.good);
+    expect(StatTone.money(1), StatTone.good);
+    expect(StatTone.money(-1), StatTone.bad);
+    expect(StatTone.money(0), StatTone.muted);
   });
 
   test('the coaching-review copy has no unglossed shorthand', () {

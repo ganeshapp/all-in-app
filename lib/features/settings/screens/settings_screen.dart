@@ -44,41 +44,41 @@ abstract final class SettingsCopy {
       'glance — recommended, and essential if you have trouble telling red '
       'suits apart.';
 
-  /// The caption that explains the four-colour deck, with each suit glyph in
-  /// the colour it names.
+  /// The caption that explains the four-colour deck, with each suit glyph
+  /// drawn the way the deck draws it — on a card face.
   ///
   /// As a flat string the caption contradicted itself: "♦ blue" was printed
   /// with a red diamond and "♣ green" with a grey club, both disagreeing with
-  /// the card preview sitting beside them. `♥` also fell through to the
-  /// system emoji font — glossy, larger and baseline-shifted next to three
-  /// flat neighbours — so the glyphs carry U+FE0E (VARIATION SELECTOR-15) to
-  /// force text presentation. Colours come from
+  /// the card preview sitting beside them.
+  ///
+  /// Colouring the glyphs straight onto the row does not work either: the
+  /// deck's inks are picked to read on a white card, and against the row's own
+  /// background ♠ (#1B2230) lands at 1.1:1 in Dark and ♣ (#2FAA66) at 2.5:1
+  /// in Light — §13 asks for 4.5:1, and an invisible spade teaches nothing.
+  /// So each glyph sits on a small card face: legible in either theme, and
+  /// literally what the user will see on the table. The inks come from
   /// `PlayingCardView.suitColor`, so the caption cannot drift from the deck.
   static List<InlineSpan> fourColourSpans({required bool on}) {
-    const vs15 = '\uFE0E';
-    Color colourOf(String suit) =>
-        PlayingCardView.suitColor(suit, fourColorDeck: on);
-    TextSpan glyph(String suit, String symbol, String name) => TextSpan(
-      children: [
-        TextSpan(
-          text: '$symbol$vs15 ',
-          style: TextStyle(color: colourOf(suit)),
-        ),
-        TextSpan(text: name),
-      ],
+    WidgetSpan glyph(String suit, String symbol) => WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: SuitSwatch(
+        symbol: symbol,
+        color: PlayingCardView.suitColor(suit, fourColorDeck: on),
+      ),
     );
     return <InlineSpan>[
-      glyph('s', '♠', 'black'),
-      const TextSpan(text: ' · '),
-      glyph('h', '♥', 'red'),
-      const TextSpan(text: ' · '),
-      glyph('d', '♦', on ? 'blue' : 'red'),
-      const TextSpan(text: ' · '),
-      glyph('c', '♣', on ? 'green' : 'black'),
-      const TextSpan(
+      glyph('s', '♠'),
+      const TextSpan(text: ' black · '),
+      glyph('h', '♥'),
+      const TextSpan(text: ' red · '),
+      glyph('d', '♦'),
+      TextSpan(text: on ? ' blue · ' : ' red · '),
+      glyph('c', '♣'),
+      TextSpan(
         text:
-            '. Makes suits unmistakable at a glance — recommended, and '
-            'essential if you have trouble telling red suits apart.',
+            '${on ? ' green' : ' black'}. Makes suits unmistakable at a '
+            'glance — recommended, and essential if you have trouble telling '
+            'red suits apart.',
       ),
     ];
   }

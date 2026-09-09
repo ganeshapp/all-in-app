@@ -270,3 +270,41 @@ class SettingNote extends StatelessWidget {
     ),
   );
 }
+
+/// One suit glyph on a miniature card face, for the four-colour-deck caption
+/// (§9). The deck's suit inks are chosen to read on a white card, so this is
+/// the only backdrop on which all four clear §13's 4.5:1 in *both* themes —
+/// straight on the row, Dark's ♠ sits at 1.1:1 and Light's ♣ at 2.5:1.
+///
+/// U+FE0E (VARIATION SELECTOR-15) keeps ♥ and ♦ in the text font: without it
+/// they fall through to the system emoji font and render glossy, larger and
+/// baseline-shifted beside their two flat neighbours.
+class SuitSwatch extends StatelessWidget {
+  const SuitSwatch({super.key, required this.symbol, required this.color});
+
+  final String symbol;
+  final Color color;
+
+  /// The caption is 13 pt; the glyph rides just under it so the swatch does
+  /// not out-weigh the sentence it illustrates.
+  static const double fontSize = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    // A `WidgetSpan` child does not inherit the paragraph's scaling, so the
+    // swatch scales itself and grows with the caption at 1.3× (§13).
+    final size = MediaQuery.textScalerOf(context).scale(fontSize);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: size * 0.2, vertical: size / 8),
+      decoration: BoxDecoration(
+        color: AllInColors.cardFaceTop,
+        borderRadius: BorderRadius.circular(AllInRadius.sm / 2),
+      ),
+      child: Text(
+        '$symbol︎',
+        textScaler: TextScaler.noScaling,
+        style: TextStyle(color: color, fontSize: size, height: 1.1),
+      ),
+    );
+  }
+}

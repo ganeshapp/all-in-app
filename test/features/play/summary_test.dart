@@ -327,6 +327,39 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('every money tile follows the one signed-money rule', (
+      tester,
+    ) async {
+      // §13 / principle 8: NET and BB/100 are the same signed quantity, so
+      // they cannot get two colour rules in one card, and a flat zero is not
+      // a win. `StatTone.money` is the single place that rule lives.
+      final container = summaryContainer();
+      playSession(container, hands: 3);
+      container.read(sessionProvider.notifier).endSession();
+
+      await warmSummary(tester, container);
+      await pumpApp(
+        tester,
+        container: container,
+        location: AllInRoutes.summaryTablePath,
+      );
+      await settleFrames(tester);
+
+      final data = container.read(sessionSummaryProvider(null)).value!;
+      final expected = <String, num>{
+        'NET': data.netBb,
+        'BB / 100': data.bb100,
+        'BIGGEST WIN': data.biggestWinBb,
+        'BIGGEST LOSS': data.biggestLossBb,
+      };
+      for (final MapEntry(key: label, value: v) in expected.entries) {
+        final tile = tester.widget<StatTile>(
+          find.ancestor(of: find.text(label), matching: find.byType(StatTile)),
+        );
+        expect(tile.tone, StatTone.money(v), reason: label);
+      }
+    });
+
     testWidgets('both disclosure rows are there and open to a written line', (
       tester,
     ) async {

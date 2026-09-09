@@ -8,6 +8,7 @@
 /// the seat plate's single-detector eye split (§4.3).
 library;
 
+import 'dart:io';
 import 'dart:math';
 
 import 'package:allin/engine/engine.dart';
@@ -15,7 +16,19 @@ import 'package:allin/theme/app_theme.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// The bundled Inter, for the tests that measure a label's width.
+Future<void> _loadInter() async {
+  final loader = FontLoader('Inter');
+  for (final weight in const ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    final file = File('assets/fonts/Inter-$weight.ttf');
+    if (!file.existsSync()) continue;
+    loader.addFont(Future.value(ByteData.sublistView(file.readAsBytesSync())));
+  }
+  await loader.load();
+}
 
 const Size _phone390 = Size(390, 844);
 
@@ -158,6 +171,12 @@ Widget _sixMaxFelt(TableState state, _FeltSpec spec) {
 }
 
 void main() {
+  // Several groups here assert what fits in a fixed width, and the action row
+  // now *measures* its own labels to size its buttons (§4.5's exact commit is
+  // never ellipsised). Those assertions only mean anything in the font the app
+  // ships: the framework's 1-em-per-glyph fallback is ~15 % wider.
+  setUpAll(_loadInter);
+
   group('the felt is a fixed dark material in both themes', () {
     // The felt is theme-invariant (`FeltCanvas` paints AllInColors.felt in
     // both themes), so everything that sits on it must read against dark
@@ -979,7 +998,10 @@ void main() {
       await pumpTable(
         tester,
         const SizedBox(
-          width: 200,
+          // Narrow enough that the stack cannot fit beside the price line in
+          // the shipped font, wide enough that §4.4's "bare position pill"
+          // fallback is still the answer.
+          width: 240,
           child: HeroStrip(
             position: Position.bb,
             stack: 2000,

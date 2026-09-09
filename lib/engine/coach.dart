@@ -39,6 +39,37 @@ enum Verdict {
 
   static Verdict fromLabel(String label) =>
       Verdict.values.firstWhere((v) => v.label == label);
+
+  /// Null rather than a throw, for labels read back off disk.
+  static Verdict? fromLabelOrNull(String? label) {
+    for (final v in Verdict.values) {
+      if (v.label == label) return v;
+    }
+    return null;
+  }
+
+  /// How loudly a verdict asks for attention when a whole hand is reduced to
+  /// one mark in a list. "Reasonable" and a bot read say nothing worth one.
+  int get severity => switch (this) {
+    Verdict.mistake => 3,
+    Verdict.thin => 2,
+    Verdict.great => 1,
+    Verdict.ok || Verdict.info => 0,
+  };
+
+  /// The single verdict that stands for a whole hand — the most severe one it
+  /// collected — or null when none of them is worth a mark.
+  static Verdict? worst(Iterable<Verdict> verdicts) {
+    Verdict? worst;
+    var best = 0;
+    for (final v in verdicts) {
+      if (v.severity > best) {
+        best = v.severity;
+        worst = v;
+      }
+    }
+    return worst;
+  }
 }
 
 /// `CoachReview.kind`.

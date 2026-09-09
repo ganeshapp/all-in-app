@@ -10,6 +10,7 @@ import 'package:allin/features/settings/screens/settings_screen.dart';
 import 'package:allin/features/stats/providers/stats_metrics.dart';
 import 'package:allin/features/stats/providers/stats_providers.dart';
 import 'package:allin/services/persistence.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -198,6 +199,28 @@ void main() {
       // P10's own `dispose` builds an `AnimationController` when it is torn
       // down un-shaken, which would fail this test for another feature's bug.
       expect(pushedLocation(router), '/home/session/4');
+    });
+
+    testWidgets('the last-session result follows the one money colour rule', (
+      tester,
+    ) async {
+      // §13: a win is green, a loss is red and a flat session is neither. The
+      // card used to sniff a leading "−" off the string, so "+0.0 bb" — a
+      // session where nothing happened — was painted in the win green.
+      final colours = AllInColors.dark;
+      Future<Color?> colourOf(double netBb) async {
+        await pumpHome(
+          tester,
+          container: homeContainer(sessions: [endedSession(netBb: netBb)]),
+        );
+        final line = find.textContaining('bb · 41 hands');
+        await reveal(tester, line);
+        return tester.widget<Text>(line).style?.color;
+      }
+
+      expect(await colourOf(12.5), colours.good);
+      expect(await colourOf(-6), colours.bad);
+      expect(await colourOf(0), colours.textMuted);
     });
 
     testWidgets('the heatmap opens Progress', (tester) async {

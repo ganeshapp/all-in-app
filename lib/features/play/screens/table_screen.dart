@@ -108,7 +108,9 @@ class _TableScreenState extends ConsumerState<TableScreen>
     // so the O1 counter is bumped for the hand already on the felt.
     final table = ref.read(sessionProvider).table;
     if (table != null) {
-      ref.read(coachMarksProvider.notifier).handStarted(table.handNumber);
+      ref
+          .read(coachMarksProvider.notifier)
+          .handStarted(table.handNumber, headsUp: table.config.seats == 2);
     }
     if (ref.read(sessionProvider).resumeCaption != null) _armCaptionTimer();
   }
@@ -348,7 +350,9 @@ class _TableScreenState extends ConsumerState<TableScreen>
     final table = after.table;
     if (table == null) return;
     if (before?.table?.handNumber != table.handNumber) {
-      ref.read(coachMarksProvider.notifier).handStarted(table.handNumber);
+      ref
+          .read(coachMarksProvider.notifier)
+          .handStarted(table.handNumber, headsUp: table.config.seats == 2);
       setState(() {
         _handOverAt = null;
         _raiseSignature = null;
@@ -856,9 +860,11 @@ class _TickerBand extends ConsumerWidget {
       paused: session.paused && session.active,
     );
 
-    // §4.2.1: the first three heads-up hands explain the button instead.
+    // §4.2.1: the first three heads-up hands explain the button instead — the
+    // first three *heads-up* hands, not the first three of the user's life,
+    // which a 6-max opener had already spent.
     final headsUpHint =
-        session.options.seats == 2 && marks.armed
+        session.options.seats == 2 && marks.headsUpArmed
             ? kHeadsUpFirstHandsTicker
             : null;
 

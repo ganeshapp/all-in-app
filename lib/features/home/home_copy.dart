@@ -107,12 +107,25 @@ abstract final class HomeCopy {
   // 3 · Continue lesson (§3.2).
   static String lessonTitle(String title) => 'Continue: $title';
 
+  /// §3.2 card 3's subtitle. [fromPlacement] is the first-day case, where the
+  /// lesson was chosen by the placement test rather than by path order.
+  ///
+  /// The spec's string ends in "{done}/31 done", which on the first day reads
+  /// "0/31 done" — a scoreboard of nothing, on the one card that is meant to
+  /// say "start here, because of what you just told us". So the placement
+  /// variant swaps that clause for the reason the lesson is on screen and
+  /// leaves the rest of the line alone; every later day is the spec's string
+  /// verbatim.
   static String lessonSubtitle({
     required int level,
     required int minutes,
     required int done,
     required int total,
-  }) => 'Level $level · $minutes min read · $done/$total done';
+    bool fromPlacement = false,
+  }) =>
+      fromPlacement
+          ? 'Picked from your placement · Level $level · $minutes min read'
+          : 'Level $level · $minutes min read · $done/$total done';
 
   /// §14 "Study · all 31 complete".
   static const String lessonCompleteTitle =

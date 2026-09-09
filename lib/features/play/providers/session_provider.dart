@@ -139,6 +139,14 @@ class SessionCounters {
   }
 }
 
+/// The most severe verdict in [reviews], or null when the coach only ever
+/// said "fine" (`ok` / `info` carry no dot — a list where every row is marked
+/// is a list where nothing is marked).
+Verdict? worstVerdict(Iterable<CoachReview> reviews) => Verdict.worst([
+  for (final r in reviews)
+    if (r.kind == ReviewKind.decision) r.verdict,
+]);
+
 /// Everything the table, the lobby and the shell read.
 @immutable
 class SessionState {
@@ -149,6 +157,7 @@ class SessionState {
     this.startedAt = 0,
     this.counters = const SessionCounters(),
     this.history = const [],
+    this.handVerdicts = const {},
     this.thinking = false,
     this.paused = false,
     this.surfacesOpen = 0,
@@ -183,6 +192,13 @@ class SessionState {
 
   /// This session's finished hands, oldest first (P2's Log and P10's rows).
   final List<HHHand> history;
+
+  /// `hand.startedAt` → the worst verdict the coach gave in that hand, for the
+  /// hand list's verdict dot (§4.13). `reviewLog` is cleared at every deal and
+  /// `HHHand` carries no notes, so the sheet has nowhere else to read it from.
+  /// Session-scoped and deliberately not in the snapshot: the dots are a
+  /// live-session affordance, and Stats reads the persisted `coachNotes[]`.
+  final Map<int, Verdict> handVerdicts;
 
   /// Auto pace: a bot's think delay is running.
   final bool thinking;
@@ -248,6 +264,7 @@ class SessionState {
     int? startedAt,
     SessionCounters? counters,
     List<HHHand>? history,
+    Map<int, Verdict>? handVerdicts,
     bool? thinking,
     bool? paused,
     int? surfacesOpen,
@@ -279,6 +296,7 @@ class SessionState {
     startedAt: startedAt ?? this.startedAt,
     counters: counters ?? this.counters,
     history: history ?? this.history,
+    handVerdicts: handVerdicts ?? this.handVerdicts,
     thinking: thinking ?? this.thinking,
     paused: paused ?? this.paused,
     surfacesOpen: surfacesOpen ?? this.surfacesOpen,
@@ -734,6 +752,7 @@ class SessionNotifier extends Notifier<SessionState> {
     final hh = _currentHH;
     var counters = state.counters;
     var history = state.history;
+    var handVerdicts = state.handVerdicts;
 
     if (hh != null) {
       hh.board = List<Card>.of(next.board);
@@ -752,6 +771,13 @@ class SessionNotifier extends Notifier<SessionState> {
         biggestLossChips: min(counters.biggestLossChips, net),
       );
       history = [...history, hh];
+
+      // The hand's own notes are cleared by the next deal, so the worst one
+      // is folded into the map the hand list reads (§4.13).
+      final worst = worstVerdict(state.reviewLog);
+      if (worst != null) {
+        handVerdicts = {...handVerdicts, hh.startedAt: worst};
+      }
     }
 
     unawaited(ref.read(playGoalsStoreProvider).record(ActivityKind.hand));
@@ -788,7 +814,11 @@ class SessionNotifier extends Notifier<SessionState> {
       );
     }
 
-    state = state.copyWith(counters: counters, history: history);
+    state = state.copyWith(
+      counters: counters,
+      history: history,
+      handVerdicts: handVerdicts,
+    );
     unawaited(_persist());
     _scheduleAutoDeal();
   }

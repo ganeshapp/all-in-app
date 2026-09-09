@@ -56,11 +56,25 @@ abstract final class CoachSheetCopy {
   static const String readSubtitle =
       "Their \u2018range\u2019 is every hand they would play here. Drag "
       'across the squares to mark the ones you think they hold — "s" means '
-      'both cards the same suit, "o" means different suits. The chips below '
-      'are shortcuts — the strongest 10 % of all hands, 15 %, and so on. Or '
-      'just tap Peek to see their range.';
+      'both cards the same suit, "o" means different suits. Or just tap Peek '
+      'to see their range.';
 
-  /// "BTN · Tight-Aggressive (TAG) · Flop" *(desktop)*.
+  /// The label over the preset row, so the chips read as a starting point
+  /// rather than ten unexplained abbreviations *(new)*.
+  ///
+  /// This sentence used to sit at the end of [readSubtitle], four lines above
+  /// the chips it describes. Saying it next to them instead also buys the
+  /// subtitle two lines back at 1.3× text.
+  static const String presetsLabel =
+      'Shortcuts: the strongest 10 % of all hands, 15 %, … then the hands '
+      'each seat usually opens.';
+
+  /// "BTN · Tight-Aggressive · Flop" *(desktop, minus the code)*.
+  ///
+  /// The desktop wrote "Tight-Aggressive (TAG)". TONE.md bans unglossed
+  /// insider shorthand at layer 1 and this line is the first thing under the
+  /// title; the short code survives in the expert layer, where the range's
+  /// provenance is spelled out.
   static String readContext({
     required String position,
     required String archetype,

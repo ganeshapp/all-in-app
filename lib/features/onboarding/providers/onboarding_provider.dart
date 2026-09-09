@@ -70,16 +70,30 @@ const String kHeadsUpFirstHandsTicker =
 
 @immutable
 class CoachMarksState {
-  const CoachMarksState({required this.handsSeen, this.visible});
+  const CoachMarksState({
+    required this.handsSeen,
+    this.headsUpHandsSeen = 0,
+    this.visible,
+  });
 
   /// Hands the user has ever started (`allin.hints.v1.firstHands`).
   final int handsSeen;
+
+  /// **Heads-up** hands the user has ever started
+  /// (`allin.hints.v1.headsUpHands`).
+  final int headsUpHandsSeen;
 
   /// The caption on screen right now, or null.
   final CoachMark? visible;
 
   /// Still owed a caption (§4.15: the first three hands of a user's life).
   bool get armed => handsSeen >= 1 && handsSeen <= kFirstHandsHintLimit;
+
+  /// Still owed [kHeadsUpFirstHandsTicker] (§4.2.1: "the first three HU
+  /// hands"). Counted on its own ticker, because a user whose first hands
+  /// were 6-max had spent [armed] long before they ever sat heads-up.
+  bool get headsUpArmed =>
+      headsUpHandsSeen >= 1 && headsUpHandsSeen <= kFirstHandsHintLimit;
 
   /// The one caption this hand may show: hand 1 → step, 2 → eye, 3 → swipe.
   CoachMark? get markForThisHand =>
@@ -89,10 +103,12 @@ class CoachMarksState {
 
   CoachMarksState copyWith({
     int? handsSeen,
+    int? headsUpHandsSeen,
     CoachMark? visible,
     bool clear = false,
   }) => CoachMarksState(
     handsSeen: handsSeen ?? this.handsSeen,
+    headsUpHandsSeen: headsUpHandsSeen ?? this.headsUpHandsSeen,
     visible: clear ? null : (visible ?? this.visible),
   );
 }
@@ -105,25 +121,36 @@ class CoachMarksNotifier extends Notifier<CoachMarksState> {
   int? _lastHand;
 
   @override
-  CoachMarksState build() => CoachMarksState(
-    handsSeen: ref.read(hintsStoreProvider).load().firstHands,
-  );
+  CoachMarksState build() {
+    final counters = ref.read(hintsStoreProvider).load();
+    return CoachMarksState(
+      handsSeen: counters.firstHands,
+      headsUpHandsSeen: counters.headsUpHands,
+    );
+  }
 
   /// A new hand was dealt. [handNumber] guards against a rebuild counting the
-  /// same hand twice; pass the session's hand counter.
-  Future<void> handStarted(int handNumber) async {
+  /// same hand twice; pass the session's hand counter. [headsUp] is the
+  /// table's own seat count, so the §4.2.1 ticker gets its own three hands.
+  Future<void> handStarted(int handNumber, {bool headsUp = false}) async {
     if (_lastHand == handNumber) return;
     _lastHand = handNumber;
-    // The counter runs one past the limit so that the fourth hand can turn
-    // the marks off for good, on this run and every later one.
-    if (state.handsSeen > kFirstHandsHintLimit) {
-      state = state.copyWith(clear: true);
-      return;
+    final store = ref.read(hintsStoreProvider);
+    // Each counter runs one past its limit so that the fourth hand can turn
+    // its hint off for good, on this run and every later one.
+    var counters = store.load();
+    if (headsUp && counters.headsUpHands <= kFirstHandsHintLimit) {
+      counters = await store.increment(HintKind.headsUpHands);
     }
-    final counters = await ref
-        .read(hintsStoreProvider)
-        .increment(HintKind.firstHands);
-    state = CoachMarksState(handsSeen: counters.firstHands);
+    if (counters.firstHands <= kFirstHandsHintLimit) {
+      counters = await store.increment(HintKind.firstHands);
+    }
+    state = CoachMarksState(
+      handsSeen: counters.firstHands,
+      headsUpHandsSeen: counters.headsUpHands,
+      // A caption from the previous hand never survives into this one.
+      visible: null,
+    );
   }
 
   /// Show [mark] if it is the one this hand owes and nothing else is up.

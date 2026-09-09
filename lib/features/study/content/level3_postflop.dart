@@ -180,9 +180,15 @@ const Lesson _potOdds = Lesson(
   title: 'Pot Odds, Break-even & EV',
   minutes: 6,
   body: [
+    // Layer 1 (TONE.md): the idea in ordinary words, with a count for the
+    // chance, and both terms defined in the same breath they first appear —
+    // this paragraph is also the lead the Pot odds tool screen shows (§6.6),
+    // so it is the first thing a beginner reads about the subject anywhere.
     ParagraphBlock(
-      'Calling is profitable when your equity beats the price the pot is offering you. Two '
-      'formulas run the whole decision.',
+      'Calling costs chips now and pays you the pot when you win, so the question is always the '
+      'same: does this hand win often enough to cover the price? Pay 5 bb to win a 20 bb pot and '
+      'you need to win about 1 time in 4. Your chance of winning is your **equity**, the price '
+      "you're being offered is your **pot odds**, and two formulas turn them into a decision.",
     ),
     HeadingBlock('From odds to a decision'),
     ParagraphBlock(

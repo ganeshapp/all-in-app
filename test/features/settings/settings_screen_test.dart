@@ -148,48 +148,82 @@ Future<void> tapSegment(WidgetTester tester, String title, String label) async {
 }
 
 void main() {
-  test('the four-colour caption paints each suit in the colour it names', () {
-    // As a flat string the caption contradicted itself: "♦ blue" printed with
-    // a red diamond, "♣ green" with a grey club, and ♥ fell through to the
-    // colour-emoji font. Colours come from the deck itself.
-    List<TextSpan> glyphs(bool on) =>
-        SettingsCopy.fourColourSpans(on: on)
-            .whereType<TextSpan>()
-            .expand(
-              (s) => s.children?.whereType<TextSpan>() ?? const <TextSpan>[],
-            )
-            .where((s) => s.style?.color != null)
-            .toList();
+  test(
+    'the four-colour caption names the colour each suit is actually drawn',
+    () {
+      // As a flat string the caption contradicted itself: "♦ blue" printed with
+      // a red diamond and "♣ green" with a grey club. The inks now come from the
+      // deck itself, so the words and the glyphs cannot disagree.
+      List<SuitSwatch> glyphs(bool on) =>
+          SettingsCopy.fourColourSpans(
+            on: on,
+          ).whereType<WidgetSpan>().map((s) => s.child as SuitSwatch).toList();
 
-    final on = glyphs(true);
-    expect(on.map((s) => s.style!.color), [
-      AllInColors.suitBlack,
-      AllInColors.suitRed,
-      AllInColors.suitBlue,
-      AllInColors.suitGreen,
-    ]);
-    // U+FE0E forces text presentation so ♥ never renders as an emoji.
-    for (final span in on) {
-      expect(span.text, contains('\uFE0E'));
+      expect(glyphs(true).map((s) => s.color), [
+        AllInColors.suitBlack,
+        AllInColors.suitRed,
+        AllInColors.suitBlue,
+        AllInColors.suitGreen,
+      ]);
+      // U+FE0E forces text presentation so ♥ never renders as a colour emoji.
+      for (final swatch in glyphs(true)) {
+        expect(swatch.symbol, isNot(contains('\uFE0E')));
+      }
+
+      // With the setting off the caption follows the two-colour deck instead.
+      expect(glyphs(false).map((s) => s.color), [
+        AllInColors.suitBlack,
+        AllInColors.suitRed,
+        AllInColors.suitRed,
+        AllInColors.suitBlack,
+      ]);
+      String words(bool on) =>
+          SettingsCopy.fourColourSpans(
+            on: on,
+          ).whereType<TextSpan>().map((s) => s.text).join();
+      expect(words(true), startsWith(' black ·  red ·  blue ·  green.'));
+      expect(words(false), startsWith(' black ·  red ·  red ·  black.'));
+    },
+  );
+
+  testWidgets('every suit glyph stays legible in both themes', (tester) async {
+    // The deck's inks are picked to read on a white card: painted straight on
+    // the settings row, Dark's ♠ sits at 1.1:1 and Light's ♣ at 2.5:1 against
+    // §13's 4.5:1. Each glyph is drawn on a card face instead.
+    for (final on in const [true, false]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AllInAppTheme.dark(),
+          home: Scaffold(
+            body: Text.rich(
+              TextSpan(children: SettingsCopy.fourColourSpans(on: on)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final swatches = find.byType(SuitSwatch);
+      expect(swatches, findsNWidgets(4));
+      for (var i = 0; i < 4; i++) {
+        final box = tester.widget<Container>(
+          find.descendant(of: swatches.at(i), matching: find.byType(Container)),
+        );
+        expect(
+          (box.decoration! as BoxDecoration).color,
+          AllInColors.cardFaceTop,
+        );
+        // The glyph is a 44 pt-irrelevant illustration, but it must not be a
+        // hairline: it stays at caption size or larger.
+        final glyph = tester.widget<Text>(
+          find.descendant(of: swatches.at(i), matching: find.byType(Text)),
+        );
+        expect(
+          glyph.style!.fontSize,
+          greaterThanOrEqualTo(SuitSwatch.fontSize),
+        );
+      }
     }
-
-    // With the setting off the caption follows the two-colour deck instead.
-    expect(glyphs(false).map((s) => s.style!.color), [
-      AllInColors.suitBlack,
-      AllInColors.suitRed,
-      AllInColors.suitRed,
-      AllInColors.suitBlack,
-    ]);
-    final wordsOff =
-        SettingsCopy.fourColourSpans(on: false)
-            .whereType<TextSpan>()
-            .expand(
-              (s) => s.children?.whereType<TextSpan>() ?? const <TextSpan>[],
-            )
-            .where((s) => s.style?.color == null)
-            .map((s) => s.text)
-            .toList();
-    expect(wordsOff, ['black', 'red', 'red', 'black']);
   });
 
   testWidgets('renders every group in both themes and at 1.3x text', (

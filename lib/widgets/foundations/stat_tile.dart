@@ -8,7 +8,23 @@ import 'package:flutter/material.dart';
 import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
 
-enum StatTone { neutral, good, bad, gold }
+enum StatTone {
+  neutral,
+  good,
+  bad,
+  gold,
+
+  /// A number that is deliberately *not* a result: a flat zero, or a stat
+  /// that has nothing to say yet. Reads as a neutral fact, not a verdict.
+  muted;
+
+  /// The signed-money rule of §13 / principle 8, as a tile tone: a win is
+  /// [good], a loss is [bad], and a flat zero is [muted] rather than green —
+  /// "+0.0 bb" in the win colour draws the eye to nothing having happened.
+  /// Mirrors `context.colors.money()` so tiles and inline numbers agree.
+  static StatTone money(num value) =>
+      value > 0 ? StatTone.good : (value < 0 ? StatTone.bad : StatTone.muted);
+}
 
 class StatTile extends StatelessWidget {
   const StatTile({
@@ -61,6 +77,7 @@ class StatTile extends StatelessWidget {
       StatTone.good => c.good,
       StatTone.bad => c.bad,
       StatTone.gold => c.gold,
+      StatTone.muted => c.textMuted,
     };
     final big = height >= heightLarge;
 

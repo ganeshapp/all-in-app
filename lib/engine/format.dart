@@ -98,14 +98,40 @@ String fmtTimes(num p) {
       : 'about 1 time in ${jsIntString(n)}';
 }
 
+/// The "N" of "about 1 time in N" — a **whole** count.
+///
+/// Deliberate divergence from the desktop (`src/lib/format.ts` rounds to the
+/// nearest half, so 1/0.3 printed "1 time in 3.5"). TONE.md's layer-1 rule is
+/// "chances as counts", and there is no such thing as winning one time in
+/// three and a half: the half-step reads as a precision the estimate does not
+/// have and stops the sentence being a picture a beginner can hold. Rounding
+/// to the nearest whole keeps the picture and stays inside the word "about".
+/// `docs/port/*.md` still record the desktop's half-step form as the
+/// behaviour being ported.
+String fmtNeedTimes(num potOdds) => jsIntString(jsRound(1 / potOdds));
+
 /// "you need to win about 1 time in N" for a break-even fraction.
 String fmtNeed(num potOdds) {
   if (potOdds <= 0) return 'any win rate';
-  final n = 1 / potOdds;
-  final rounded = jsRound(n * 2) / 2;
-  final isInteger = rounded.isFinite && rounded == rounded.truncateToDouble();
-  return 'about 1 time in ${isInteger ? jsIntString(rounded) : jsToFixed(rounded, 1)}';
+  return 'about 1 time in ${fmtNeedTimes(potOdds)}';
 }
+
+/// "Ks" → "K♠" for display only; storage always keeps the engine's form.
+///
+/// Lives here rather than beside the table widgets because both `features/play`
+/// (the session log) and `features/stats` (All hands, the replayer) print a
+/// pair of hole cards in a list row *(mobile addition)*.
+String prettyCard(String card) {
+  const glyphs = {'c': '♣', 'd': '♦', 'h': '♥', 's': '♠'};
+  if (card.length < 2) return card;
+  return '${card[0]}${glyphs[card[1]] ?? card[1]}';
+}
+
+/// "K♠ Q♠" for a two-card holding; empty when there is nothing to show.
+String prettyHoleCards(List<String>? cards) =>
+    cards == null || cards.length < 2
+        ? ''
+        : '${prettyCard(cards[0])} ${prettyCard(cards[1])}';
 
 double _pow10(int digits) {
   var s = 1.0;

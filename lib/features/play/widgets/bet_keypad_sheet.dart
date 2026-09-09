@@ -17,6 +17,7 @@ library;
 import 'package:allin/engine/engine.dart';
 import 'package:allin/features/play/providers/raise_sizing.dart';
 import 'package:allin/features/play/widgets/play_copy.dart';
+import 'package:allin/theme/motion.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:allin/theme/typography.dart';
 import 'package:allin/widgets/widgets.dart';
@@ -110,6 +111,11 @@ class _BetKeypadSheetState extends State<BetKeypadSheet> {
     });
   }
 
+  /// Port §"aggroVerb": `currentBet == 0 ? "Bet" : "Raise to"`. The action row
+  /// behind the sheet says "Bet 3"; the sheet used to answer "Set · Raise to
+  /// 3" for the same tap.
+  String get _verb => widget.currentBet == 0 ? 'Bet' : 'Raise to';
+
   void _step(int deltaHalfBb) {
     final next = (_chips + deltaHalfBb * (_bigBlind ~/ 2)).clamp(
       widget.legal.minRaiseTo,
@@ -169,25 +175,14 @@ class _BetKeypadSheetState extends State<BetKeypadSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    height: 36,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: detents.length,
-                      separatorBuilder:
-                          (_, _) => const SizedBox(width: AllInSpace.sm),
-                      itemBuilder: (context, i) {
-                        final detent = detents[i];
-                        return _DetentChip(
-                          label: detent.label,
-                          selected: detent.value == chips,
-                          onTap:
-                              () => setState(
-                                () => _entry = fmtBb(detent.value, _bigBlind),
-                              ),
-                        );
-                      },
-                    ),
+                  _PresetStrip(
+                    detents: detents,
+                    value: chips,
+                    reducedMotion: widget.reducedMotion,
+                    onPick:
+                        (detent) => setState(
+                          () => _entry = fmtBb(detent.value, _bigBlind),
+                        ),
                   ),
                   const SizedBox(height: AllInSpace.md),
                   for (final row in const [
@@ -216,7 +211,7 @@ class _BetKeypadSheetState extends State<BetKeypadSheet> {
           ),
           const SizedBox(height: AllInSpace.sm),
           AllInButton.primary(
-            label: 'Set · Raise to ${fmtBb(chips, _bigBlind)}',
+            label: 'Set · $_verb ${fmtBb(chips, _bigBlind)}',
             size: AllInButtonSize.lg,
             expand: true,
             reducedMotion: widget.reducedMotion,
@@ -224,6 +219,160 @@ class _BetKeypadSheetState extends State<BetKeypadSheet> {
             onPressed: () => Navigator.of(context).pop(chips),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// §4.5's seven size presets, and the affordance that says there are more of
+/// them off the right edge.
+///
+/// The strip holds seven chips ("Min · 1/3 · 1/2 · 2/3 · Pot · 2× · All-in")
+/// in ~330 pt of felt, so two or three are always past the fold. §4.5 accepts
+/// that they scroll; a strip that scrolls with nothing to say so just reads as
+/// a clipped row, and the fastest way to size a bet stays hidden.
+class _PresetStrip extends StatefulWidget {
+  const _PresetStrip({
+    required this.detents,
+    required this.value,
+    required this.onPick,
+    required this.reducedMotion,
+  });
+
+  final List<RailDetent> detents;
+
+  /// The current raise-to total, in chips — which chip reads as selected.
+  final int value;
+  final ValueChanged<RailDetent> onPick;
+  final bool reducedMotion;
+
+  static const double height = 36;
+
+  @override
+  State<_PresetStrip> createState() => _PresetStripState();
+}
+
+class _PresetStripState extends State<_PresetStrip> {
+  final ScrollController _controller = ScrollController();
+
+  /// True while chips remain off the right edge.
+  bool _more = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// `ScrollMetricsNotification` carries the *first layout* (a strip nobody
+  /// drags still has to declare itself); `ScrollNotification` carries the
+  /// drags after it.
+  void _setMore(ScrollMetrics m) {
+    final more = m.hasContentDimensions && m.extentAfter > 1;
+    if (more == _more) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _more = more);
+    });
+  }
+
+  /// Tapping the affordance is the second way along — one thumb, no drag.
+  void _pageRight() {
+    if (!_controller.hasClients) return;
+    final position = _controller.position;
+    final target = (position.pixels + position.viewportDimension * 0.8).clamp(
+      0.0,
+      position.maxScrollExtent,
+    );
+    if (widget.reducedMotion) {
+      _controller.jumpTo(target);
+      return;
+    }
+    _controller.animateTo(
+      target,
+      duration: AllInMotion.base,
+      curve: AllInMotion.easeOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: _PresetStrip.height,
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (n) {
+          if (n.depth == 0) _setMore(n.metrics);
+          return false;
+        },
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            if (n.depth == 0) _setMore(n.metrics);
+            return false;
+          },
+          child: Stack(
+            children: [
+              ListView.separated(
+                controller: _controller,
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.detents.length,
+                separatorBuilder:
+                    (_, _) => const SizedBox(width: AllInSpace.sm),
+                itemBuilder: (context, i) {
+                  final detent = widget.detents[i];
+                  return _DetentChip(
+                    label: detent.label,
+                    selected: detent.value == widget.value,
+                    onTap: () => widget.onPick(detent),
+                  );
+                },
+              ),
+              if (_more)
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  child: _MoreBeside(onTap: _pageRight),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "there are more presets this way" affordance: a short fade into the
+/// sheet's own `ink800` with a chevron in it. It only exists while the strip
+/// really does have chips off the edge, and tapping it pages them into view.
+class _MoreBeside extends StatelessWidget {
+  const _MoreBeside({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Semantics(
+      button: true,
+      label: 'More sizes',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 32,
+          alignment: Alignment.centerRight,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [c.ink800.withValues(alpha: 0), c.ink800],
+            ),
+          ),
+          child: Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: c.textMuted,
+          ),
+        ),
       ),
     );
   }

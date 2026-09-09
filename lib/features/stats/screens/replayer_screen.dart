@@ -51,6 +51,25 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
   int? _index;
   bool _sharing = false;
 
+  /// Set once the user steps to a sibling hand (§7.7 + the hand-to-hand step).
+  ///
+  /// The screen swaps the hand it is showing rather than pushing a new route:
+  /// P11 is hosted by five different branches (§16.1) and each builds its own
+  /// path, so re-deriving one here would be five ways to get the back stack
+  /// wrong. Back still returns to wherever the user came in from.
+  int? _startedAt;
+
+  int get _hand => _startedAt ?? widget.startedAt;
+
+  void _goToHand(int startedAt) {
+    setState(() {
+      _startedAt = startedAt;
+      // A new hand has its own frames, and the deep link that opened this
+      // route pointed at a frame of the *first* hand.
+      _index = null;
+    });
+  }
+
   /// The query is read defensively: the screen is also constructed directly
   /// in tests, where there is no `GoRouterState`.
   String? _query(String key) {
@@ -62,13 +81,17 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
   }
 
   int _initialIndex(ReplayModel model) {
-    final street = widget.street ?? _query('street');
-    final action = widget.action ?? _query('action');
-    if (street != null && action != null) {
-      return model.frameForNote(street: street, action: action);
+    // The route's deep link belongs to the hand the route was opened on; a
+    // sibling hand opens on its last frame like any other (§7.7).
+    if (_startedAt == null) {
+      final street = widget.street ?? _query('street');
+      final action = widget.action ?? _query('action');
+      if (street != null && action != null) {
+        return model.frameForNote(street: street, action: action);
+      }
+      final frame = int.tryParse(_query('frame') ?? '');
+      if (frame != null) return frame.clamp(0, model.lastIndex);
     }
-    final frame = int.tryParse(_query('frame') ?? '');
-    if (frame != null) return frame.clamp(0, model.lastIndex);
     return model.lastIndex;
   }
 
@@ -93,7 +116,7 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hand = ref.watch(handProvider(widget.startedAt));
+    final hand = ref.watch(handProvider(_hand));
 
     return hand.when(
       loading: () => const _ReplayerShell(body: _Loading()),
@@ -193,6 +216,10 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
                     (v) => 'Frame ${v.round() + 1} of ${model.frames.length}',
                 onChanged: (v) => _go(v.round(), model),
               ),
+            ),
+            _HandStepRow(
+              neighbours: ref.watch(handNeighboursProvider(stored.startedAt)),
+              onGo: _goToHand,
             ),
             const SizedBox(height: AllInSpace.sm),
           ],
@@ -582,6 +609,96 @@ class _FrameList extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "‹ Older hand … Newer hand ›" — one step along T2's own order, so a
+/// session can be reviewed hand after hand without leaving P11 *(new)*.
+///
+/// Older is on the left because the list runs newest first and the replayer is
+/// usually entered at the newest hand: stepping left walks back through the
+/// session the way it was played.
+class _HandStepRow extends StatelessWidget {
+  const _HandStepRow({required this.neighbours, required this.onGo});
+
+  final HandNeighbours neighbours;
+  final ValueChanged<int> onGo;
+
+  @override
+  Widget build(BuildContext context) {
+    final older = neighbours.older;
+    final newer = neighbours.newer;
+    if (older == null && newer == null) return const SizedBox.shrink();
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          _HandStepButton(
+            label: StatsCopy.replayOlderHand,
+            icon: Icons.chevron_left_rounded,
+            leading: true,
+            onPressed: older == null ? null : () => onGo(older),
+          ),
+          const Spacer(),
+          _HandStepButton(
+            label: StatsCopy.replayNewerHand,
+            icon: Icons.chevron_right_rounded,
+            leading: false,
+            onPressed: newer == null ? null : () => onGo(newer),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HandStepButton extends StatelessWidget {
+  const _HandStepButton({
+    required this.label,
+    required this.icon,
+    required this.leading,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool leading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final color = onPressed == null ? c.textFaint : c.textMuted;
+    final text = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AllInText.body(13, color: color),
+    );
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: label,
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+            padding: const EdgeInsets.symmetric(horizontal: AllInSpace.xs),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (leading) Icon(icon, size: 18, color: color),
+                Flexible(child: text),
+                if (!leading) Icon(icon, size: 18, color: color),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

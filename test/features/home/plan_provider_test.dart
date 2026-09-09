@@ -185,7 +185,12 @@ void main() {
 
       final lesson = container.read(planProvider).entry(PlanCardKind.lesson)!;
       expect(lesson.route, '/study/lesson/threebet-pots');
-      expect(lesson.subtitle, startsWith('Level 4 · '));
+      // Day one names the reason the lesson is there rather than opening on
+      // a "0/31 done" scoreboard.
+      expect(
+        lesson.subtitle,
+        'Picked from your placement · Level 4 · 6 min read',
+      );
     });
 
     test('an un-placed rating falls back to the first incomplete lesson', () {

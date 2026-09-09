@@ -10,7 +10,7 @@ import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const Size _phone390 = Size(390, 844);
@@ -41,6 +41,8 @@ Future<void> pumpAllIn(
     ),
   );
 }
+
+void _ignore(int _) {}
 
 const Map<String, TermDefinition> _terms = {
   'BB': TermDefinition(
@@ -219,6 +221,123 @@ void main() {
       expect(tester.getSize(find.byType(AllInSegmented)).height, 44);
       expect(tester.getSize(find.byType(AllInSwitch)).height, 44);
       expect(tester.getSize(find.byType(AllInSlider)).height, 44);
+    });
+
+    // §13: at 360 pt × 1.3× every one of these ellipsed to "Hea…", "Ma…",
+    // "Std…" — the row was a fixed 1/n per segment with no shrink-to-fit.
+    // The widths are what the control actually gets on a 360 pt screen: the
+    // lobby's Table row (page 16 + card 16 either side, minus its 60 pt
+    // label), the same row again minus the Auto speed menu, and Settings'
+    // full-bleed Speed row.
+    const cases = <(List<String>, double)>[
+      (['Heads-up', '6-max', '9-max'], 236),
+      (['Manual', 'Auto'], 136),
+      (['Slow', 'Standard', 'Fast'], 296),
+    ];
+    for (final (labels, width) in cases) {
+      testWidgets('segmented labels are not truncated: ${labels.first}…', (
+        tester,
+      ) async {
+        for (final scale in const [1.0, 1.3]) {
+          await pumpAllIn(
+            tester,
+            SizedBox(
+              width: width,
+              child: AllInSegmented(
+                labels: labels,
+                value: 0,
+                onChanged: (_) {},
+              ),
+            ),
+            size: const Size(360, 780),
+            textScale: scale,
+          );
+
+          final sizes = <double>{};
+          for (final label in labels) {
+            final paragraph = tester.renderObject<RenderParagraph>(
+              find.text(label),
+            );
+            final size = (paragraph.text.style?.fontSize ?? 0).toDouble();
+            sizes.add(size);
+
+            // Lay the same span out unbounded: anything wider than the box it
+            // was given came out ellipsed. The test font is a fixed-width
+            // block face roughly twice Inter's advance, so a label that fits
+            // on device can still bottom the size out here — truncating is
+            // only allowed once there is no size left to give up.
+            final painter = TextPainter(
+              text: paragraph.text,
+              textDirection: TextDirection.ltr,
+              textScaler: TextScaler.noScaling,
+            )..layout();
+            final fits = painter.width <= paragraph.size.width + 0.5;
+            painter.dispose();
+            expect(
+              fits || size == AllInSegmented.minLabelSize,
+              isTrue,
+              reason: '"$label" is truncated at 360 pt × $scale× at $size pt',
+            );
+          }
+          // One size for the whole set: the row still reads as one control.
+          expect(sizes, hasLength(1));
+          expect(
+            sizes.single,
+            greaterThanOrEqualTo(AllInSegmented.minLabelSize),
+          );
+          expect(
+            sizes.single,
+            lessThanOrEqualTo(AllInSegmented.labelSize * scale + 0.01),
+          );
+        }
+      });
+    }
+
+    testWidgets('segmented labels keep full size when they fit', (
+      tester,
+    ) async {
+      for (final scale in const [1.0, 1.3]) {
+        await pumpAllIn(
+          tester,
+          const SizedBox(
+            width: 236,
+            child: AllInSegmented(
+              labels: ['A', 'B'],
+              value: 0,
+              onChanged: _ignore,
+            ),
+          ),
+          size: const Size(360, 780),
+          textScale: scale,
+        );
+        final paragraph = tester.renderObject<RenderParagraph>(find.text('A'));
+        expect(
+          paragraph.text.style?.fontSize,
+          closeTo(AllInSegmented.labelSize * scale, 0.01),
+        );
+      }
+    });
+
+    testWidgets('segmented labels never shrink below the floor', (
+      tester,
+    ) async {
+      await pumpAllIn(
+        tester,
+        const SizedBox(
+          width: 90,
+          child: AllInSegmented(
+            labels: ['Push/Fold', 'Exploits'],
+            value: 0,
+            onChanged: _ignore,
+          ),
+        ),
+        size: const Size(360, 780),
+        textScale: 1.3,
+      );
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.text('Push/Fold'),
+      );
+      expect(paragraph.text.style?.fontSize, AllInSegmented.minLabelSize);
     });
 
     testWidgets('the disclosure row is 48 tall', (tester) async {
@@ -748,6 +867,83 @@ void main() {
   });
 
   group('AllInToast', () {
+    testWidgets('sits under the header, on a Material (§10.1)', (tester) async {
+      await pumpAllIn(
+        tester,
+        Builder(
+          builder:
+              (context) => AllInScaffold(
+                title: 'Play',
+                body: Center(
+                  child: AllInButton.primary(
+                    label: 'Copy',
+                    onPressed: () => AllInToast.show(context, 'Session paused'),
+                  ),
+                ),
+              ),
+        ),
+      );
+      await tester.tap(find.text('Copy'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      // §10.1 puts the pill at the top of the *content* area: at
+      // `padding.top + 8` it landed on the large title.
+      expect(
+        tester.getRect(find.byType(AllInToast)).top,
+        greaterThanOrEqualTo(tester.getRect(find.text('Play')).bottom),
+      );
+      // The root overlay has no Material of its own, so without one the toast
+      // picked up Flutter's "missing Material" yellow double underline.
+      expect(
+        debugCheckHasMaterial(tester.element(find.byType(AllInToast))),
+        isTrue,
+      );
+
+      await tester.pump(AllInToast.duration);
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+
+    testWidgets('survives the overlay it was shown in being disposed', (
+      tester,
+    ) async {
+      Widget app(bool dark) => MaterialApp(
+        key: ValueKey(dark),
+        debugShowCheckedModeBanner: false,
+        theme: dark ? AllInAppTheme.dark() : AllInAppTheme.light(),
+        home: Builder(
+          builder:
+              (context) => Scaffold(
+                body: Center(
+                  child: AllInButton.primary(
+                    label: 'Copy',
+                    onPressed:
+                        () => AllInToast.show(context, 'Hand history copied'),
+                  ),
+                ),
+              ),
+        ),
+      );
+
+      await tester.pumpWidget(app(true));
+      await tester.tap(find.text('Copy'));
+      await tester.pump();
+
+      // §9's theme switch rebuilds the app and disposes the overlay the toast
+      // in flight belongs to; removing that entry asserted `_owner != null`.
+      await tester.pumpWidget(app(false));
+      await tester.pump();
+      await tester.tap(find.text('Copy'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(tester.takeException(), isNull);
+      expect(find.text('Hand history copied'), findsOneWidget);
+
+      await tester.pump(AllInToast.duration);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('shows for 2.5 s then removes itself', (tester) async {
       await pumpAllIn(
         tester,

@@ -22,8 +22,6 @@ class LastSessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final negative =
-        session.line.startsWith('−') || session.line.startsWith('-');
     return AllInCard.plain(
       onTap: onTap,
       semanticLabel: [
@@ -44,7 +42,7 @@ class LastSessionCard extends StatelessWidget {
                 children: [
                   Text(
                     session.line,
-                    style: AllInText.mono(15, color: negative ? c.bad : c.good),
+                    style: AllInText.mono(15, color: c.money(session.netBb)),
                   ),
                   if (session.costliest != null) ...[
                     const SizedBox(height: 2),

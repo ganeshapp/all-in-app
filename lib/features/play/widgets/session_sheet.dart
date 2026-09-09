@@ -14,7 +14,6 @@ import 'package:allin/features/play/hand_log_format.dart';
 import 'package:allin/features/play/providers/play_providers.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/hand_note_sheet.dart';
-import 'package:allin/features/play/widgets/hero_labels.dart';
 import 'package:allin/features/play/widgets/play_copy.dart';
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/services/persistence/settings_store.dart';
@@ -465,7 +464,7 @@ class _SessionTab extends ConsumerWidget {
                 child: StatTile(
                   label: 'Net',
                   value: '${fmtSigned(session.netBb)} bb',
-                  tone: session.netBb >= 0 ? StatTone.good : StatTone.bad,
+                  tone: StatTone.money(session.netBb),
                 ),
               ),
             ],
@@ -477,6 +476,9 @@ class _SessionTab extends ConsumerWidget {
                 child: StatTile(
                   label: 'bb / 100',
                   value: fmtSigned(session.bb100),
+                  // The same signed money quantity as NET beside it, so it
+                  // follows the same colour rule (§13 / principle 8).
+                  tone: StatTone.money(session.bb100),
                   infoSemanticLabel: 'What bb per 100 means',
                   onInfo:
                       () => _explain(
@@ -523,6 +525,9 @@ class _SessionTab extends ConsumerWidget {
               // without opening them one at a time. The hero's cards do.
               heroCards: hand.holes[0],
               netBb: hand.heroNet / session.bigBlind,
+              // The coach's own verdict for the hand, so the list you scan
+              // after a session shows where the mistakes were (§4.13).
+              verdict: session.handVerdicts[hand.startedAt],
               hasNote: (notes.noteFor(hand.startedAt)?.note ?? '').isNotEmpty,
               onReplay:
                   onReplay == null ? null : () => onReplay!(hand.startedAt),
@@ -565,6 +570,7 @@ class _HandRow extends StatelessWidget {
     required this.hasNote,
     required this.onReplay,
     required this.onNote,
+    this.verdict,
   });
 
   final int number;
@@ -573,15 +579,13 @@ class _HandRow extends StatelessWidget {
   /// The hero's two cards, or null on a hand that was never dealt to them.
   final List<String>? heroCards;
   final double netBb;
+
+  /// The worst verdict the coach gave in this hand, or null when it had
+  /// nothing to flag.
+  final Verdict? verdict;
   final bool hasNote;
   final VoidCallback? onReplay;
   final VoidCallback onNote;
-
-  String get _cards {
-    final cards = heroCards;
-    if (cards == null || cards.length < 2) return '';
-    return '${prettyCard(cards[0])} ${prettyCard(cards[1])}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -597,17 +601,20 @@ class _HandRow extends StatelessWidget {
           SizedBox(
             width: 64,
             child: Text(
-              _cards,
+              prettyHoleCards(heroCards),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AllInText.mono(13, color: c.textMuted),
             ),
           ),
+          // §16.5's verdict colours as an 8 pt dot: the row keeps its 52 pt
+          // rhythm and a scan down the list finds the flagged hands.
+          VerdictDot(verdict: verdict),
           Expanded(
             child: Text(
               '${fmtSigned(netBb)} bb',
               textAlign: TextAlign.right,
-              style: AllInText.mono(14, color: netBb >= 0 ? c.good : c.bad),
+              style: AllInText.mono(14, color: c.money(netBb)),
             ),
           ),
           const SizedBox(width: AllInSpace.sm),

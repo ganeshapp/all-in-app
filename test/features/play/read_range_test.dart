@@ -67,6 +67,8 @@ void main() {
 
       expect(find.text(CoachSheetCopy.readTitle(name)), findsOneWidget);
       expect(find.text(CoachSheetCopy.readSubtitle), findsOneWidget);
+      // The chips are named where they are, not four lines above them.
+      expect(find.text(CoachSheetCopy.presetsLabel), findsOneWidget);
       expect(find.byType(RangeMatrix), findsOneWidget);
       expect(find.byType(RangePresetRow), findsOneWidget);
       expect(find.text(CoachSheetCopy.guessingIsOptional), findsOneWidget);
@@ -75,6 +77,23 @@ void main() {
 
       final matrix = tester.widget<RangeMatrix>(find.byType(RangeMatrix));
       expect(matrix.mode, RangeMatrixMode.editable);
+    });
+
+    testWidgets('the context line names the archetype without its code', (
+      tester,
+    ) async {
+      final container = await readingSeatOne(tester);
+      final player = container.read(sessionProvider).table!.players[1];
+      final config = kArchetypes[player.archetype!]!;
+
+      final line = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .firstWhere((s) => s.contains(config.name), orElse: () => '');
+
+      expect(line, contains(config.name));
+      // TONE.md: "(TAG)" / "(Station)" is layer-3 shorthand, not a subtitle.
+      expect(line, isNot(contains('(${player.archetype!.label})')));
     });
 
     testWidgets('a preset paints, Clear empties and Undo brings it back', (

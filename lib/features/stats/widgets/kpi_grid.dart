@@ -29,8 +29,10 @@ class KpiGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final netTone = metrics.netBb >= 0 ? StatTone.good : StatTone.bad;
-    final rateTone = metrics.bb100 >= 0 ? StatTone.good : StatTone.bad;
+    // §13's money rule, from the one helper: a flat zero is neither a win nor
+    // a loss, so it is muted instead of painted in the win green.
+    final netTone = StatTone.money(metrics.netBb);
+    final rateTone = StatTone.money(metrics.bb100);
     final reads = metrics.guesses.length;
 
     return Column(
@@ -206,7 +208,7 @@ class _TrendWindows extends StatelessWidget {
                   label: 'Last ${windows[i].key}',
                   value: fmtSigned(windows[i].value),
                   sub: 'bb/100',
-                  tone: windows[i].value >= 0 ? StatTone.good : StatTone.bad,
+                  tone: StatTone.money(windows[i].value),
                 ),
               ),
             ],

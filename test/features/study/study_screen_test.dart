@@ -40,11 +40,44 @@ void main() {
     testWidgets('reflows the tools to one column above 1.5x', (tester) async {
       expect(ToolsGrid.singleColumn(1.6), isTrue);
       expect(ToolsGrid.singleColumn(1.3), isFalse);
-      expect(ToolsGrid.tileHeight(1.0), 56);
-      expect(ToolsGrid.tileHeight(1.4), 72);
+      // The tile is solved from the text scale now that it carries a gloss
+      // line under the label; it grows with the user's text, never shrinks.
+      expect(ToolsGrid.tileHeight(1.0), greaterThan(56));
+      expect(ToolsGrid.tileHeight(1.4), greaterThan(ToolsGrid.tileHeight(1.0)));
       await pumpStudyApp(tester, size: const Size(360, 780), textScale: 1.6);
       expect(tester.takeException(), isNull);
     });
+
+    // A tool nobody can name is a tool nobody opens: the six tiles say what
+    // they do, and the gloss has to survive the narrowest tile at the largest
+    // two-column text scale.
+    for (final size in <Size>[Size(360, 780), Size(390, 844), Size(430, 932)]) {
+      for (final scale in <double>[1.0, 1.3]) {
+        testWidgets('every tool names what it does at ${size.width.toInt()}, '
+            '${scale}x text', (tester) async {
+          await pumpStudyApp(tester, size: size, textScale: scale);
+          expect(tester.takeException(), isNull);
+          for (final tool in kStudyTools) {
+            expect(
+              find.text(tool.subtitle),
+              findsOneWidget,
+              reason: '${tool.id} has no gloss on screen',
+            );
+            final text = tester.widget<Text>(find.text(tool.subtitle));
+            final box = tester.renderObject<RenderBox>(
+              find.text(tool.subtitle),
+            );
+            expect(text.maxLines, 2);
+            // Two lines of gloss have to fit inside the tile the grid
+            // reserved for them.
+            expect(
+              box.size.height,
+              lessThanOrEqualTo(ToolsGrid.tileHeight(scale)),
+            );
+          }
+        });
+      }
+    }
   });
 
   group('progress header and Continue card', () {

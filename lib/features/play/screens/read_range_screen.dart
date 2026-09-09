@@ -144,10 +144,9 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
         player.archetype == null ? null : kArchetypes[player.archetype];
     final context1 = CoachSheetCopy.readContext(
       position: positionLabel(player.position, table!.config.seats),
-      archetype:
-          config == null
-              ? 'Player'
-              : '${config.name} (${player.archetype!.label})',
+      // The archetype's plain name only — the "(TAG)" / "(Station)" code the
+      // desktop appended is layer-3 shorthand (TONE.md).
+      archetype: config == null ? 'Player' : config.name,
       street: CoachNoteView.streetLabel(table.board),
     );
 
@@ -251,6 +250,18 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
           ),
         ),
         const SizedBox(height: AllInSpace.sm),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AllInSpace.lg,
+            0,
+            AllInSpace.lg,
+            4,
+          ),
+          child: Text(
+            CoachSheetCopy.presetsLabel,
+            style: AllInText.body(12, color: c.textFaint, height: 1.3),
+          ),
+        ),
         RangePresetRow(
           // §4.9's chip list exactly: five top-percent ranges then the five
           // 100 bb position opens. Clear is a button here, not a chip.

@@ -1,8 +1,10 @@
 /// `AnswerRow` — the 56 pt row of 2–3 drill options (DESIGN.md §5.1, §5.3,
 /// §10.6).
 ///
-/// Labels come **verbatim** from `option.label`; the row never composes one
-/// (§15.2). Widths follow the table's action row: 28 / 34 / 38 % for three
+/// Labels come from `option.label`; the row never composes one (§15.2) — it
+/// only adds the **unit** §5.1 spells out ("Call 2.5 bb", "Raise to 7.5 bb")
+/// to the engine's desktop-verbatim strings, see [AnswerRow.labelWithUnit].
+/// Widths follow the table's action row: 28 / 34 / 38 % for three
 /// options, 50 / 50 for two, fold leftmost and the aggressive action rightmost.
 /// After an answer every option locks: accepted ones turn `good`, a wrong pick
 /// turns `bad`, the rest dim (desktop `DrillControls`).
@@ -48,6 +50,21 @@ class AnswerRow extends StatelessWidget {
   /// §5.1: three options take 28 / 34 / 38 %, two take half each.
   static List<int> flexFor(int count) =>
       count >= 3 ? const [28, 34, 38] : const [50, 50];
+
+  /// A label ending in a bare number — "Call 2.5", "3-bet 7.5", "Open 2.5",
+  /// "Limp 1", "Bet 5.4".
+  static final RegExp _bareAmount = RegExp(r'\d(?:[\d.]*\d)?$');
+
+  /// §5.1 spells every drill answer with its unit ("Fold", "Call 2.5 bb",
+  /// "Raise to 7.5 bb", "Shove 12 bb", "Check"). Half of the engine's labels
+  /// are desktop-verbatim strings that stop at the number, so the row read
+  /// "Raise to 2.7" beside a pot counted in "bb" and a beginner had nothing
+  /// to tell them 2.7 of *what*. The unit is added here — the one place a
+  /// drill option is drawn — rather than in `lib/engine`, whose strings are
+  /// pinned to the desktop. Labels that already carry it ("Shove 12 bb") and
+  /// labels with no amount at all ("Fold", "Check back") are untouched.
+  static String labelWithUnit(String label) =>
+      _bareAmount.hasMatch(label) ? '$label bb' : label;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +136,7 @@ class _AnswerButtonState extends State<_AnswerButton> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final label = AnswerRow.labelWithUnit(widget.option.label);
     final (Color fill, Color fg, Color? border) = switch (widget.state) {
       _AnswerState.fold => (c.ink700, c.bad, c.bad.withValues(alpha: 0.4)),
       _AnswerState.passive => (c.ink600, c.text, null),
@@ -131,7 +149,7 @@ class _AnswerButtonState extends State<_AnswerButton> {
     return Semantics(
       button: true,
       enabled: widget.onTap != null,
-      label: _semanticLabel(widget.option.label),
+      label: _semanticLabel(label),
       child: ExcludeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -168,7 +186,7 @@ class _AnswerButtonState extends State<_AnswerButton> {
                     border == null ? null : Border.all(color: border, width: 1),
               ),
               child: Text(
-                widget.option.label,
+                label,
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,

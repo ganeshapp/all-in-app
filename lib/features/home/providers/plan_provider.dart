@@ -215,7 +215,13 @@ class PlanNotifier extends Notifier<PlanState> {
       );
     }
 
-    cards.add(_lessonCard(lesson, done));
+    // The same clause `studyContinueLessonProvider` applies on the first day:
+    // nothing completed yet and the placement test named this lesson.
+    final fromPlacement =
+        done == 0 &&
+        lesson != null &&
+        placementLessonForRating(board.rating) == lesson.id;
+    cards.add(_lessonCard(lesson, done, fromPlacement: fromPlacement));
 
     final mode = weakestMode(answers);
     cards.add(
@@ -258,7 +264,7 @@ class PlanNotifier extends Notifier<PlanState> {
   /// that rule — placement suggestion on the first day, first incomplete in
   /// path order after — and Study's Continue card reads the same provider, so
   /// the two screens cannot name different lessons.
-  PlanEntry _lessonCard(Lesson? next, int done) {
+  PlanEntry _lessonCard(Lesson? next, int done, {bool fromPlacement = false}) {
     final total = kAllLessonIds.length;
     if (next == null) {
       return PlanEntry(
@@ -281,6 +287,7 @@ class PlanNotifier extends Notifier<PlanState> {
         minutes: lesson.minutes,
         done: done,
         total: total,
+        fromPlacement: fromPlacement,
       ),
       route: AllInRoutes.lessonPath(id),
     );

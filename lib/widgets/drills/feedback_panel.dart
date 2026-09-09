@@ -207,7 +207,6 @@ class _FeedbackPanelState extends State<FeedbackPanel> {
                       bottom: 0,
                       child: _MoreBelow(
                         onTap: () => widget.onExpandedChanged(true),
-                        reducedMotion: widget.reducedMotion,
                       ),
                     ),
                 ],
@@ -269,12 +268,12 @@ class _FeedbackPanelState extends State<FeedbackPanel> {
 /// panel, so the beginner never taps "Next puzzle" without having been shown
 /// that the *why* was one gesture away.
 class _MoreBelow extends StatelessWidget {
-  const _MoreBelow({required this.onTap, required this.reducedMotion});
+  const _MoreBelow({required this.onTap});
 
   final VoidCallback onTap;
-  final bool reducedMotion;
 
-  static const double height = 32;
+  /// 44, not the 32 the fade needs: this is a hit target (\u00a716.5).
+  static const double height = 44;
 
   @override
   Widget build(BuildContext context) {
@@ -283,10 +282,17 @@ class _MoreBelow extends StatelessWidget {
       button: true,
       label: 'More of the coach\u2019s note below \u2014 expand',
       child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+        // Translucent, and the paint below is behind an `IgnorePointer`: the
+        // strip lies over the bottom of the scrolling middle, which is
+        // exactly where a thumb reaching up from the pinned button starts its
+        // drag. A `BoxDecoration` hit-tests *true* over its whole rectangle
+        // (so does the chevron's glyph), so painting it live would have made
+        // the affordance swallow the very scroll it advertises. Only this
+        // listener sits in the hit path, and it lets the pointer through:
+        // a drag scrolls the note, a tap expands the panel.
+        behavior: HitTestBehavior.translucent,
         onTap: onTap,
         child: IgnorePointer(
-          ignoring: false,
           child: Container(
             height: height,
             alignment: Alignment.bottomCenter,
@@ -300,18 +306,10 @@ class _MoreBelow extends StatelessWidget {
                 ],
               ),
             ),
-            child: AnimatedOpacity(
-              opacity: 1,
-              duration: AllInMotion.of(
-                context,
-                AllInMotion.fast,
-                reduced: reducedMotion,
-              ),
-              child: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 20,
-                color: c.textFaint,
-              ),
+            child: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: c.textFaint,
             ),
           ),
         ),

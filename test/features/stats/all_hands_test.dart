@@ -5,8 +5,11 @@ import 'dart:io';
 
 import 'package:allin/features/stats/providers/data_actions.dart';
 import 'package:allin/features/stats/screens/all_hands_screen.dart';
+import 'package:allin/engine/engine.dart' show Verdict;
 import 'package:allin/features/stats/stats_copy.dart';
 import 'package:allin/services/persistence.dart';
+import 'package:allin/theme/tokens.dart';
+import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:allin/services/share_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +46,43 @@ void main() {
     expect(find.text(StatsCopy.importedBadge), findsOneWidget);
   });
 
+  testWidgets('a row names the hand by its cards and the coach\'s worst call', (
+    tester,
+  ) async {
+    // A date and an amount do not say which hand this was, and nothing said
+    // which rows the coach flagged. Both come out of the stored payload —
+    // `holes[0]` and `hand_json.coachNotes[]` (§16.4).
+    CoachNoteRecord note(String verdict) => CoachNoteRecord(
+      street: 'flop',
+      action: 'call',
+      verdict: verdict,
+      title: 'Your call',
+      plain: 'plain',
+    );
+
+    final fixture = StatsFixture();
+    await fixture.addHand(
+      sixMaxHand(startedAt: 1781838000000, id: 1),
+      coachNotes: [note('great'), note('mistake'), note('ok')],
+    );
+    await fixture.addHand(sixMaxHand(startedAt: 1781838060000, id: 2));
+
+    await pumpStats(tester, const AllHandsScreen(), fixture: fixture);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    // `sixMaxHand` deals the hero As Ks.
+    expect(find.text('A♠ K♠'), findsNWidgets(2));
+
+    final dots = tester.widgetList<VerdictDot>(find.byType(VerdictDot));
+    expect(dots.length, 2);
+    // Most recent first, so the uncoached hand #2 leads. The worst of hand
+    // #1's three notes stands for it; the uncoached row still reserves the
+    // dot's box so the column stays aligned.
+    expect(dots.first.verdict, isNull);
+    expect(dots.last.verdict, Verdict.mistake);
+  });
+
   testWidgets('the source filter narrows the list', (tester) async {
     final fixture = StatsFixture();
     await fixture.addHand(sixMaxHand(startedAt: 1781838000000, id: 1));
@@ -62,6 +102,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Hand #1'), findsOneWidget);
     expect(find.textContaining('Hand #3'), findsNothing);
+  });
+
+  testWidgets('a hand row colours its result on the one money scale', (
+    tester,
+  ) async {
+    // §13: a hand you folded for nothing is not a win. `netBb >= 0` painted
+    // "+0.0 bb" in the win green. The row reads the hero's net out of the
+    // stored hand, so the fixture sets it in chips (bb = 20).
+    final fixture = StatsFixture();
+    for (final (i, chips) in <num>[60, -40, 0].indexed) {
+      final hand = sixMaxHand(startedAt: 1781838000000 + i * 60000, id: i + 1);
+      hand.heroNet = chips;
+      await fixture.addHand(hand);
+    }
+
+    await pumpStats(tester, const AllHandsScreen(), fixture: fixture);
+    await tester.pumpAndSettle();
+
+    final colours = AllInColors.dark;
+    Color? colourOf(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+    expect(colourOf('+3.0 bb'), colours.good);
+    expect(colourOf('-2.0 bb'), colours.bad);
+    expect(colourOf('+0.0 bb'), colours.textMuted);
   });
 
   testWidgets('no hands at all shows the desktop empty line', (tester) async {

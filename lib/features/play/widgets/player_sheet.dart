@@ -138,6 +138,10 @@ class PlayerSheet extends StatelessWidget {
                       enough
                           ? '${(player.vpipCount / seen * 100).round()} %'
                           : '–',
+                  // Under 8 observed hands the em dash is "no data yet", not
+                  // a reading of zero: it says so in the colour too, and the
+                  // line below the tiles glosses both acronyms.
+                  tone: enough ? StatTone.neutral : StatTone.muted,
                 ),
               ),
               const SizedBox(width: AllInSpace.sm),
@@ -149,6 +153,7 @@ class PlayerSheet extends StatelessWidget {
                           ? '${(player.pfrCount / seen * 100).round()} %'
                           : '–',
                   sub: '$seen hand${seen == 1 ? '' : 's'}',
+                  tone: enough ? StatTone.neutral : StatTone.muted,
                 ),
               ),
             ],

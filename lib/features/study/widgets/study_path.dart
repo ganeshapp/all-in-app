@@ -3,9 +3,18 @@
 /// header with its 52 pt lesson rows.
 ///
 /// The tools grid is the one piece with real layout arithmetic in it: two
-/// columns of 56 pt tiles up to 1.3× text, 72 pt tiles above that, and a
-/// single column above 1.5× — because a tool whose name is truncated is a tool
-/// nobody opens (§6.1).
+/// columns whose tile is solved from the text scale, and a single column above
+/// 1.5× — because a tool whose name is truncated is a tool nobody opens
+/// (§6.1).
+///
+/// **Deviation from §6.1's "icon 20 + label Inter 15 on ONE line", 56 tall.**
+/// Six labels alone ("Bluff calc", "Multiway", "Range explorer") tell a
+/// first-week player nothing about what the six screens behind them do, and
+/// nothing else on S0 explains them — the reader has to open all six to find
+/// the one they wanted. Each tile now carries a one-sentence gloss under its
+/// label and the tile is sized for it. §6.1's *rationale* is untouched: its
+/// whole argument is that two columns exist so the **label** never truncates,
+/// and the label still owns its own line at every width and scale.
 library;
 
 import 'package:allin/features/study/content/curriculum.dart';
@@ -22,6 +31,7 @@ class StudyTool {
     required this.id,
     required this.label,
     required this.icon,
+    required this.subtitle,
     required this.lessonId,
     required this.kind,
   });
@@ -29,6 +39,10 @@ class StudyTool {
   /// The `:tool` path segment (`range-explorer`, `equity`, …).
   final String id;
   final String label;
+
+  /// One plain-English line saying what the tool answers (TONE.md): no term
+  /// here is one the tool itself is supposed to teach.
+  final String subtitle;
   final IconData icon;
 
   /// The lesson S3 borrows its intro paragraph from, and the target of the
@@ -44,6 +58,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'range-explorer',
     label: 'Range explorer',
+    subtitle: 'See every hand a range holds',
     icon: Icons.grid_view_rounded,
     lessonId: 'range-explorer',
     kind: LessonWidgetKind.rangeExplorer,
@@ -51,6 +66,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'equity',
     label: 'Equity calc',
+    subtitle: 'How often one hand beats another',
     icon: Icons.pie_chart_outline_rounded,
     lessonId: 'equity-calculator',
     kind: LessonWidgetKind.equityCalculator,
@@ -58,6 +74,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'pot-odds',
     label: 'Pot odds',
+    subtitle: 'Is this call worth the price?',
     icon: Icons.percent_rounded,
     lessonId: 'pot-odds',
     kind: LessonWidgetKind.potOddsCalculator,
@@ -65,6 +82,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'bluff',
     label: 'Bluff calc',
+    subtitle: 'How often a bluff has to work',
     icon: Icons.auto_awesome_rounded,
     lessonId: 'bet-sizing',
     kind: LessonWidgetKind.bluffCalculator,
@@ -72,6 +90,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'multiway',
     label: 'Multiway',
+    subtitle: 'Your chances against 3 or more',
     icon: Icons.groups_rounded,
     lessonId: 'multiway',
     kind: LessonWidgetKind.multiwayEquityTrainer,
@@ -79,6 +98,7 @@ const List<StudyTool> kStudyTools = <StudyTool>[
   StudyTool(
     id: 'rankings',
     label: 'Hand rankings',
+    subtitle: 'What beats what',
     icon: Icons.style_rounded,
     lessonId: 'hand-rankings',
     kind: LessonWidgetKind.handRankings,
@@ -210,16 +230,26 @@ class ContinueCard extends StatelessWidget {
   }
 }
 
-/// The TOOLS grid (§6.1). Two columns of 56 pt tiles; 72 pt above 1.3× text
-/// scale; one column above 1.5×.
+/// The TOOLS grid (§6.1). Two columns of [tileHeight] tiles; one column above
+/// 1.5× text scale.
 class ToolsGrid extends StatelessWidget {
   const ToolsGrid({super.key, required this.onOpen, this.tools = kStudyTools});
 
   final ValueChanged<StudyTool> onOpen;
   final List<StudyTool> tools;
 
-  /// The tile height for [textScale] (§6.1).
-  static double tileHeight(double textScale) => textScale > 1.3 ? 72 : 56;
+  /// The tile height for [textScale]: 8 pt of padding top and bottom, the
+  /// label's line, and room for the gloss to take two lines — which it does at
+  /// 360, where a tile is 160 pt wide (§6.1).
+  ///
+  /// Every tile in a run is given the same height, so the grid keeps its
+  /// rhythm whether a gloss wrapped or not.
+  static double tileHeight(double textScale) =>
+      16 + labelLine * textScale + 2 + 2 * glossLine * textScale;
+
+  /// Inter 15 and Inter 12 at their rendered line heights.
+  static const double labelLine = 19;
+  static const double glossLine = 15.5;
 
   /// Whether the grid reflows to a single column (§6.1).
   static bool singleColumn(double textScale) => textScale > 1.5;
@@ -262,7 +292,7 @@ class _ToolTile extends StatelessWidget {
     final c = context.colors;
     return Semantics(
       button: true,
-      label: tool.label,
+      label: '${tool.label}. ${tool.subtitle}',
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -279,11 +309,29 @@ class _ToolTile extends StatelessWidget {
               Icon(tool.icon, size: 20, color: c.gold),
               const SizedBox(width: AllInSpace.sm),
               Expanded(
-                child: Text(
-                  tool.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AllInText.body(15, color: c.text),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      tool.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AllInText.body(15, color: c.text),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tool.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AllInText.body(
+                        12,
+                        color: c.textMuted,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

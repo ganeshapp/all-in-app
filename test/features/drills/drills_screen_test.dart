@@ -20,6 +20,7 @@ import 'package:allin/features/drills/widgets/review_empty.dart';
 import 'package:allin/services/clock.dart';
 import 'package:allin/services/persistence.dart';
 import 'package:allin/theme/app_theme.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -126,6 +127,50 @@ void main() {
     // The spot opens on the decision frame (§5.2).
     expect(find.text('3 / 3'), findsOneWidget);
     expect(find.byType(FeedbackPanel), findsNothing);
+  });
+
+  testWidgets('every answer label carries its unit (§5.1)', (tester) async {
+    // Regression: half the engine's labels are desktop-verbatim strings that
+    // stop at the number ("Call 2.5", "3-bet 7.5", "Open 2.5", "Limp 1"), so
+    // the row read "3-bet 7.5" next to a pot counted in "bb" and a beginner
+    // had nothing to tell them 7.5 of what.
+    final semantics = tester.ensureSemantics();
+    await pumpDrills(
+      tester,
+      const DrillsScreen(),
+      overrides: _overrides(
+        puzzle:
+            (_) => testPuzzle(
+              options: const [
+                DrillOption(action: DrillAction.fold, label: 'Fold'),
+                DrillOption(
+                  action: DrillAction.call,
+                  label: 'Call 2.5',
+                  amount: 2.5,
+                ),
+                DrillOption(
+                  action: DrillAction.raise,
+                  label: '3-bet 7.5',
+                  amount: 7.5,
+                ),
+              ],
+            ),
+      ),
+    );
+
+    expect(find.text('Call 2.5 bb'), findsOneWidget);
+    expect(find.text('3-bet 7.5 bb'), findsOneWidget);
+    expect(find.text('Call 2.5'), findsNothing);
+    expect(find.text('3-bet 7.5'), findsNothing);
+    // A label with no amount is left exactly as the engine wrote it.
+    expect(find.text('Fold'), findsOneWidget);
+    // §13: the unit is spoken in full, once.
+    expect(find.bySemanticsLabel('Call 2.5 big blinds'), findsOneWidget);
+
+    // Labels that already carry the unit are never doubled.
+    expect(AnswerRow.labelWithUnit('Shove 12 bb'), 'Shove 12 bb');
+    expect(AnswerRow.labelWithUnit('Check back'), 'Check back');
+    semantics.dispose();
   });
 
   testWidgets('a right answer raises D1 with the verdict, the rating delta '
@@ -289,7 +334,9 @@ void main() {
     expect(chevron, findsOneWidget);
 
     final compactTop = tester.getTopLeft(find.byType(FeedbackPanel)).dy;
-    await tester.tap(chevron);
+    // The chevron is painted behind an `IgnorePointer` so the strip cannot
+    // swallow the scroll it advertises; the tap goes to the strip over it.
+    await tester.tapAt(tester.getCenter(chevron));
     await tester.pumpAndSettle();
     expect(
       tester.getTopLeft(find.byType(FeedbackPanel)).dy,
@@ -298,6 +345,45 @@ void main() {
     );
     // Expanded, there is nothing below the fold to advertise.
     expect(chevron, findsNothing);
+  });
+
+  testWidgets('the fade never swallows the scroll it advertises', (
+    tester,
+  ) async {
+    // The fade lies over the bottom of the scrolling middle — exactly where a
+    // thumb reaching up from the pinned button starts its drag. A live
+    // `BoxDecoration` hit-tests true over its whole rectangle, so the
+    // affordance used to eat that drag; the paint is behind an
+    // `IgnorePointer` and only a translucent listener sits in the path.
+    await pumpDrills(
+      tester,
+      const DrillsScreen(),
+      overrides: _overrides(puzzle: (_) => testPuzzle()),
+    );
+    await _answer(tester, 'Call 8 bb');
+    await tester.pumpAndSettle();
+
+    final chevron = find.descendant(
+      of: find.byType(FeedbackPanel),
+      matching: find.byIcon(Icons.keyboard_arrow_down_rounded),
+    );
+    expect(chevron, findsOneWidget);
+    final panelTop = tester.getTopLeft(find.byType(FeedbackPanel)).dy;
+    final before = tester.getRect(find.byType(DrillFeedbackBody)).top;
+
+    await tester.dragFrom(tester.getCenter(chevron), const Offset(0, -60));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getRect(find.byType(DrillFeedbackBody)).top,
+      lessThan(before),
+      reason: 'a drag that starts on the fade scrolls the note',
+    );
+    expect(
+      tester.getTopLeft(find.byType(FeedbackPanel)).dy,
+      panelTop,
+      reason: 'and it is a scroll, not an accidental detent change',
+    );
   });
 
   testWidgets('the rating delta says what it counts', (tester) async {
@@ -567,6 +653,97 @@ void main() {
     expect(find.text(DrillMode.mixed.blurb), findsOneWidget);
   });
 
+  testWidgets('the spot sentence is a full-width line, not pill text (§5.2)', (
+    tester,
+  ) async {
+    // Regression: `frame.text` used to live inside the 44 pt scrubber pill,
+    // where it ellipsised at ~28 characters ("Action on you in the CO…"), so
+    // reading the spot you are graded on cost a long-press on every spot.
+    const size = Size(390, 844);
+    // A real decision sentence — the one that used to become "Action on you
+    // in the CO…".
+    const long =
+        'Checked to you on the river as the pre-flop aggressor. Action on '
+        'you in the CO.';
+    await pumpDrills(
+      tester,
+      const DrillsScreen(),
+      size: size,
+      overrides: _overrides(
+        puzzle:
+            (_) => testPuzzle(
+              frames: const [
+                DrillFrame(
+                  text: 'CO raises to 3 bb.',
+                  street: Street.preflop,
+                  board: [],
+                  pot: 4.5,
+                ),
+                DrillFrame(
+                  text: long,
+                  street: Street.flop,
+                  board: ['As', '7d', '2c'],
+                  pot: 24,
+                ),
+              ],
+            ),
+      ),
+    );
+
+    expect(find.byType(FrameTextLine), findsOneWidget);
+    final line = tester.getRect(find.byType(FrameTextLine));
+    expect(
+      line.width,
+      moreOrLessEquals(size.width - 2 * AllInSpace.lg, epsilon: 0.5),
+      reason: 'the sentence wraps across the full page width, not a pill',
+    );
+    expect(find.text(long), findsOneWidget);
+    // Two lines of it, not one clipped line.
+    expect(line.height, greaterThan(20));
+    // It sits under the felt and above the scrubber.
+    final scrubber = tester.getRect(find.byType(FrameScrubber));
+    expect(line.bottom, lessThanOrEqualTo(scrubber.top));
+    expect(
+      line.top,
+      greaterThanOrEqualTo(tester.getRect(find.byType(DrillTable)).bottom),
+    );
+
+    // The pill carries the index alone.
+    expect(find.text('2 / 2'), findsOneWidget);
+    expect(find.textContaining('2 / 2 ·'), findsNothing);
+
+    // Scrubbing back swaps the sentence with it.
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+    expect(find.text('CO raises to 3 bb.'), findsOneWidget);
+  });
+
+  testWidgets('the felt sits on the same 16 pt page margin as every other '
+      'band (§16.5)', (tester) async {
+    // Regression: `DrillTable` filled the table box edge to edge, so the
+    // felt's brown rail was clipped flat against both bezels at its widest
+    // point and the table read as cut off.
+    for (final size in const [Size(360, 780), Size(390, 844), Size(430, 932)]) {
+      await pumpDrills(
+        tester,
+        const DrillsScreen(),
+        size: size,
+        overrides: _overrides(puzzle: (_) => testPuzzle()),
+      );
+
+      final felt = tester.getRect(find.byType(DrillTable));
+      final answers = tester.getRect(find.byType(AnswerRow));
+      expect(
+        felt.left,
+        moreOrLessEquals(AllInSpace.lg, epsilon: 0.5),
+        reason: 'the felt is inset by the page margin at ${size.width}',
+      );
+      expect(felt.right, moreOrLessEquals(size.width - AllInSpace.lg));
+      expect(felt.left, moreOrLessEquals(answers.left, epsilon: 0.5));
+      expect(felt.right, moreOrLessEquals(answers.right, epsilon: 0.5));
+    }
+  });
+
   testWidgets('the frame list (D2) opens from a long-press on the pill', (
     tester,
   ) async {
@@ -655,7 +832,8 @@ void main() {
     );
     expect(find.text('46/7'), findsOneWidget, reason: "the Station's HUD");
 
-    await _answer(tester, 'Bet 5.4');
+    // The engine's label stops at the number; §5.1's row adds the unit.
+    await _answer(tester, 'Bet 5.4 bb');
     await _openLayer(tester, CoachCopy.showMath);
     expect(find.text(DrillCopy.balancedLine(48)), findsOneWidget);
     expect(find.text(DrillCopy.exploitLine(65)), findsOneWidget);

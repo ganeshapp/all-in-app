@@ -35,6 +35,8 @@ Future<int?> _open(
   required Size size,
   double textScale = 1.0,
   int value = 150,
+  int currentBet = 40,
+  LegalActions legal = _legal,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -59,8 +61,8 @@ Future<int?> _open(
                           onPressed: () async {
                             result = await BetKeypadSheet.show(
                               inner,
-                              legal: _legal,
-                              currentBet: 40,
+                              legal: legal,
+                              currentBet: currentBet,
                               value: value,
                               enableHaptics: false,
                               reducedMotion: true,
@@ -80,7 +82,23 @@ Future<int?> _open(
   return result;
 }
 
-Finder _commit() => find.textContaining('Set · Raise to');
+Finder _commit() => find.textContaining('Set · ');
+
+/// No bet outstanding: the action row behind the sheet says "Bet 3", so the
+/// sheet must not answer "Raise to 3" for the same tap.
+const LegalActions _openPot = LegalActions(
+  toCall: 0,
+  canFold: true,
+  canCheck: true,
+  canCall: false,
+  callAmount: 0,
+  canBet: true,
+  canRaise: false,
+  minRaiseTo: 20,
+  maxRaiseTo: 2000,
+  potSize: 90,
+  bigBlind: 20,
+);
 
 void main() {
   for (final size in const [phone360, phone390, phone430]) {
@@ -176,6 +194,50 @@ void main() {
     await tester.tap(_commit());
     await tester.pumpAndSettle();
     expect(find.byType(AllInSheet), findsNothing);
+  });
+
+  testWidgets('the commit verb follows the action row: no bet outstanding '
+      'reads "Set · Bet"', (tester) async {
+    await _open(
+      tester,
+      size: phone390,
+      legal: _openPot,
+      currentBet: 0,
+      value: 60,
+    );
+
+    expect(find.text('Set · Bet 3'), findsOneWidget);
+    expect(find.textContaining('Raise to'), findsNothing);
+  });
+
+  testWidgets('facing a bet the verb stays "Raise to"', (tester) async {
+    await _open(tester, size: phone390, value: 150);
+    expect(find.text('Set · Raise to 7.5'), findsOneWidget);
+  });
+
+  testWidgets('the preset strip says when sizes are off the edge, and the '
+      'affordance pages them in', (tester) async {
+    // Seven chips in ~330 pt: two or three are always past the right edge.
+    // §4.5 accepts that they scroll; a strip that scrolls with nothing to say
+    // so reads as a clipped row, and the fastest way to size a bet is the
+    // part that stays hidden.
+    await _open(tester, size: phone360);
+
+    expect(find.text('Min'), findsOneWidget);
+    expect(find.text('All-in'), findsNothing, reason: 'nothing to page to');
+    expect(find.bySemanticsLabel('More sizes'), findsOneWidget);
+
+    for (var i = 0; i < 6; i++) {
+      final affordance = find.bySemanticsLabel('More sizes');
+      if (affordance.evaluate().isEmpty) break;
+      await tester.tap(affordance);
+      await tester.pumpAndSettle();
+    }
+
+    // The strip paged to its end: the last preset is on screen and the
+    // affordance has taken itself away.
+    expect(find.text('All-in'), findsOneWidget);
+    expect(find.bySemanticsLabel('More sizes'), findsNothing);
   });
 
   testWidgets('every key and stepper keeps a 44 pt hit target (§13)', (

@@ -367,6 +367,12 @@ abstract final class StatsCopy {
       'written out below; the felt is only a picture.';
 
   static const String replayShareText = "Share this hand's text";
+
+  /// P11's hand-to-hand step *(mobile addition)*. Reviewing a session means
+  /// reading its hands in order; without these the only way to the next one is
+  /// back out to the list and find your place again.
+  static const String replayNewerHand = 'Newer hand';
+  static const String replayOlderHand = 'Older hand';
   static const String replayFrames = 'Frames';
   static const String shareHand = 'Share this hand';
   static const String shareFailed = "Couldn't open the share sheet";

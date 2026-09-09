@@ -95,3 +95,43 @@ class VerdictBadge extends StatelessWidget {
     );
   }
 }
+
+/// The badge reduced to a coloured dot, for a list row that has to stay on its
+/// 52–56 pt rhythm (§4.13's session log, §7.5's All hands).
+///
+/// It occupies its box whether or not there is a verdict, so a column of rows
+/// keeps its alignment when only some hands were coached.
+class VerdictDot extends StatelessWidget {
+  const VerdictDot({super.key, this.verdict, this.diameter = 8, this.box = 14});
+
+  /// Null when the coach had nothing to say about the hand (or was off).
+  final Verdict? verdict;
+  final double diameter;
+
+  /// The reserved width, so rows line up with and without a dot.
+  final double box;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = verdict;
+    return SizedBox(
+      width: box,
+      child:
+          v == null
+              ? null
+              : Semantics(
+                label: VerdictBadge.labelOf(v),
+                child: Center(
+                  child: Container(
+                    width: diameter,
+                    height: diameter,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: VerdictBadge.colorOf(v, context.colors),
+                    ),
+                  ),
+                ),
+              ),
+    );
+  }
+}

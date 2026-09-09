@@ -186,6 +186,31 @@ final handProvider = FutureProvider.family<StoredHand?, int>((ref, startedAt) {
   return ref.watch(handsRepositoryProvider).handByStartedAt(startedAt);
 });
 
+/// The hands either side of [startedAt] in T2's own order (newest first), so
+/// P11 can step from one hand to the next without a round trip through the
+/// list *(mobile addition)*.
+///
+/// `.older` is the next row down the list; `.newer` is the row above it. Both
+/// are null when the hand is not in the loaded page — an imported hand opened
+/// by deep link after the page moved on, say — which simply disables the two
+/// controls.
+typedef HandNeighbours = ({int? newer, int? older});
+
+final handNeighboursProvider = Provider.family<HandNeighbours, int>((
+  ref,
+  startedAt,
+) {
+  final hands =
+      ref.watch(allHandsProvider(kAllHandsPage)).valueOrNull ??
+      const <StoredHand>[];
+  final i = hands.indexWhere((h) => h.startedAt == startedAt);
+  if (i < 0) return (newer: null, older: null);
+  return (
+    newer: i > 0 ? hands[i - 1].startedAt : null,
+    older: i < hands.length - 1 ? hands[i + 1].startedAt : null,
+  );
+});
+
 /* ------------------------------------------------------------- practice */
 
 /// 16 weeks × 7 cells, oldest first (§7.11).

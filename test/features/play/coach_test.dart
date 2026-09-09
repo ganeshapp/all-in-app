@@ -188,13 +188,24 @@ void main() {
       expect(find.byType(CoachNoteView), findsNothing);
     });
 
-    for (final size in const [Size(390, 844), Size(411, 914)]) {
+    const footerCases = <(Size, double, bool)>[
+      (Size(360, 780), 1.0, true),
+      (Size(360, 780), 1.3, true),
+      (Size(390, 844), 1.0, true),
+      (Size(390, 844), 1.3, false),
+      (Size(411, 914), 1.0, true),
+      (Size(430, 932), 1.3, true),
+    ];
+    for (final (size, textScale, dark) in footerCases) {
       testWidgets('"Got it" is inside the viewport the moment it opens at '
-          '${size.width.toInt()}', (tester) async {
+          '${size.width.toInt()}×${size.height.toInt()} @${textScale}x'
+          '${dark ? '' : ' (light)'}', (tester) async {
         // It used to be the last item of the sheet's own scroll view, so on
         // a full note (paragraph + equity bar + multiway callout + two
         // disclosure rows + EV row) the only way out of a blocking verdict
-        // was below the fold until the user dragged the sheet up to L.
+        // was below the fold until the user dragged the sheet up to L. The
+        // footer is pinned now, so it holds on the narrowest phone at 1.3×
+        // text, where the note is tallest.
         final container = makeContainer();
         addTearDown(container.dispose);
         await pumpSheet(
@@ -202,17 +213,27 @@ void main() {
           container: container,
           req: request(callReview()),
           size: size,
+          textScale: textScale,
+          dark: dark,
         );
 
         final button = tester.getRect(find.text(CoachCopy.gotIt));
         final sheet = tester.getRect(find.byType(AllInSheet));
+        final reason = '${size.width.toInt()} @${textScale}x';
         expect(
           button.bottom,
           lessThanOrEqualTo(sheet.bottom + 0.5),
-          reason: 'Got it is below the fold at ${size.width}',
+          reason: 'Got it is below the fold at $reason',
         );
         expect(button.top, greaterThanOrEqualTo(sheet.top - 0.5));
         expect(button.bottom, lessThanOrEqualTo(size.height));
+        // Reachable without a drag: the row is still a 44 pt target and the
+        // tap resumes the hand.
+        final row = tester.getRect(find.byType(AllInButton).last);
+        expect(row.height, greaterThanOrEqualTo(44), reason: reason);
+        await tester.tap(find.text(CoachCopy.gotIt));
+        await tester.pumpAndSettle();
+        expect(find.byType(CoachNoteView), findsNothing, reason: reason);
       });
     }
 
@@ -538,6 +559,18 @@ void main() {
         find.text(PlayCopy.readsAreEarned(player.handsSeen)),
         findsOneWidget,
       );
+      // …and both acronyms are glossed in that same line, so the two tiles
+      // are never two bare initialisms over an em dash.
+      expect(find.textContaining('VPIP ='), findsOneWidget);
+      expect(find.textContaining('PFR ='), findsOneWidget);
+      // The em dash is "nothing yet", not a reading of zero (§13).
+      for (final label in const ['VPIP', 'PFR']) {
+        final tile = tester.widget<StatTile>(
+          find.ancestor(of: find.text(label), matching: find.byType(StatTile)),
+        );
+        expect(tile.value, '–');
+        expect(tile.tone, StatTone.muted);
+      }
       expect(find.text(PlayCopy.explainTheirLastMove), findsNothing);
 
       await tapIn(tester, find.text(PlayCopy.readTheirRange));
