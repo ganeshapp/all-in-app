@@ -181,11 +181,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CoachNoteView), findsOneWidget);
 
-      // The sheet is at M and the note is taller than that, so the
-      // acknowledgement is one scroll down — it is still the only way out.
-      await tapIn(tester, find.text(CoachCopy.gotIt));
+      // §1.1: the acknowledgement is pinned, so it is tappable straight away
+      // — no scroll, no drag to L.
+      await tester.tap(find.text(CoachCopy.gotIt));
+      await tester.pumpAndSettle();
       expect(find.byType(CoachNoteView), findsNothing);
     });
+
+    for (final size in const [Size(390, 844), Size(411, 914)]) {
+      testWidgets('"Got it" is inside the viewport the moment it opens at '
+          '${size.width.toInt()}', (tester) async {
+        // It used to be the last item of the sheet's own scroll view, so on
+        // a full note (paragraph + equity bar + multiway callout + two
+        // disclosure rows + EV row) the only way out of a blocking verdict
+        // was below the fold until the user dragged the sheet up to L.
+        final container = makeContainer();
+        addTearDown(container.dispose);
+        await pumpSheet(
+          tester,
+          container: container,
+          req: request(callReview()),
+          size: size,
+        );
+
+        final button = tester.getRect(find.text(CoachCopy.gotIt));
+        final sheet = tester.getRect(find.byType(AllInSheet));
+        expect(
+          button.bottom,
+          lessThanOrEqualTo(sheet.bottom + 0.5),
+          reason: 'Got it is below the fold at ${size.width}',
+        );
+        expect(button.top, greaterThanOrEqualTo(sheet.top - 0.5));
+        expect(button.bottom, lessThanOrEqualTo(size.height));
+      });
+    }
 
     testWidgets('shows the verdict, layer 1 and the equity bar', (
       tester,

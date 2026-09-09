@@ -92,11 +92,13 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
         ),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
+        // T2 keeps the tab bar (and the Session pill), so the shell's chrome
+        // inset has to be reserved or the last hand rows sit under it.
+        padding: EdgeInsets.fromLTRB(
           AllInSpace.lg,
           0,
           AllInSpace.lg,
-          AllInSpace.xxl,
+          AllInSpace.xxl + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           AllInSegmented(

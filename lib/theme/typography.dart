@@ -7,9 +7,12 @@ class AllInFonts {
   static const String body = 'Inter';
   static const String mono = 'JetBrains Mono';
 
-  /// Inter and JetBrains Mono ship without the Number Forms block, so the
-  /// sizing rail's `⅓` / `⅔` (§4.5) render as tofu without a fallback.
-  /// Bricolage Grotesque carries them, so every family falls back to it.
+  /// Last-resort fallback for glyphs Inter and JetBrains Mono do not ship.
+  ///
+  /// It is deliberately *not* load-bearing for the §4.5 sizing rail: the rail
+  /// and the P13 preset chips write their fractions in ASCII ("1/3", "2/3"),
+  /// because falling back per-glyph mixed two typefaces inside a single row —
+  /// `½`/`¾` in Inter beside `⅓`/`⅔` in Bricolage.
   static const List<String> fallback = <String>[display];
 }
 

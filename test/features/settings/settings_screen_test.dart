@@ -17,6 +17,7 @@ import 'package:allin/features/settings/providers/settings_providers.dart';
 import 'package:allin/features/settings/widgets/reset_dialog.dart';
 import 'package:allin/features/settings/widgets/setting_rows.dart';
 import 'package:allin/services/persistence/key_value_store.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/services/persistence/settings_store.dart';
 import 'package:allin/theme/app_theme.dart';
 import 'package:allin/widgets/widgets.dart';
@@ -147,6 +148,50 @@ Future<void> tapSegment(WidgetTester tester, String title, String label) async {
 }
 
 void main() {
+  test('the four-colour caption paints each suit in the colour it names', () {
+    // As a flat string the caption contradicted itself: "♦ blue" printed with
+    // a red diamond, "♣ green" with a grey club, and ♥ fell through to the
+    // colour-emoji font. Colours come from the deck itself.
+    List<TextSpan> glyphs(bool on) =>
+        SettingsCopy.fourColourSpans(on: on)
+            .whereType<TextSpan>()
+            .expand(
+              (s) => s.children?.whereType<TextSpan>() ?? const <TextSpan>[],
+            )
+            .where((s) => s.style?.color != null)
+            .toList();
+
+    final on = glyphs(true);
+    expect(on.map((s) => s.style!.color), [
+      AllInColors.suitBlack,
+      AllInColors.suitRed,
+      AllInColors.suitBlue,
+      AllInColors.suitGreen,
+    ]);
+    // U+FE0E forces text presentation so ♥ never renders as an emoji.
+    for (final span in on) {
+      expect(span.text, contains('\uFE0E'));
+    }
+
+    // With the setting off the caption follows the two-colour deck instead.
+    expect(glyphs(false).map((s) => s.style!.color), [
+      AllInColors.suitBlack,
+      AllInColors.suitRed,
+      AllInColors.suitRed,
+      AllInColors.suitBlack,
+    ]);
+    final wordsOff =
+        SettingsCopy.fourColourSpans(on: false)
+            .whereType<TextSpan>()
+            .expand(
+              (s) => s.children?.whereType<TextSpan>() ?? const <TextSpan>[],
+            )
+            .where((s) => s.style?.color == null)
+            .map((s) => s.text)
+            .toList();
+    expect(wordsOff, ['black', 'red', 'red', 'black']);
+  });
+
   testWidgets('renders every group in both themes and at 1.3x text', (
     tester,
   ) async {

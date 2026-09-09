@@ -185,6 +185,25 @@ class ImportFlowController {
   }
 }
 
+/// `AllInSheet` draws chrome only, so each T3 sheet owns its own padding —
+/// without it the copy and the buttons run flush into both screen edges.
+class _SheetBody extends StatelessWidget {
+  const _SheetBody({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      AllInSpace.lg,
+      AllInSpace.sm,
+      AllInSpace.lg,
+      AllInSpace.lg + MediaQuery.paddingOf(context).bottom,
+    ),
+    child: child,
+  );
+}
+
 class _ImportProgressSheet extends ConsumerWidget {
   const _ImportProgressSheet({
     required this.onBackground,
@@ -213,44 +232,46 @@ class _ImportProgressSheet extends ConsumerWidget {
             ? StatsCopy.importReviewing(state.analysedHands, state.totalHands)
             : StatsCopy.importReading;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          StatsCopy.importTitle,
-          style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
-        ),
-        const SizedBox(height: AllInSpace.md),
-        Text(headline, style: AllInText.body(15, color: c.textMuted)),
-        const SizedBox(height: AllInSpace.sm),
-        ProgressBarThin(
-          value: state.progress ?? 0,
-          height: 6,
-          semanticLabel: headline,
-        ),
-        if (state.fileName != null) ...[
-          const SizedBox(height: AllInSpace.sm),
+    return _SheetBody(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text(
-            state.fileName!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AllInText.mono(12, color: c.textFaint),
+            StatsCopy.importTitle,
+            style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
+          ),
+          const SizedBox(height: AllInSpace.md),
+          Text(headline, style: AllInText.body(15, color: c.textMuted)),
+          const SizedBox(height: AllInSpace.sm),
+          ProgressBarThin(
+            value: state.progress ?? 0,
+            height: 6,
+            semanticLabel: headline,
+          ),
+          if (state.fileName != null) ...[
+            const SizedBox(height: AllInSpace.sm),
+            Text(
+              state.fileName!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AllInText.mono(12, color: c.textFaint),
+            ),
+          ],
+          const SizedBox(height: AllInSpace.lg),
+          AllInButton.ghost(
+            label: StatsCopy.importContinue,
+            expand: true,
+            onPressed: onBackground,
+          ),
+          const SizedBox(height: AllInSpace.sm),
+          AllInButton.ghost(
+            label: StatsCopy.importCancel,
+            expand: true,
+            onPressed: onCancel,
           ),
         ],
-        const SizedBox(height: AllInSpace.lg),
-        AllInButton.ghost(
-          label: StatsCopy.importContinue,
-          expand: true,
-          onPressed: onBackground,
-        ),
-        const SizedBox(height: AllInSpace.sm),
-        AllInButton.ghost(
-          label: StatsCopy.importCancel,
-          expand: true,
-          onPressed: onCancel,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -271,37 +292,39 @@ class _ImportResultSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          StatsCopy.importTitle,
-          style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
-        ),
-        const SizedBox(height: AllInSpace.md),
-        Text(summary, style: AllInText.body(15, color: c.text, height: 1.5)),
-        const SizedBox(height: AllInSpace.lg),
-        AllInButton.secondary(
-          label: StatsCopy.importSeeHands,
-          expand: true,
-          onPressed: onSeeHands,
-        ),
-        if (leaks > 0) ...[
-          const SizedBox(height: AllInSpace.sm),
+    return _SheetBody(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            StatsCopy.importTitle,
+            style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
+          ),
+          const SizedBox(height: AllInSpace.md),
+          Text(summary, style: AllInText.body(15, color: c.text, height: 1.5)),
+          const SizedBox(height: AllInSpace.lg),
           AllInButton.secondary(
-            label: StatsCopy.importReviewNow,
+            label: StatsCopy.importSeeHands,
             expand: true,
-            onPressed: onReviewNow,
+            onPressed: onSeeHands,
+          ),
+          if (leaks > 0) ...[
+            const SizedBox(height: AllInSpace.sm),
+            AllInButton.secondary(
+              label: StatsCopy.importReviewNow,
+              expand: true,
+              onPressed: onReviewNow,
+            ),
+          ],
+          const SizedBox(height: AllInSpace.sm),
+          AllInButton.ghost(
+            label: StatsCopy.importDone,
+            expand: true,
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
-        const SizedBox(height: AllInSpace.sm),
-        AllInButton.ghost(
-          label: StatsCopy.importDone,
-          expand: true,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -330,31 +353,33 @@ class _ImportFailureSheet extends StatelessWidget {
       _ => (StatsCopy.importTitle, StatsCopy.importNoHands),
     };
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          title,
-          style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
-        ),
-        const SizedBox(height: AllInSpace.md),
-        Text(body, style: AllInText.body(15, color: c.text, height: 1.5)),
-        const SizedBox(height: AllInSpace.lg),
-        if (failure == ImportFailure.noHands) ...[
-          AllInButton.secondary(
-            label: StatsCopy.importExportSample,
-            expand: true,
-            onPressed: onExportSample,
+    return _SheetBody(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: AllInText.body(17, weight: FontWeight.w600, color: c.text),
           ),
-          const SizedBox(height: AllInSpace.sm),
+          const SizedBox(height: AllInSpace.md),
+          Text(body, style: AllInText.body(15, color: c.text, height: 1.5)),
+          const SizedBox(height: AllInSpace.lg),
+          if (failure == ImportFailure.noHands) ...[
+            AllInButton.secondary(
+              label: StatsCopy.importExportSample,
+              expand: true,
+              onPressed: onExportSample,
+            ),
+            const SizedBox(height: AllInSpace.sm),
+          ],
+          AllInButton.ghost(
+            label: StatsCopy.importOk,
+            expand: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ],
-        AllInButton.ghost(
-          label: StatsCopy.importOk,
-          expand: true,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
+      ),
     );
   }
 }

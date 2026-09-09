@@ -25,6 +25,7 @@ import '../../drills/providers/review_provider.dart';
 import '../../play/providers/play_providers.dart';
 import '../../play/providers/session_provider.dart';
 import '../../study/content/curriculum.dart';
+import '../../study/content/lesson_model.dart';
 import '../../study/providers/study_providers.dart';
 import '../home_copy.dart';
 import 'home_providers.dart';
@@ -130,18 +131,6 @@ const int kSessionMinutes = 6;
 /// §3.2 card 4.
 const int kQuickSetMinutes = 4;
 
-/// The lesson the placement test suggested, recovered from the rating it
-/// seeded (bands of `PlacementResult.forScore`: 900 · 1050 · 1250). The
-/// suggestion itself is not persisted, and re-deriving it here is cheaper than
-/// a new store — on any other rating this returns null and the card falls back
-/// to the first incomplete lesson, which is §3.2's rule anyway.
-String? placementLessonForRating(double rating) => switch (rating) {
-  900 => 'hand-rankings',
-  1050 => 'pot-odds',
-  1250 => 'threebet-pots',
-  _ => null,
-};
-
 /// The mode with the weakest accuracy over its last [kModeWindow] answers,
 /// among those with at least [kModeMinAnswers]; Mixed otherwise (§3.2).
 QuickSetMode weakestMode(List<DrillAnswer> answers) {
@@ -226,7 +215,7 @@ class PlanNotifier extends Notifier<PlanState> {
       );
     }
 
-    cards.add(_lessonCard(lesson?.id, done, board.rating));
+    cards.add(_lessonCard(lesson, done));
 
     final mode = weakestMode(answers);
     cards.add(
@@ -264,9 +253,14 @@ class PlanNotifier extends Notifier<PlanState> {
   }
 
   /// §3.2 card 3, including §14's "all 31 complete" wording.
-  PlanEntry _lessonCard(String? continueId, int done, double rating) {
+  ///
+  /// *Which* lesson is not decided here: `studyContinueLessonProvider` owns
+  /// that rule — placement suggestion on the first day, first incomplete in
+  /// path order after — and Study's Continue card reads the same provider, so
+  /// the two screens cannot name different lessons.
+  PlanEntry _lessonCard(Lesson? next, int done) {
     final total = kAllLessonIds.length;
-    if (continueId == null) {
+    if (next == null) {
       return PlanEntry(
         kind: PlanCardKind.lesson,
         title: HomeCopy.lessonCompleteTitle,
@@ -275,13 +269,8 @@ class PlanNotifier extends Notifier<PlanState> {
       );
     }
 
-    // On the first day the placement result's suggestion wins (§3.2).
-    final suggested = done == 0 ? placementLessonForRating(rating) : null;
-    final id =
-        suggested != null && lessonById(suggested) != null
-            ? suggested
-            : continueId;
-    final lesson = lessonById(id)!;
+    final id = next.id;
+    final lesson = next;
     final level = kLevels.indexWhere((l) => l.lessons.any((x) => x.id == id));
 
     return PlanEntry(

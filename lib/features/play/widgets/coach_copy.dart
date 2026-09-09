@@ -45,9 +45,20 @@ abstract final class CoachSheetCopy {
   /// The route's own title when there is no seat to name (§14).
   static const String readTitleGeneric = 'Read their range';
 
-  /// *(desktop)* the second subtitle line.
+  /// The second subtitle line.
+  ///
+  /// The desktop's "Optionally paint your guess, or just peek to study their
+  /// range." sat over a 13×13 grid of codes (AKs / AKo / T8o) and explained
+  /// none of it: "range" is undefined at layer 1, "paint" never says
+  /// tap-or-drag, and the s/o suffix appears nowhere else on the screen (the
+  /// legend only colours Pairs / Suited / Offsuit). A first-week player could
+  /// not start — and the reveal then graded them "Way off" (TONE.md).
   static const String readSubtitle =
-      'Optionally paint your guess, or just peek to study their range.';
+      "Their \u2018range\u2019 is every hand they would play here. Drag "
+      'across the squares to mark the ones you think they hold — "s" means '
+      'both cards the same suit, "o" means different suits. The chips below '
+      'are shortcuts — the strongest 10 % of all hands, 15 %, and so on. Or '
+      'just tap Peek to see their range.';
 
   /// "BTN · Tight-Aggressive (TAG) · Flop" *(desktop)*.
   static String readContext({

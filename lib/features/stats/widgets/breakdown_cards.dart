@@ -187,12 +187,19 @@ class _PositionRow extends StatelessWidget {
                 child: DivergingBar(value: stat.rate, max: maxAbs, height: 8),
               ),
               const SizedBox(width: AllInSpace.sm),
+              // A win rate is one number: "−250/100" is 8 mono characters and
+              // wrapped onto a second line inside the old 62 pt column, which
+              // the 44 pt row then had to clip.
               SizedBox(
-                width: 62,
-                child: Text(
-                  rate,
-                  textAlign: TextAlign.right,
-                  style: AllInText.mono(13, color: c.text),
+                width: 68,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    rate,
+                    maxLines: 1,
+                    style: AllInText.mono(13, color: c.text),
+                  ),
                 ),
               ),
               const SizedBox(width: AllInSpace.xs),

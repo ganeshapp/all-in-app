@@ -28,6 +28,11 @@ const Duration _kBarShow = Duration(milliseconds: 200);
 /// Locations that hide the bar (§16.1). Root-level modals are listed too:
 /// they cover the shell anyway, but the predicate is the single source of
 /// truth and the tests assert it.
+/// Where the Session pill is redundant: the Play lobby already shows a
+/// full-width "Session in progress … Resume ›" card at the top of the same
+/// screen, so the pill was a second copy of the same control (§2.2).
+final RegExp _kPillRedundant = RegExp(r'^/play$');
+
 final List<RegExp> _kHiddenLocations = [
   RegExp(r'^/table(/.*)?$'),
   RegExp(r'^/placement$'),
@@ -54,6 +59,24 @@ class TabScaffold extends ConsumerWidget {
   static const double minHeightForPill = 800;
   static const double maxTextScaleForPill = 1.15;
 
+  /// The `NavigationBar` label size (`app_theme.dart`).
+  static const double labelSize = 11.5;
+
+  /// §2.1's bar height, grown by one label line above 1.15×.
+  ///
+  /// That is exactly the point where the pill is gated out and the Play item
+  /// takes the session on itself ("Play · +4.5"). At 360 × 1.3× that label
+  /// wraps, and inside a fixed 68 pt bar the second line was painted straight
+  /// through the active-indicator pill. `chromeHeight` is computed from the
+  /// same number, so the routes that budget against it stay correct.
+  static double barHeightFor(BuildContext context) {
+    final base =
+        NavigationBarTheme.of(context).height ?? kBottomNavigationBarHeight;
+    final scaled = MediaQuery.textScalerOf(context).scale(labelSize);
+    if (scaled <= labelSize * maxTextScaleForPill) return base;
+    return base + scaled * 1.35;
+  }
+
   /// Whether the `NavigationBar` is hidden at [location] (path only).
   static bool hidesTabBar(String location) {
     final path = Uri.parse(location).path;
@@ -75,14 +98,19 @@ class TabScaffold extends ConsumerWidget {
     final pillFits =
         media.size.height >= minHeightForPill &&
         textScale <= maxTextScaleForPill;
-    final showPill = session != null && pillFits;
+    final showPill =
+        session != null &&
+        pillFits &&
+        !_kPillRedundant.hasMatch(Uri.parse(location).path);
 
-    final barHeight =
-        NavigationBarTheme.of(context).height ?? kBottomNavigationBarHeight;
+    final barHeight = barHeightFor(context);
     final chromeHeight =
         barHeight +
         media.padding.bottom +
-        (showPill ? pillHeight + pillGap : 0);
+        // The pill now sits inside the bar's opaque surface with a gap above
+        // *and* below it, so routes budgeting against `chromeHeight` still
+        // clear it exactly (§5.1).
+        (showPill ? pillHeight + pillGap * 2 : 0);
 
     // The incoming route is laid out for a hidden bar from its first frame, so
     // nothing reflows while the bar slides away (§11).
@@ -123,29 +151,39 @@ class TabScaffold extends ConsumerWidget {
                     reduced: reduced,
                   ),
                   curve: AllInMotion.ease,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (showPill)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: AllInSpace.lg,
-                            right: AllInSpace.lg,
-                            bottom: pillGap,
+                  // The pill and the bar are **one opaque surface**. Floating
+                  // the pill over a transparent band let live content scroll
+                  // through the gaps around it — a paragraph sliced in half
+                  // beside the pill, an eyebrow showing between pill and bar.
+                  child: ColoredBox(
+                    color: colors.ink850,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (showPill)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: AllInSpace.lg,
+                              right: AllInSpace.lg,
+                              top: pillGap,
+                              bottom: pillGap,
+                            ),
+                            child: SessionPill(
+                              session: session,
+                              onResume: () => context.go(AllInRoutes.tablePath),
+                              onEndSession: () => _endSession(context, ref),
+                            ),
                           ),
-                          child: SessionPill(
-                            session: session,
-                            onResume: () => context.go(AllInRoutes.tablePath),
-                            onEndSession: () => _endSession(context, ref),
-                          ),
+                        _TabBar(
+                          currentIndex: navigationShell.currentIndex,
+                          due: due,
+                          height: barHeight,
+                          session: pillFits ? null : session,
+                          onSelected:
+                              (index) => _onSelected(context, ref, index),
                         ),
-                      _TabBar(
-                        currentIndex: navigationShell.currentIndex,
-                        due: due,
-                        session: pillFits ? null : session,
-                        onSelected: (index) => _onSelected(context, ref, index),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -188,12 +226,14 @@ class _TabBar extends StatelessWidget {
   const _TabBar({
     required this.currentIndex,
     required this.due,
+    required this.height,
     required this.session,
     required this.onSelected,
   });
 
   final int currentIndex;
   final int due;
+  final double height;
 
   /// Non-null only when the pill is height-gated out: the Play item then
   /// carries the session (§2.1).
@@ -208,6 +248,7 @@ class _TabBar extends StatelessWidget {
 
     return NavigationBar(
       selectedIndex: currentIndex,
+      height: height,
       onDestinationSelected: onSelected,
       destinations: [
         const NavigationDestination(
@@ -361,12 +402,17 @@ class SessionPill extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // Not gold: on the Drills tab this parks a second gold
+                  // call-to-action ~12 pt under the drill's own gold primary,
+                  // putting "leave the mode" in the same thumb slot as
+                  // "Next puzzle". The gold live-dot already marks the pill
+                  // as the session (§9's one-accent rule).
                   Text(
                     'Resume ›',
                     style: AllInText.body(
                       15,
                       weight: FontWeight.w600,
-                      color: colors.gold,
+                      color: colors.text,
                     ),
                   ),
                 ],

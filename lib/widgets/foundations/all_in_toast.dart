@@ -11,6 +11,10 @@ import '../../theme/motion.dart';
 import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
 
+/// The `AllInScaffold` header band the toast has to clear: its 8 pt top
+/// padding, the 44 pt title row and its 12 pt bottom padding.
+const double _headerBand = AllInSpace.sm + 44 + AllInSpace.md;
+
 class AllInToast extends StatelessWidget {
   const AllInToast({super.key, required this.text, this.icon});
 
@@ -30,7 +34,12 @@ class AllInToast extends StatelessWidget {
   }) {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    _current?.remove();
+    // Only entries still attached to a live overlay can be removed. Switching
+    // the theme (§9) rebuilds `MaterialApp` and disposes the overlay a toast
+    // in flight belongs to, and `remove()` on that entry asserts
+    // `_owner != null` deep in the render tree — a red screen for a
+    // confirmation pill.
+    _removeCurrent();
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder:
@@ -48,9 +57,12 @@ class AllInToast extends StatelessWidget {
   static OverlayEntry? _current;
 
   /// Removes the visible toast, if any (used when a route is torn down).
-  static void dismiss() {
-    _current?.remove();
+  static void dismiss() => _removeCurrent();
+
+  static void _removeCurrent() {
+    final entry = _current;
     _current = null;
+    if (entry != null && entry.mounted) entry.remove();
   }
 
   @override
@@ -158,7 +170,11 @@ class _ToastHostState extends State<_ToastHost>
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.paddingOf(context).top + AllInSpace.sm;
+    // §10.1 puts the pill at the top of the **content** area, not the top of
+    // the screen: `padding.top + 8` landed it straight on the `AllInScaffold`
+    // large title. Clear the header band instead (safe area + the 44 pt title
+    // row + the header's own 12 pt bottom padding).
+    final top = MediaQuery.paddingOf(context).top + _headerBand + AllInSpace.sm;
     return Positioned(
       top: top,
       left: AllInSpace.lg,
@@ -173,7 +189,17 @@ class _ToastHostState extends State<_ToastHost>
             ).animate(
               CurvedAnimation(parent: _controller, curve: AllInMotion.ease),
             ),
-            child: Center(child: widget.child),
+            // The root `Overlay` has no `Material` ancestor, so without this
+            // the toast's `Text` picked up Flutter's "missing Material" debug
+            // decoration — a yellow double underline under the sentence. It
+            // wraps the *child*, not the `Positioned`, whose parent data
+            // belongs to the overlay's own `Stack`.
+            child: Center(
+              child: Material(
+                type: MaterialType.transparency,
+                child: widget.child,
+              ),
+            ),
           ),
         ),
       ),

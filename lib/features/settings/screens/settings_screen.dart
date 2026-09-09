@@ -36,10 +36,53 @@ abstract final class SettingsCopy {
   // ------------------------------------------------------- table & cards
   static const String tableGroup = 'Table & cards';
   static const String fourColour = 'Four-colour deck';
+
+  /// The suit glyphs are rendered as coloured spans by [fourColourSpans] —
+  /// this plain string is the screen-reader / fallback wording.
   static const String fourColourDesc =
       '♠ black · ♥ red · ♦ blue · ♣ green. Makes suits unmistakable at a '
       'glance — recommended, and essential if you have trouble telling red '
       'suits apart.';
+
+  /// The caption that explains the four-colour deck, with each suit glyph in
+  /// the colour it names.
+  ///
+  /// As a flat string the caption contradicted itself: "♦ blue" was printed
+  /// with a red diamond and "♣ green" with a grey club, both disagreeing with
+  /// the card preview sitting beside them. `♥` also fell through to the
+  /// system emoji font — glossy, larger and baseline-shifted next to three
+  /// flat neighbours — so the glyphs carry U+FE0E (VARIATION SELECTOR-15) to
+  /// force text presentation. Colours come from
+  /// `PlayingCardView.suitColor`, so the caption cannot drift from the deck.
+  static List<InlineSpan> fourColourSpans({required bool on}) {
+    const vs15 = '\uFE0E';
+    Color colourOf(String suit) =>
+        PlayingCardView.suitColor(suit, fourColorDeck: on);
+    TextSpan glyph(String suit, String symbol, String name) => TextSpan(
+      children: [
+        TextSpan(
+          text: '$symbol$vs15 ',
+          style: TextStyle(color: colourOf(suit)),
+        ),
+        TextSpan(text: name),
+      ],
+    );
+    return <InlineSpan>[
+      glyph('s', '♠', 'black'),
+      const TextSpan(text: ' · '),
+      glyph('h', '♥', 'red'),
+      const TextSpan(text: ' · '),
+      glyph('d', '♦', on ? 'blue' : 'red'),
+      const TextSpan(text: ' · '),
+      glyph('c', '♣', on ? 'green' : 'black'),
+      const TextSpan(
+        text:
+            '. Makes suits unmistakable at a glance — recommended, and '
+            'essential if you have trouble telling red suits apart.',
+      ),
+    ];
+  }
+
   static const String realisticReveals = 'Realistic reveals';
   static const String realisticRevealsDesc =
       "By default the app shows everyone's cards when a hand ends — folded "
@@ -333,6 +376,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SettingRow(
                   title: SettingsCopy.fourColour,
                   description: SettingsCopy.fourColourDesc,
+                  descriptionSpans: SettingsCopy.fourColourSpans(
+                    on: settings.fourColorDeck,
+                  ),
                   below: previewBesideSwitch ? null : preview,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

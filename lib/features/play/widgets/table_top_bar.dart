@@ -4,6 +4,11 @@
 /// The title truncates to "#12 · +4.5" at 360 (§4.2); the badge is hidden when
 /// the coach is off; the pace pill toggles on tap and opens P2 Options on a
 /// long-press (§4.6).
+///
+/// The bar sits on the page grid like every other band on the table: [margin]
+/// on both sides (16, or 20 at 430 — §4.2.3), supplied by `TableMetrics`. It
+/// used to run edge to edge, which put the pace pill's border ~2 pt from the
+/// bezel while the context and action rows below it were inset by 16.
 library;
 
 import 'package:allin/engine/format.dart';
@@ -22,6 +27,7 @@ class TableTopBar extends StatelessWidget {
     required this.netBb,
     required this.paceMode,
     required this.compact,
+    this.margin = 16,
     this.coachCount = 0,
     this.coachVerdict,
     this.showCoach = true,
@@ -40,6 +46,9 @@ class TableTopBar extends StatelessWidget {
 
   /// 360-class width: the title drops the words (§4.2).
   final bool compact;
+
+  /// The page margin (`TableMetrics.margin`): 16, or 20 at 430 (§4.2.3).
+  final double margin;
 
   /// Notes this hand.
   final int coachCount;
@@ -65,62 +74,65 @@ class TableTopBar extends StatelessWidget {
     final c = context.colors;
     final signed = fmtSigned(netBb);
 
-    return SizedBox(
-      height: height,
-      child: Row(
-        children: [
-          Semantics(
-            button: true,
-            label: 'Leave table',
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(AllInRadius.md),
-                  onTap: onBack,
-                  child: Icon(Icons.chevron_left, size: 26, color: c.text),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: margin),
+      child: SizedBox(
+        height: height,
+        child: Row(
+          children: [
+            Semantics(
+              button: true,
+              label: 'Leave table',
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AllInRadius.md),
+                    onTap: onBack,
+                    child: Icon(Icons.chevron_left, size: 26, color: c.text),
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Semantics(
-              button: true,
-              label: 'Hand $handNumber, $signed big blinds. Session',
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(AllInRadius.md),
-                  onTap: onTitle,
-                  child: SizedBox(
-                    height: 44,
-                    child: Center(
-                      child: RichText(
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                                  compact
-                                      ? '#$handNumber · '
-                                      : 'Hand #$handNumber · ',
-                              style: AllInText.body(
-                                15,
-                                weight: FontWeight.w600,
-                                color: c.text,
+            Expanded(
+              child: Semantics(
+                button: true,
+                label: 'Hand $handNumber, $signed big blinds. Session',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AllInRadius.md),
+                    onTap: onTitle,
+                    child: SizedBox(
+                      height: 44,
+                      child: Center(
+                        child: RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text:
+                                    compact
+                                        ? '#$handNumber · '
+                                        : 'Hand #$handNumber · ',
+                                style: AllInText.body(
+                                  15,
+                                  weight: FontWeight.w600,
+                                  color: c.text,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: compact ? signed : '$signed bb',
-                              style: AllInText.mono(
-                                15,
-                                color: netBb >= 0 ? c.good : c.bad,
+                              TextSpan(
+                                text: compact ? signed : '$signed bb',
+                                style: AllInText.mono(
+                                  15,
+                                  color: netBb >= 0 ? c.good : c.bad,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -128,21 +140,21 @@ class TableTopBar extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          if (showCoach)
-            CoachBadge(
-              count: coachCount,
-              verdict: coachVerdict,
-              pulse: pulseBadge,
-              reducedMotion: reducedMotion,
-              onTap: onCoach,
+            if (showCoach)
+              CoachBadge(
+                count: coachCount,
+                verdict: coachVerdict,
+                pulse: pulseBadge,
+                reducedMotion: reducedMotion,
+                onTap: onCoach,
+              ),
+            _PacePill(
+              mode: paceMode,
+              onTap: onPaceToggle,
+              onLongPress: onPaceLongPress,
             ),
-          _PacePill(
-            mode: paceMode,
-            onTap: onPaceToggle,
-            onLongPress: onPaceLongPress,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

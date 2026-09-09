@@ -167,10 +167,17 @@ abstract final class PlayCopy {
       'how often they put money in pre-flop, PFR = how often they raise. Each '
       "player's exact numbers vary, so watch them settle.";
 
-  /// §4.3 *(desktop)* — under 8 observed hands.
+  /// §4.3 — under 8 observed hands.
+  ///
+  /// This is the *common* case the first time a beginner opens P6, and the
+  /// two tiles beside it are labelled only "VPIP" and "PFR" with an em dash
+  /// for a value. The desktop only ever glossed those two acronyms in
+  /// [hudExplained], which does not appear until the stats do — so the gloss
+  /// is repeated here, where the acronyms first show up (TONE.md).
   static String readsAreEarned(int seen) =>
       'Stats appear after 8 observed hands ($seen so far) — reads are earned, '
-      'not given.';
+      'not given. VPIP = how often they put money in before the flop; '
+      'PFR = how often they raise.';
 
   /// §4.3 *(new)* — a disabled action's reason.
   static const String handOverReadsReopen =

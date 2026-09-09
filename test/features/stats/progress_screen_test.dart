@@ -5,6 +5,7 @@ import 'package:allin/engine/engine.dart';
 import 'package:allin/features/stats/screens/progress_screen.dart';
 import 'package:allin/features/stats/stats_copy.dart';
 import 'package:allin/services/persistence.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:flutter_test/flutter_test.dart';
@@ -52,6 +53,10 @@ Future<StatsFixture> _seeded() async {
   return fixture;
 }
 
+/// The colour of the money in a coaching-review row.
+Color? _rowMoneyColour(WidgetTester tester, String text) =>
+    tester.widget<Text>(find.text(text).first).style?.color;
+
 void main() {
   testWidgets('first run shows every card\'s verbatim empty line', (
     tester,
@@ -64,15 +69,22 @@ void main() {
     expect(find.text(StatsCopy.subtitle), findsOneWidget);
     expect(find.text(StatsCopy.chartEmpty), findsOneWidget);
     expect(find.text(StatsCopy.coachingReviewEmpty), findsOneWidget);
-    expect(find.text(StatsCopy.handsEmpty), findsOneWidget);
 
     // KPI zeros and the "—" read accuracy (§7.2).
     expect(find.text('0'), findsWidgets);
     expect(find.text('—'), findsWidgets);
     expect(find.text(StatsCopy.kpiReadsSub(0)), findsOneWidget);
 
-    // Cards further down the page.
+    // Cards further down the page. The glossed "EV Coach" empty line is a
+    // line taller, so the hands card now starts just below the fold too.
     final list = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text(StatsCopy.handsEmpty),
+      300,
+      scrollable: list,
+    );
+    expect(find.text(StatsCopy.handsEmpty), findsOneWidget);
+
     await tester.scrollUntilVisible(
       find.text(StatsCopy.positionsEmpty),
       300,
@@ -110,12 +122,17 @@ void main() {
     expect(find.text(StatsCopy.verdictMistakes.toUpperCase()), findsOneWidget);
     expect(find.text(kLeakFoldTooOften), findsOneWidget);
     expect(find.text(StatsCopy.recentNegativeEv), findsOneWidget);
+    // The facts read as counts (TONE.md) and the money is its own span, so a
+    // positive amount can be coloured on the money scale rather than in red.
     expect(
-      find.text(
-        StatsCopy.decisionNumbers(equity: 0.17, potOdds: 0.25, evBb: -2),
-      ),
+      find.text(StatsCopy.decisionNumbers(equity: 0.17, potOdds: 0.25)),
       findsWidgets,
     );
+    expect(
+      StatsCopy.decisionNumbers(equity: 0.17, potOdds: 0.25),
+      'needed about 1 time in 4 · won about 1 time in 6',
+    );
+    expect(find.text(StatsCopy.decisionAmount(-2)), findsWidgets);
 
     // The recent hand row, further down the page.
     await tester.scrollUntilVisible(
@@ -124,6 +141,62 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('Hand #7'), findsOneWidget);
+  });
+
+  testWidgets('a decision row colours only the money, on the money scale', (
+    tester,
+  ) async {
+    // Principle 8 / §13: verdicts and results never share a colour scale in
+    // one row. The whole trailing string used to be painted `c.bad`, so a
+    // *gain* ("+4.5 bb") was printed in the loss red.
+    final fixture = await _seeded();
+    await pumpStats(tester, const ProgressScreen(), fixture: fixture);
+    await _settle(tester);
+
+    final colours = AllInColors.dark;
+    final facts = StatsCopy.decisionNumbers(equity: 0.17, potOdds: 0.25);
+    expect(_rowMoneyColour(tester, facts), colours.textMuted);
+    expect(_rowMoneyColour(tester, StatsCopy.decisionAmount(-2)), colours.bad);
+  });
+
+  test('the coaching-review copy has no unglossed shorthand', () {
+    // "−EV", "eq" and the raw archetype codes are never explained on T0.
+    expect(StatsCopy.recentNegativeEv, isNot(contains('EV')));
+    expect(
+      StatsCopy.decisionNumbers(equity: 0.25, potOdds: 0.33),
+      isNot(contains('eq')),
+    );
+    expect(
+      StatsCopy.decisionNumbers(equity: 0.25, potOdds: 0.33),
+      isNot(contains('%')),
+    );
+    expect(
+      StatsCopy.decisionRow(street: 'flop', action: 'fold', archetype: 'TAG'),
+      'Flop fold vs Tight-Aggressive',
+    );
+    expect(
+      StatsCopy.decisionRow(
+        street: 'river',
+        action: 'call',
+        archetype: 'Station',
+      ),
+      'River call vs Calling Station',
+    );
+  });
+
+  test('the read-accuracy explainer states the formula the engine uses', () {
+    // §4.9's prose says the arithmetic mean; `coach.dart` scores the harmonic
+    // mean. TONE.md's honesty rule makes the code the authority, and a spec
+    // cross-reference means nothing to a user.
+    expect(StatsCopy.readAccuracyExpert, isNot(contains('§')));
+    expect(StatsCopy.readAccuracyExpert, isNot(contains('/ 2')));
+    expect(StatsCopy.readAccuracyExpert, contains('2 × coverage × precision'));
+  });
+
+  test('the read-accuracy nudge points at labels the app actually shows', () {
+    expect(StatsCopy.readAccuracyLeak, isNot(contains('Guess & Peek')));
+    expect(StatsCopy.readAccuracyLeak, contains('Range-Building Drill'));
+    expect(StatsCopy.readAccuracyLeak, contains('eye on a seat'));
   });
 
   testWidgets('the win-rate ⓘ opens T1 with the verbatim body', (tester) async {

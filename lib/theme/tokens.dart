@@ -177,3 +177,37 @@ class AllInTheme extends ThemeExtension<AllInTheme> {
 extension AllInThemeContext on BuildContext {
   AllInColors get colors => Theme.of(this).extension<AllInTheme>()!.colors;
 }
+
+/// The felt is a **theme-invariant dark material**: `FeltCanvas` paints
+/// [AllInColors.felt] in both themes, so everything that sits on it has to be
+/// read against dark green. Without this, Light flips seat plates to a
+/// near-white box and every mono number on the felt to `goldLight` (#96701C,
+/// a dark ochre on dark green) — the table's most important screen becomes
+/// unusable in one of the two shipped themes.
+///
+/// [FeltTheme] pins the dark palette for its subtree, so felt-resident widgets
+/// keep using `context.colors` and simply always resolve dark. `FeltCanvas`
+/// wraps its own prop stack in one, so every felt in the app (Play, Drills,
+/// the replayer and the lobby preview) inherits it.
+class FeltTheme extends StatelessWidget {
+  const FeltTheme({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final current = theme.extension<AllInTheme>();
+    if (current != null && identical(current.colors, AllInColors.dark)) {
+      return child;
+    }
+    return Theme(
+      data: theme.copyWith(
+        extensions: const <ThemeExtension<dynamic>>[
+          AllInTheme(colors: AllInColors.dark),
+        ],
+      ),
+      child: child,
+    );
+  }
+}

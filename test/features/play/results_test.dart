@@ -266,6 +266,60 @@ void main() {
       expect(header.caption, ResultsCopy.wonThePot);
       expect(header.netBb, greaterThan(0));
     });
+
+    // §4.12's template is "{names} wins with {hand}.", written for a desktop
+    // hero with a name. Here the hero *is* "You", so the verb has to agree —
+    // the same rule `HandLog` applies to the ticker and the P2 log.
+    test('the hero never reads "You wins" / "You takes it down"', () {
+      final table = _tableWhereHeroWins();
+      final header = resultsSummary(table, table.summary!);
+      expect(header.sentence, startsWith('You '));
+      expect(header.sentence, isNot(contains('You wins')));
+      expect(header.sentence, isNot(contains('You takes')));
+      expect(
+        header.sentence,
+        anyOf(contains('You win with '), contains('You take it down.')),
+      );
+    });
+
+    test('a split pot names the winners as a list, not a CSV', () {
+      // "You, Ivey win with two pair." is not English. The card joins names
+      // the way the log does: "You and Ivey", "You, Ivey and Dwan".
+      final table = _tableWhereHeroWins();
+      final split = HandSummary(
+        handNumber: table.summary!.handNumber,
+        potResults: [
+          PotResult(
+            winners: const [0, 1],
+            amount: table.summary!.potResults.first.amount,
+            potLabel: 'Pot',
+          ),
+        ],
+        showdown: const [],
+        board: table.summary!.board,
+        heroNetChips: table.summary!.heroNetChips,
+      );
+      final header = resultsSummary(table, split);
+      expect(header.sentence, startsWith('You and '));
+      expect(header.sentence, contains(' take it down.'));
+      expect(header.sentence, isNot(contains('You, ')));
+    });
+
+    test('a single bot winner keeps the third person', () {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+      final table = playHand(
+        container,
+        heroAction: (_) => const poker.Action.fold(),
+      );
+      final header = resultsSummary(table, table.summary!);
+      if (!header.sentence.startsWith('You ')) {
+        expect(
+          header.sentence,
+          anyOf(contains(' wins with '), contains(' takes it down.')),
+        );
+      }
+    });
   });
 
   group('overlay', () {
@@ -395,17 +449,21 @@ void main() {
       await pumpOverlay(tester, container: container, data: contextFor(table));
 
       final more = find.text('All 8 hands ›');
-      // The row lives at the end of the list that scrolls inside the card.
-      await tester.scrollUntilVisible(
-        more,
-        40,
-        scrollable: find.descendant(
-          of: find.byType(ResultsCard),
-          matching: find.byType(Scrollable),
+      // §4.12's card is "three rows + All 8 hands ›": the overflow row is
+      // pinned under the scrolling list, so it is on screen without scrolling
+      // past all eight reveals first.
+      expect(more, findsOneWidget);
+      final card = tester.getRect(find.byType(ResultsCard));
+      final row = tester.getRect(more);
+      expect(card.contains(row.center), isTrue);
+      // The label already carries "›" — no second chevron icon beside it.
+      expect(
+        find.descendant(
+          of: find.ancestor(of: more, matching: find.byType(Row)).first,
+          matching: find.byIcon(Icons.chevron_right_rounded),
         ),
+        findsNothing,
       );
-      await tester.ensureVisible(more);
-      await tester.pumpAndSettle();
       await tester.tap(more);
       await tester.pumpAndSettle();
 

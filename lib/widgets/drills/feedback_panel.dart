@@ -79,7 +79,30 @@ class _FeedbackPanelState extends State<FeedbackPanel> {
     // Dragging down at the compact detent does nothing: the verdict stays.
   }
 
+  /// True while the compact body has more note below the fold. §5.3 lets the
+  /// middle scroll, but a sentence that simply stopped ("…busting here costs")
+  /// under a 36 pt grabber read as a rendering fault: there was nothing to say
+  /// the rest existed. The fade + chevron is that affordance, and tapping it
+  /// expands — the same gesture the grabber already offers.
+  bool _overflowing = false;
+
+  bool _onMetrics(ScrollNotification n) => _noteMetrics(n.metrics);
+
+  bool _noteMetrics(ScrollMetrics metrics) {
+    final more = metrics.maxScrollExtent - metrics.pixels > 0.5;
+    if (more != _overflowing) {
+      // Layout-time notification: defer so this never sets state mid-build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _overflowing != more) {
+          setState(() => _overflowing = more);
+        }
+      });
+    }
+    return false;
+  }
+
   bool _onScroll(ScrollNotification n) {
+    _onMetrics(n);
     if (widget.onNext == null || !widget.expanded) return false;
     if (n is ScrollUpdateNotification || n is OverscrollNotification) {
       final over = n.metrics.pixels - n.metrics.maxScrollExtent;
@@ -166,42 +189,28 @@ class _FeedbackPanelState extends State<FeedbackPanel> {
               ),
             ),
             Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScroll,
-                child: SingleChildScrollView(
-                  controller: widget.scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(
-                    AllInSpace.lg,
-                    0,
-                    AllInSpace.lg,
-                    AllInSpace.sm,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      widget.body,
-                      AnimatedOpacity(
-                        opacity: _armed ? 1 : 0,
-                        duration: AllInMotion.of(
-                          context,
-                          AllInMotion.fast,
-                          reduced: widget.reducedMotion,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: AllInSpace.sm),
-                          child: Text(
-                            'Release for the next puzzle',
-                            textAlign: TextAlign.center,
-                            style: AllInText.body(12, color: c.textFaint),
-                          ),
-                        ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: NotificationListener<ScrollMetricsNotification>(
+                      onNotification: (n) => _noteMetrics(n.metrics),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _onScroll,
+                        child: _body(context, c),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  if (!widget.expanded && _overflowing)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _MoreBelow(
+                        onTap: () => widget.onExpandedChanged(true),
+                        reducedMotion: widget.reducedMotion,
+                      ),
+                    ),
+                ],
               ),
             ),
             Padding(
@@ -214,6 +223,97 @@ class _FeedbackPanelState extends State<FeedbackPanel> {
               child: widget.primary,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context, AllInColors c) => SingleChildScrollView(
+    controller: widget.scrollController,
+    physics: const AlwaysScrollableScrollPhysics(
+      parent: BouncingScrollPhysics(),
+    ),
+    padding: const EdgeInsets.fromLTRB(
+      AllInSpace.lg,
+      0,
+      AllInSpace.lg,
+      AllInSpace.sm,
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.body,
+        AnimatedOpacity(
+          opacity: _armed ? 1 : 0,
+          duration: AllInMotion.of(
+            context,
+            AllInMotion.fast,
+            reduced: widget.reducedMotion,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: AllInSpace.sm),
+            child: Text(
+              'Release for the next puzzle',
+              textAlign: TextAlign.center,
+              style: AllInText.body(12, color: c.textFaint),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// The compact detent's "there is more" affordance (§5.3): a fade off the
+/// bottom of the scrolling middle plus a chevron. Tapping it expands the
+/// panel, so the beginner never taps "Next puzzle" without having been shown
+/// that the *why* was one gesture away.
+class _MoreBelow extends StatelessWidget {
+  const _MoreBelow({required this.onTap, required this.reducedMotion});
+
+  final VoidCallback onTap;
+  final bool reducedMotion;
+
+  static const double height = 32;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Semantics(
+      button: true,
+      label: 'More of the coach\u2019s note below \u2014 expand',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: IgnorePointer(
+          ignoring: false,
+          child: Container(
+            height: height,
+            alignment: Alignment.bottomCenter,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  c.ink800.withValues(alpha: 0),
+                  c.ink800.withValues(alpha: 0.92),
+                ],
+              ),
+            ),
+            child: AnimatedOpacity(
+              opacity: 1,
+              duration: AllInMotion.of(
+                context,
+                AllInMotion.fast,
+                reduced: reducedMotion,
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 20,
+                color: c.textFaint,
+              ),
+            ),
+          ),
         ),
       ),
     );

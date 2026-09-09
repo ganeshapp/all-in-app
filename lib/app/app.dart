@@ -10,6 +10,7 @@ import 'package:allin/features/onboarding/widgets/onboarding_gate.dart';
 import 'package:allin/theme/app_theme.dart';
 import 'package:allin/theme/tokens.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AllInApp extends ConsumerWidget {
@@ -44,22 +45,33 @@ class AllInApp extends ConsumerWidget {
           router: router,
           child: child ?? const SizedBox.shrink(),
         );
+        final brightness = Theme.of(context).brightness;
         return MediaQuery(
           data: media.copyWith(
             textScaler: media.textScaler.clamp(maxScaleFactor: maxTextScale),
           ),
-          child:
-              media.size.width > tabletBreakpoint
-                  ? ColoredBox(
-                    color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? AllInColors.dark.ink900
-                            : AllInColors.light.ink900,
-                    child: Center(
-                      child: SizedBox(width: phoneColumnWidth, child: content),
-                    ),
-                  )
-                  : content,
+          // §9: the status and navigation bars follow the theme *reactively*.
+          // `main()` only styles the first frame; without this, switching to
+          // Light at runtime left the clock, signal and battery white on the
+          // #F4F6F9 page (~1.1:1) while the nav bar inverted correctly.
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: AllInAppTheme.overlayStyle(brightness),
+            child:
+                media.size.width > tabletBreakpoint
+                    ? ColoredBox(
+                      color:
+                          brightness == Brightness.dark
+                              ? AllInColors.dark.ink900
+                              : AllInColors.light.ink900,
+                      child: Center(
+                        child: SizedBox(
+                          width: phoneColumnWidth,
+                          child: content,
+                        ),
+                      ),
+                    )
+                    : content,
+          ),
         );
       },
     );

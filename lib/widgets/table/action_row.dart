@@ -7,11 +7,13 @@
 library;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../../engine/format.dart';
 import '../../engine/types.dart';
+import '../../theme/typography.dart';
 import '../foundations/all_in_button.dart';
 
 /// §4.5's states. F (`paused`) dims whatever [ActionRow.underlyingState] would
@@ -111,8 +113,57 @@ class ActionRow extends StatefulWidget {
   /// for 150 ms after the row appears (§4.5).
   static const Duration tapGuard = Duration(milliseconds: 150);
 
-  /// Above 1.3× the labels drop their amounts into the hero strip (§4.2.4).
-  static bool dropAmounts(TextScaler scaler) => scaler.scale(17) > 17 * 1.3;
+  /// The labels drop their amounts into the hero strip at 1.3× (§4.2.4).
+  ///
+  /// The spec says "above 1.3×", but 1.3× is already past the row's budget at
+  /// every supported width: at 411 pt the two commit buttons rendered
+  /// "Call 1 …" and "Raise t…", and §4.5 makes the exact commit
+  /// unconditional — "Raise to 7.5" is never "Raise to …". So the step is
+  /// taken *at* 1.3× rather than one notch later.
+  static bool dropAmounts(TextScaler scaler) =>
+      scaler.scale(17) >= 17 * 1.3 - 0.01;
+
+  /// Width of the "tap the amount" zone, measured from the right edge.
+  ///
+  /// The label is centred, so the zone is `(width − label) / 2 + amount`: the
+  /// trailing gap plus the amount run itself. Never narrower than a 44 pt hit
+  /// target and never wider than 35 % of the button, so the verb — and with it
+  /// the button's visual centre — always commits.
+  @visibleForTesting
+  static double amountZoneWidth(
+    TextScaler scaler,
+    String label,
+    double buttonWidth,
+  ) {
+    if (!buttonWidth.isFinite || buttonWidth <= 0) return 0;
+    final ceiling = math.max(44.0, buttonWidth * 0.35);
+    // The amount run is the trailing number and its unit: "7.5 bb", "100 bb".
+    final match = _amountRun.firstMatch(label);
+    // "Raise" / "Bet" / "All-in" with the amount dropped (§4.2.3): there is no
+    // amount to aim at, so the zone falls back to its ceiling.
+    if (match == null) return math.min(ceiling, buttonWidth);
+    final amount = match.group(0)!;
+
+    final style = AllInText.body(17, weight: FontWeight.w600, height: 1.1);
+    double measure(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      return painter.width;
+    }
+
+    final full = math.min(measure(label), buttonWidth);
+    final zone = (buttonWidth - full) / 2 + measure(amount);
+    return zone.clamp(
+      math.min(44.0, buttonWidth),
+      math.min(ceiling, buttonWidth),
+    );
+  }
+
+  static final RegExp _amountRun = RegExp(r'\d[\d.]*(?: bb)?$');
 
   @override
   State<ActionRow> createState() => _ActionRowState();
@@ -173,14 +224,19 @@ class _ActionRowState extends State<ActionRow> {
         : 'Call ${_bb(legal.callAmount)} bb';
   }
 
+  /// §4.5 / DESIGN.md:1839 write these as "Call 2.5 bb" / "Raise to 7.5 bb".
+  /// "Call" kept its unit while "Raise to 2.7", "Bet 4.5" and "All-in 100"
+  /// dropped it — inside the same row, next to a felt that says "Pot 4 bb". A
+  /// beginner reading "Raise to 2.7" has no idea 2.7 of what. The narrow-width
+  /// `dropAmounts` fallback (§4.2.3) still drops the number entirely.
   String _raiseLabel(LegalActions legal, bool dropAmounts) {
     final to = widget.raiseTo ?? legal.minRaiseTo;
     final isAllIn = to >= legal.maxRaiseTo;
-    if (isAllIn) return dropAmounts ? 'All-in' : 'All-in ${_bb(to)}';
+    if (isAllIn) return dropAmounts ? 'All-in' : 'All-in ${_bb(to)} bb';
     if (legal.canBet && legal.toCall == 0) {
-      return dropAmounts ? 'Bet' : 'Bet ${_bb(to)}';
+      return dropAmounts ? 'Bet' : 'Bet ${_bb(to)} bb';
     }
-    return dropAmounts ? 'Raise' : 'Raise to ${_bb(to)}';
+    return dropAmounts ? 'Raise' : 'Raise to ${_bb(to)} bb';
   }
 
   @override
@@ -384,29 +440,49 @@ class _RaiseButton extends StatelessWidget {
 
     if (onAmountTap == null) return withLongPress;
 
-    return Stack(
-      children: [
-        Positioned.fill(child: withLongPress),
-        Positioned.fill(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FractionallySizedBox(
-              widthFactor: 0.6,
-              heightFactor: 1,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onAmountTap,
-                onLongPress: onLongPress,
-                child: Semantics(
-                  button: true,
-                  label: 'Edit raise size',
-                  child: const SizedBox.expand(),
+    // §4.5's "tap the amount" opens P13 — but only over the *amount*.
+    //
+    // The zone used to be the right 60 % of an opaque button whose label is
+    // centred, so the visual centre of "Bet 3" / "Raise to 4" — the natural
+    // thumb target — landed inside it and opened a sheet instead of
+    // committing. On the two-button row the button is ~203 dp wide, the zone
+    // started at 81 dp and the centred label spanned ~70–134 dp.
+    //
+    // The zone is now measured: it runs from the right edge back to the start
+    // of the amount run, so the verb (and the button's visual centre) always
+    // belongs to the commit action. Long-press anywhere is still the second
+    // way into P13.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            Positioned.fill(child: withLongPress),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: ActionRow.amountZoneWidth(
+                    MediaQuery.maybeTextScalerOf(context) ??
+                        TextScaler.noScaling,
+                    label,
+                    constraints.maxWidth,
+                  ),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAmountTap,
+                    onLongPress: onLongPress,
+                    child: Semantics(
+                      button: true,
+                      label: 'Edit raise size',
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

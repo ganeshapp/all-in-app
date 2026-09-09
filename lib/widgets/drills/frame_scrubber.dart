@@ -11,6 +11,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/motion.dart';
 import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
 
@@ -109,15 +110,20 @@ class FrameScrubber extends StatelessWidget {
                           '${index + 1} / $count',
                           style: AllInText.mono(12, color: c.text),
                         ),
-                        const SizedBox(width: AllInSpace.sm),
-                        Flexible(
-                          child: Text(
-                            text,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AllInText.body(12, color: c.textMuted),
+                        // Hosts that show the frame text full width beside
+                        // the scrubber ([FrameTextLine]) pass an empty string;
+                        // the pill is then just "● 4 / 4".
+                        if (text.isNotEmpty) ...[
+                          const SizedBox(width: AllInSpace.sm),
+                          Flexible(
+                            child: Text(
+                              text,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AllInText.body(12, color: c.textMuted),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -176,6 +182,50 @@ class _ScrubButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The frame's own sentence, full width, crossfading between frames.
+///
+/// The one line that says *what the spot is* does not belong inside a pill:
+/// ellipsised at ~28 characters it read "Action on you in the CO…" /
+/// "BB checks. Action on y…", so understanding the situation you are being
+/// graded on cost a long-press into the frame list on every spot. The hand
+/// replayer (§7.7) already gives the same kind of line its own row; this is
+/// that row, shared.
+class FrameTextLine extends StatelessWidget {
+  const FrameTextLine({
+    super.key,
+    required this.text,
+    this.reducedMotion = false,
+    this.maxLines = 2,
+  });
+
+  final String text;
+  final bool reducedMotion;
+  final int maxLines;
+
+  /// The band a host reserves for it at 1.0× text scale.
+  static const double height = 34;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return AnimatedSwitcher(
+      duration: AllInMotion.of(
+        context,
+        AllInMotion.fast,
+        reduced: reducedMotion,
+      ),
+      child: Text(
+        text,
+        key: ValueKey<String>(text),
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AllInText.body(13.5, color: c.text, height: 1.25),
       ),
     );
   }

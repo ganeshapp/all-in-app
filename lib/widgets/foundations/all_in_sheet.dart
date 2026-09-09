@@ -30,6 +30,8 @@ class AllInSheet extends StatefulWidget {
     this.blocking = false,
     this.onDetentChanged,
     this.reducedMotion = false,
+    this.scrollable = true,
+    this.autoHeightFraction,
   });
 
   final Widget child;
@@ -49,6 +51,27 @@ class AllInSheet extends StatefulWidget {
   final bool blocking;
   final ValueChanged<AllInSheetDetent>? onDetentChanged;
   final bool reducedMotion;
+
+  /// True (the default): the sheet wraps [child] in its own scroll view.
+  ///
+  /// False hands the height to the child instead — it is laid out inside the
+  /// detent's bounded box and scrolls whatever part of itself it wants to. The
+  /// bet keypad (P13, §4.5) needs this: its commit button is pinned below a
+  /// scrolling keypad, and a button inside the sheet's scroll view would open
+  /// below the fold at 390–430 pt. So does the blocking coach note (P3, §1.1),
+  /// whose "Got it" was the last item of a scrolled body at detent M.
+  ///
+  /// At M and L the child is given the detent's box and the
+  /// `DraggableScrollableSheet` controller as its `PrimaryScrollController`,
+  /// so its own scroll view still drives drag-to-resize.
+  final bool scrollable;
+
+  /// Raises the detent-S ceiling for a sheet whose content simply does not
+  /// fit 40 % — P13's keypad needs ~428 pt of the 366 a 914 pt screen gives
+  /// it, and the row it lost was ". 0 ⌫", i.e. the digit 0 and backspace. The
+  /// `ConstrainedBox` in `_autoHeight` still shrink-wraps, so a sheet that
+  /// fits in less is unaffected.
+  final double? autoHeightFraction;
 
   static const double sFraction = 0.40;
   static const double mFraction = 0.55;
@@ -86,7 +109,15 @@ class AllInSheet extends StatefulWidget {
     ValueChanged<AllInSheetDetent>? onDetentChanged,
     VoidCallback? onClose,
     bool reducedMotion = false,
-    bool useRootNavigator = false,
+    // Sheets go on the **root** navigator. `TabScaffold` paints the tab bar
+    // and the Session pill as a `Positioned` sibling *above* the shell body,
+    // so a sheet presented on a branch navigator is drawn underneath them and
+    // loses its bottom ~168 pt — which is where every sheet keeps its buttons
+    // ("Done", "OK", "Review now"). System back still pops the sheet first
+    // because it is the topmost route (§2.5).
+    bool useRootNavigator = true,
+    bool scrollable = true,
+    double? autoHeightFraction,
   }) {
     assert(child != null || builder != null, 'Pass a child or a builder.');
     final navigator = Navigator.of(context, rootNavigator: useRootNavigator);
@@ -132,6 +163,8 @@ class AllInSheet extends StatefulWidget {
             blocking: blocking,
             onDetentChanged: onDetentChanged,
             reducedMotion: reduced,
+            scrollable: scrollable,
+            autoHeightFraction: autoHeightFraction,
             child: child ?? builder!(sheetContext),
           ),
     ).whenComplete(() => onClose?.call());
@@ -201,15 +234,25 @@ class _AllInSheetState extends State<AllInSheet> {
     );
   }
 
-  /// Detent S: hugs its content, capped at 40 % of the viewport (§10.1).
+  /// Detent S: hugs its content, capped at [AllInSheet.autoHeightFraction]
+  /// (40 % of the viewport by default, §10.1).
+  ///
+  /// `scrollable: false` hands that bounded box straight to the child, which
+  /// then decides what scrolls inside it — the bet keypad (§4.5) pins its
+  /// commit button below a scrolling keypad, and a button inside *this*
+  /// scroll view would sit below the fold at every supported width.
   Widget _autoHeight(BuildContext context) {
     final maxHeight =
-        MediaQuery.sizeOf(context).height * _cap(AllInSheet.sFraction);
+        MediaQuery.sizeOf(context).height *
+        _cap(widget.autoHeightFraction ?? AllInSheet.sFraction);
     return _chrome(
       context,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: SingleChildScrollView(child: widget.child),
+        child:
+            widget.scrollable
+                ? SingleChildScrollView(child: widget.child)
+                : widget.child,
       ),
     );
   }
@@ -237,17 +280,37 @@ class _AllInSheetState extends State<AllInSheet> {
       minChildSize: min,
       maxChildSize: max,
       builder:
-          (context, scrollController) => _chrome(
-            context,
-            child: SingleChildScrollView(
-              controller: scrollController,
-              child: widget.child,
-            ),
-          ),
+          (context, scrollController) =>
+              widget.scrollable
+                  ? _chrome(
+                    context,
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: widget.child,
+                    ),
+                  )
+                  // `scrollable: false` at M / L hands the detent's box to the
+                  // child, which pins what it wants and scrolls the rest — the
+                  // blocking coach note (P3, §1.1) keeps "Got it" on screen
+                  // instead of leaving it below the fold of a scrolled body.
+                  // The child is expected to use the primary controller for
+                  // its own scroll view, so drag-to-resize still works.
+                  : _chrome(
+                    context,
+                    fill: true,
+                    child: PrimaryScrollController(
+                      controller: scrollController,
+                      child: widget.child,
+                    ),
+                  ),
     );
   }
 
-  Widget _chrome(BuildContext context, {required Widget child}) {
+  Widget _chrome(
+    BuildContext context, {
+    required Widget child,
+    bool fill = false,
+  }) {
     final c = context.colors;
     final showGrabber = widget.showGrabber && !widget.blocking;
     return Container(
@@ -260,7 +323,7 @@ class _AllInSheetState extends State<AllInSheet> {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
         children: [
           if (showGrabber)
             Semantics(

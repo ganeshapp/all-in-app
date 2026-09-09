@@ -31,6 +31,18 @@ mobile UX specification. This file is the technical contract every contributor f
   math", then "expert detail". Copy is ported verbatim from the desktop unless the mobile design
   says otherwise.
 - **Portrait-first phone app.** Orientation locked to portrait (see `main.dart`).
+- **One rule per shared question, one provider.** When two screens answer the same question they
+  read the same provider rather than each deriving an answer. The live case is "what do I read
+  next?": Home's plan card (DESIGN.md §3.2 card 3) and Study's Continue card (§6.1) both read
+  `studyContinueLessonProvider`, which owns §3.2's rule in full — the placement result's suggested
+  lesson while nothing is completed, the first incomplete lesson in path order after that. They
+  used to derive it separately and disagreed on day one.
+- **The hero strip's price line outranks everything beside it** (§4.4). `HeroStrip` walks a
+  four-rung ladder — disc · pill · stack → disc · pill → pill → nothing — and takes the first rung
+  that leaves the price line its whole measured width. §4.4 names three rungs; the fourth is the
+  same rule carried to its end, because "never ellipsised and never truncated" is unconditional
+  and a bare "BB" is not always narrow enough (430 pt at 1.3× text). Widths are measured against
+  `DefaultTextStyle.of(context).style.merge(style)`, never the bare `AllInText` style.
 
 ## Layout
 
@@ -121,13 +133,28 @@ Commits are authored as the user only — no Claude attribution trailers.
 
 ## Deliberate copy changes from the desktop
 
-Lesson and coach text is ported verbatim, with three exceptions where the desktop copy describes a
-mouse the phone does not have. These are the only intentional wording changes:
+Lesson and coach text is ported verbatim, with four exceptions: three where the desktop copy
+describes a mouse the phone does not have, and the hand log, which the desktop writes in the third
+person and in chips. These are the only intentional wording changes:
 
 | Where | Desktop | Mobile |
 |---|---|---|
 | Lesson `position` | "(Hover the dotted terms for a definition…)" | "(Tap the dotted terms for a definition…)" |
 | Lesson `hud-reading` | "Hover a bot's HUD in the game…" | "Tap a bot's plate at the table…" |
 | Lesson `cheat-sheet` glossary | "Every term below is also hoverable wherever it appears in a lesson." | "Tap any dotted term wherever it appears in a lesson to see this definition." |
+| Hand log — ticker (§4.2), P2 Log (§4.11) and "copy hand log" | "You raises to 58" · "You folds" · "You wins 88 (uncontested)" · "Hand #3 · blinds 10/20" | "You raise to 2.9 bb" · "You fold" · "You win 4.4 bb (uncontested)" · "Hand #3 · blinds 0.5 / 1 bb" |
+
+**The hand log deviation in full.** `lib/engine` still writes the desktop strings — they are pinned
+by the parity tests and shared with the desktop — and `lib/features/play/hand_log_format.dart`
+(`HandLog`) rewrites them for display only:
+
+- the hero's verbs become second person ("You fold / check / call / bet / raise to / post SB / win"),
+  because the engine's `${p.name} folds` template with a hero named "You" produces "You folds";
+- bots keep the third person, and several winners take the plural ("You and Ivey win 26 bb (Pot)");
+- every amount is converted to big blinds with `fmtBb` and given a " bb" unit, because every other
+  surface on the phone speaks big blinds (§4.4, §4.5, §10.3). Posted stakes — the hand header's
+  blinds and antes, and any "posts …" line — keep a second decimal when they need one, so the log
+  says "ante 0.25 bb" like the lobby rather than `fmtBb`'s rounded "0.3";
+- lines with no player and no chips (street deals, the §14 ticker overrides) pass through unchanged.
 
 Any further deviation from the desktop wording needs a row here.

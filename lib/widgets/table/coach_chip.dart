@@ -112,7 +112,25 @@ class CoachChip extends StatefulWidget {
   static String firstClause(String text) {
     final match = RegExp(r'( — |;|\.(\s|$))').firstMatch(text);
     final cut = match == null ? text : text.substring(0, match.start);
-    return cut.trim();
+    return _chipLength(cut.trim());
+  }
+
+  /// How many characters of the clause survive beside the verdict word.
+  ///
+  /// The chip is ~250 pt wide and already spends ~80 on "Nice play · ", so a
+  /// first clause like "You paid 1 bb to win a pot of 11.5 bb" ellipsised at
+  /// exactly the payload: "Nice play · You paid 1 bb to win a…". §10.3 models
+  /// `title` and `clause` separately for this reason — the chip gets a
+  /// chip-length clause and the full sentence lives in P3, one tap away.
+  static const int maxClauseChars = 30;
+
+  /// Trims [clause] to [maxClauseChars] on a word boundary. A clause that is
+  /// only a little over is kept whole rather than cut for one character.
+  static String _chipLength(String clause) {
+    if (clause.length <= maxClauseChars + 4) return clause;
+    final cut = clause.substring(0, maxClauseChars);
+    final space = cut.lastIndexOf(' ');
+    return '${(space > maxClauseChars ~/ 2 ? cut.substring(0, space) : cut).trimRight()}…';
   }
 
   @override

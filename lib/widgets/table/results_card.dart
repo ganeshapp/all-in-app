@@ -143,14 +143,11 @@ class ResultsCard extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount: rows.length + (moreLabel == null ? 0 : 1),
+                itemCount: rows.length,
                 separatorBuilder:
                     (context, _) =>
                         Divider(height: 1, thickness: 1, color: c.line),
                 itemBuilder: (context, index) {
-                  if (index >= rows.length) {
-                    return _MoreRow(label: moreLabel!, onTap: onMore);
-                  }
                   final row = rows[index];
                   return _RevealRowView(
                     row: row,
@@ -164,6 +161,14 @@ class ResultsCard extends StatelessWidget {
                 },
               ),
             ),
+            // §4.12's 9-max card is "three rows + All 8 hands ›": the overflow
+            // row is pinned under the scrolling list, not appended to it —
+            // inside the list it sat eight rows down, which is exactly the
+            // place the row exists to save the user from.
+            if (moreLabel != null) ...[
+              Divider(height: 1, thickness: 1, color: c.line),
+              _MoreRow(label: moreLabel!, onTap: onMore),
+            ],
           ],
         ],
       ),
@@ -479,6 +484,8 @@ class _MoreRow extends StatelessWidget {
             height: 44,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AllInSpace.md),
+              // The label already ends in "›" (§4.12's "All 8 hands ›"), so a
+              // chevron icon here rendered it twice.
               child: Row(
                 children: [
                   Text(
@@ -489,7 +496,6 @@ class _MoreRow extends StatelessWidget {
                       color: c.gold,
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, size: 18, color: c.gold),
                 ],
               ),
             ),

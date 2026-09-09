@@ -6,6 +6,7 @@
 library;
 
 import 'package:allin/theme/app_theme.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -728,6 +729,24 @@ void main() {
     });
   });
 
+  group('system chrome follows the resolved theme (§9)', () {
+    // `SystemChrome.setSystemUIOverlayStyle` used to be called once, in
+    // `main()`, from the persisted theme — so switching to Light at runtime
+    // left the clock, signal and battery white on the #F4F6F9 page while the
+    // navigation bar inverted correctly.
+    test('light and dark invert together, keyed on Brightness', () {
+      final light = AllInAppTheme.overlayStyle(Brightness.light);
+      expect(light.statusBarIconBrightness, Brightness.dark);
+      expect(light.systemNavigationBarIconBrightness, Brightness.dark);
+      expect(light.systemNavigationBarColor, AllInColors.light.ink850);
+
+      final dark = AllInAppTheme.overlayStyle(Brightness.dark);
+      expect(dark.statusBarIconBrightness, Brightness.light);
+      expect(dark.systemNavigationBarIconBrightness, Brightness.light);
+      expect(dark.systemNavigationBarColor, AllInColors.dark.ink850);
+    });
+  });
+
   group('AllInToast', () {
     testWidgets('shows for 2.5 s then removes itself', (tester) async {
       await pumpAllIn(
@@ -804,14 +823,14 @@ void main() {
         SizedBox(
           width: 130,
           child: AllInButton.primary(
-            label: 'Raise to 7.5',
+            label: 'Raise to 7.5 bb',
             expand: true,
             onPressed: () {},
           ),
         ),
       );
       final button = tester.getSize(find.byType(AllInButton)).width;
-      final label = tester.getSize(find.text('Raise to 7.5')).width;
+      final label = tester.getSize(find.text('Raise to 7.5 bb')).width;
       expect(button, 130);
       expect(
         label,

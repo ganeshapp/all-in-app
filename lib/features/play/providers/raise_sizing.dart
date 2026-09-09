@@ -1,7 +1,8 @@
 /// The sizing rail's seven detents (DESIGN.md §4.5) — pure arithmetic over
 /// `legalActions()`, so it is testable without a widget.
 ///
-/// `Min · ⅓ · ½ · ⅔ · ¾ · Pot · All-in`, evenly spaced **regardless of value**:
+/// `Min · 1/3 · 1/2 · 2/3 · 3/4 · Pot · All-in`, evenly spaced **regardless of
+/// value**:
 /// a collapsed detent keeps its slot and only loses its label, which is why
 /// `SizingRail` is handed all seven every time.
 library;
@@ -10,15 +11,23 @@ import 'package:allin/engine/engine.dart';
 import 'package:allin/widgets/widgets.dart';
 
 abstract final class RaiseSizing {
-  /// Slot index of the default (⅔ — the desktop 0.66 rule).
+  /// Slot index of the default (2/3 — the desktop 0.66 rule).
   static const int defaultIndex = 3;
 
+  /// ASCII fractions, not `⅓ ½ ⅔ ¾`.
+  ///
+  /// Inter ships `½` and `¾` (Latin-1 Supplement) but not `⅓` / `⅔` (Number
+  /// Forms), and `AllInFonts.fallback` sends every missing glyph to Bricolage
+  /// Grotesque — so in one seven-item row two labels rendered raised, heavy
+  /// and slashed while their two neighbours sat on the baseline, light and
+  /// level. The rail and the P13 preset chips are the primary betting
+  /// surface; they render in one face.
   static const List<String> labels = [
     'Min',
-    '⅓',
-    '½',
-    '⅔',
-    '¾',
+    '1/3',
+    '1/2',
+    '2/3',
+    '3/4',
     'Pot',
     'All-in',
   ];
@@ -72,7 +81,7 @@ abstract final class RaiseSizing {
     ];
   }
 
-  /// The rail's opening value: ⅔, clamped.
+  /// The rail's opening value: 2/3, clamped.
   static int defaultValue(LegalActions legal, int currentBet) =>
       detents(legal, currentBet)[defaultIndex].value;
 

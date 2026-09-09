@@ -3,6 +3,8 @@
 /// §10.3; colours and behaviour §4.3, geometry §4.2).
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../engine/format.dart';
@@ -92,15 +94,49 @@ class BetPill extends StatelessWidget {
     };
   }
 
+  /// The width the pill's row needs at its full 11 pt type.
+  static double _needed(
+    String text,
+    TextStyle style,
+    TextScaler scaler,
+    bool hasChip,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    // chip glyph 7 + 4 gap, plus the container's 7 pt of padding either side.
+    return painter.maxIntrinsicWidth + (hasChip ? 11 : 0) + 14;
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final tone = toneOf(context, kind);
-    final text = _text() + (isHero ? ' (you)' : '');
+    final base = _text();
     final hasChip = amount != null && amount != 0;
 
+    final style =
+        hasChip
+            ? AllInText.mono(11, color: c.goldLight)
+            : AllInText.body(11, weight: FontWeight.w600, color: tone);
+    final withYou = '$base (you)';
+    final text = isHero ? withYou : base;
+
+    // §13's 11 pt legibility floor. [maxWidth] is the §4.2 *nominal* pill
+    // width, not a hard clip: "● 0.5 bb (you)" needs ~104 pt and the hero
+    // budget is 36–44, so honouring the cap literally handed `FittedBox` a
+    // 0.55 scale — about 6 pt type and a 4 px chip dot on the one number the
+    // hero most needs to read. The pill therefore grows to whatever its own
+    // text needs at 11 pt, and `FittedBox` only ever engages above 1.0× text
+    // scale (where it can shrink back to, but never below, 11 pt).
+    final atOnePoint = _needed(text, style, TextScaler.noScaling, hasChip);
+    final width = math.max(maxWidth, atOnePoint);
+
     final pill = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth, minHeight: height),
+      constraints: BoxConstraints(maxWidth: width, minHeight: height),
       child: Container(
         height: height,
         padding: const EdgeInsets.symmetric(horizontal: 7),
@@ -125,18 +161,7 @@ class BetPill extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
               ],
-              Text(
-                text,
-                maxLines: 1,
-                style:
-                    hasChip
-                        ? AllInText.mono(11, color: c.goldLight)
-                        : AllInText.body(
-                          11,
-                          weight: FontWeight.w600,
-                          color: tone,
-                        ),
-              ),
+              Text(text, maxLines: 1, style: style),
             ],
           ),
         ),
@@ -155,7 +180,7 @@ class BetPill extends StatelessWidget {
     );
 
     final labelled = Semantics(
-      label: semanticLabel ?? text,
+      label: semanticLabel ?? (isHero ? withYou : text),
       button: onTap != null,
       child: animated,
     );

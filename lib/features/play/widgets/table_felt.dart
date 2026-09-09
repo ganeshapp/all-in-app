@@ -333,10 +333,10 @@ class EmptyFelt extends StatelessWidget {
                   width: metrics.plateSize.width,
                   height: metrics.plateSize.height,
                   decoration: BoxDecoration(
-                    color: c.ink900.withValues(alpha: 0.25),
+                    color: AllInColors.dark.ink900.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(AllInRadius.md),
                     border: Border.all(
-                      color: c.line.withValues(alpha: 0.6),
+                      color: AllInColors.dark.line.withValues(alpha: 0.6),
                       width: 1,
                     ),
                   ),

@@ -19,6 +19,7 @@ import 'dart:math' as math;
 import 'package:flutter/painting.dart' show Offset;
 
 import '../../../engine/engine.dart';
+import '../../play/hand_log_format.dart';
 import '../../../services/persistence.dart' show CoachNoteRecord;
 
 /// The largest table the felt draws; above it §7.7's refusal state applies.
@@ -67,7 +68,21 @@ class ReplayModel {
     HHHand hand, {
     List<CoachNoteRecord> coachNotes = const [],
   }) {
-    final frames = buildReplayFrames(hand);
+    // The frames themselves are the engine's, verbatim; only their *wording*
+    // is rewritten for the phone, exactly as the ticker and the P2 log are
+    // (`HandLog`). Without it §7.7 reads "You calls 2.5 bb" and
+    // "Dwan win 39 bb.".
+    final frames = [
+      for (final f in buildReplayFrames(hand))
+        ReplayFrame(
+          text: HandLog.replayFrame(f.text),
+          street: f.street,
+          board: f.board,
+          pot: f.pot,
+          folded: f.folded,
+          revealAll: f.revealAll,
+        ),
+    ];
     final heroes = hand.seats.where((s) => s.isHero);
     final hero =
         heroes.isNotEmpty

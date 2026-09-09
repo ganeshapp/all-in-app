@@ -39,6 +39,10 @@ const double _chipsBand = 44;
 const double _statsBand = 32;
 const double _todayBand = 24;
 const double _scrubberBand = 44;
+
+/// The frame sentence's own row, under the felt (§5.2). It used to live
+/// inside the scrubber pill, where it truncated at ~28 characters.
+const double _frameTextBand = FrameTextLine.height;
 const double _handBand = 26;
 const double _answerBand = AnswerRow.height;
 
@@ -53,8 +57,55 @@ const double _gap = AllInSpace.sm;
 /// 360×780 column).
 const double _mergeStatsBelow = 820;
 
-/// The panel's compact detent never leaves less than this on screen.
-const double _minPanelHeight = 220;
+/// The compact detent's floor at 1.0× text scale: the 20 pt grabber band, the
+/// pinned header (44 verdict row + 40 EV-loss line), one line of rationale and
+/// the pinned 56 pt primary with its 2 × 16 padding. §5.3 is explicit that the
+/// full budget (334) does not fit the compact detent at 390 and that the
+/// **middle scrolls** — so this is a floor on what stays pinned, not on the
+/// whole note.
+const double _minPanelHeightAt1x = 220;
+
+/// The compact floor, grown with the text scaler: everything in the budget
+/// above except the 56 pt button is type (§5.1, §13).
+double _minPanelHeight(double textScale) =>
+    56 + (_minPanelHeightAt1x - 56) * textScale;
+
+/// The table box's height, given the space the other bands left over.
+///
+/// D1's compact top is `heroCardsBottom(above, h) + 8` and the panel below it
+/// must clear [_minPanelHeight]. Solving for `h`:
+///
+///     above + h·heroAnchor.dy + cardHeight/2 + 8 ≤ viewport − minPanel
+///
+/// `cardHeight` itself depends on `h` through `DrillTableMetrics.forHeight`,
+/// so the bound is solved once at the free height and once more at the
+/// resulting height — two passes are enough, because the metrics table has
+/// exactly two rows and shrinking only ever moves it to the smaller one.
+double _tableHeightFor({
+  required double free,
+  required double above,
+  required double viewport,
+  required double textScale,
+}) {
+  double bound(double forHeight) {
+    final cardHalf =
+        PlayingCardView.heightFor(
+          DrillTableMetrics.forHeight(forHeight).heroCardWidth,
+        ) /
+        2;
+    return (viewport - _minPanelHeight(textScale) - 8 - above - cardHalf) /
+        kDrillHeroAnchor.dy;
+  }
+
+  var height = free;
+  for (var pass = 0; pass < 2; pass++) {
+    height = height.clamp(160.0, free);
+    final limit = bound(height);
+    if (height <= limit) break;
+    height = limit;
+  }
+  return height.clamp(160.0, free);
+}
 
 class DrillsScreen extends ConsumerStatefulWidget {
   const DrillsScreen({super.key, this.mode, this.setSize});
@@ -317,6 +368,8 @@ class _Body extends ConsumerWidget {
         _gap +
         (showIcm ? icmHeight + _gap : 0) +
         (stacksLine != null ? stacksHeight + _gap : 0) +
+        _frameTextBand * textScale +
+        AllInSpace.xs +
         _scrubberBand +
         AllInSpace.xs +
         handHeight +
@@ -325,10 +378,23 @@ class _Body extends ConsumerWidget {
         _gap;
 
     final above = _chipsBand + statsHeight + AllInSpace.xs;
-    final tableHeight = (constraints.maxHeight - above - below).clamp(
+    // The table takes the remainder — but never so much of it that D1's
+    // compact detent (§5.3: hero-cards bottom + 8) would leave the panel less
+    // than its content floor. When the two fight, the *table* shrinks: raising
+    // the panel instead would slice the hero's hole cards in half.
+    final freeHeight = (constraints.maxHeight - above - below).clamp(
       160.0,
       constraints.maxHeight,
     );
+    final tableHeight = _tableHeightFor(
+      free: freeHeight,
+      above: above,
+      viewport: constraints.maxHeight,
+      textScale: textScale,
+    );
+    // Whatever the table gave up is re-inserted directly under it, so the
+    // scrubber, hand line and the 56 pt answer row stay bottom-anchored.
+    final tableSlack = freeHeight - tableHeight;
 
     final header = Column(
       mainAxisSize: MainAxisSize.min,
@@ -401,12 +467,12 @@ class _Body extends ConsumerWidget {
     // ------------------------------------------------------- the live spot
     final frame = session.frame ?? puzzle.frames.last;
     final metrics = DrillTableMetrics.forHeight(tableHeight);
+    // §5.3 exactly: the panel's compact top is the bottom of the hero's cards
+    // plus 8. `_tableHeightFor` has already guaranteed this leaves the panel
+    // its floor, so the clamp is only a degenerate-viewport guard.
     final compactTop = (metrics.heroCardsBottom(above, tableHeight) + 8).clamp(
       0.0,
-      (constraints.maxHeight - _minPanelHeight).clamp(
-        0.0,
-        constraints.maxHeight,
-      ),
+      constraints.maxHeight,
     );
     final decoration = _SpotDecoration.of(puzzle);
 
@@ -415,42 +481,50 @@ class _Body extends ConsumerWidget {
         header,
         SizedBox(
           height: tableHeight,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: DrillTable(
-                  seats: puzzle.seats,
-                  hole: puzzle.hole,
-                  frame: frame,
-                  bb: puzzle.bb,
-                  captions: decoration.captions,
-                  heroCaption: decoration.heroCaption,
-                  highlightSeat: decoration.seat,
-                  highlightColor: decoration.color,
-                  highlightHud: decoration.hud,
-                  fourColorDeck: fourColorDeck,
-                  dimmed: session.isAnswered,
-                  enableHaptics: haptics,
-                  onPreviousFrame: notifier.previousFrame,
-                  onNextFrame: notifier.nextFrame,
-                  onTouchChanged: notifier.setTouchingTable,
-                ),
-              ),
-              if (session.showSwipeHint)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: AllInSpace.sm,
-                  child: IgnorePointer(
-                    child: Center(
-                      child: _SwipeHint(reducedMotion: reducedMotion),
-                    ),
+          // The felt sits on the same 16 pt page margin as every other band on
+          // this screen (mode chips, stats strip, scrubber, source pill, answer
+          // row) and as the Play table's felt. Drawn edge to edge, its brown
+          // rail was clipped flat against both bezels at the widest point and
+          // the table read as cut off.
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DrillTable(
+                    seats: puzzle.seats,
+                    hole: puzzle.hole,
+                    frame: frame,
+                    bb: puzzle.bb,
+                    captions: decoration.captions,
+                    heroCaption: decoration.heroCaption,
+                    highlightSeat: decoration.seat,
+                    highlightColor: decoration.color,
+                    highlightHud: decoration.hud,
+                    fourColorDeck: fourColorDeck,
+                    dimmed: session.isAnswered,
+                    enableHaptics: haptics,
+                    onPreviousFrame: notifier.previousFrame,
+                    onNextFrame: notifier.nextFrame,
+                    onTouchChanged: notifier.setTouchingTable,
                   ),
                 ),
-            ],
+                if (session.showSwipeHint)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: AllInSpace.sm,
+                    child: IgnorePointer(
+                      child: Center(
+                        child: _SwipeHint(reducedMotion: reducedMotion),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: _gap),
+        SizedBox(height: _gap + tableSlack),
         // Both bands sit on the 16 pt page margin like everything else on the
         // screen; without it the stacks line runs into the bezels and
         // ellipsises a stack size away.
@@ -471,12 +545,29 @@ class _Body extends ConsumerWidget {
           ),
           const SizedBox(height: _gap),
         ],
+        // The spot's own sentence, full width — the only line that says what
+        // the situation is. In the pill it truncated to "Action on you in the
+        // CO…", so reading the spot you are graded on cost a long-press.
+        SizedBox(
+          height: _frameTextBand * textScale,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
+            child: Center(
+              child: FrameTextLine(
+                text: frame.text,
+                reducedMotion: reducedMotion,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AllInSpace.xs),
         SizedBox(
           height: _scrubberBand,
           child: FrameScrubber(
             index: session.navIndex.clamp(0, puzzle.frames.length - 1),
             count: puzzle.frames.length,
-            text: frame.text,
+            // The sentence is the row above; the pill stays "● 4 / 4".
+            text: '',
             enableHaptics: haptics,
             onIndexChanged: notifier.setNav,
             onPillLongPress:
@@ -655,7 +746,7 @@ class _HandLine extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTap: onSource,
                   child: Text(
-                    DrillCopy.sourceLabel(puzzle),
+                    DrillCopy.sourceLabelShort(puzzle),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,

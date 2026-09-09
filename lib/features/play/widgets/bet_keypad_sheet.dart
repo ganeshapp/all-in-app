@@ -4,6 +4,14 @@
 ///
 /// "Set" clamps to `[minRaiseTo, maxRaiseTo]` and returns the value — it never
 /// commits. There is no system keyboard on the table.
+///
+/// **The commit button is pinned.** Display + steppers stay at the top, "Set ·
+/// Raise to …" stays at the bottom, and only the detent chips + keypad scroll
+/// between them. §10.1 caps detent S at 40 % of the viewport (338 pt at 844,
+/// 312 at 780), and §4.5's own parts — 48 display + 36 chips + four 48 pt key
+/// rows + a 56 pt button — need ~412 pt, so *something* has to scroll. It is
+/// never the button: the sheet exists to set a number and confirm it, and a
+/// confirm button below the fold is the defect this layout fixes.
 library;
 
 import 'package:allin/engine/engine.dart';
@@ -47,6 +55,16 @@ class BetKeypadSheet extends StatefulWidget {
     detent: AllInSheetDetent.s,
     reducedMotion: reducedMotion,
     maxHeightFraction: AllInSheet.tableMaxHeightFraction(context),
+    // P13 needs ~428 pt (display 56 + 16 + chips 36 + 16 + four 48 pt key
+    // rows with 8 pt gaps + 8 + the 56 pt commit button + 16). At 411×914 the
+    // flat 40 % detent gives 366 — short by exactly one key row, so ". 0 ⌫"
+    // sat under the pinned button and the digit 0 and backspace were
+    // unreachable without scrolling the presets out of view. The
+    // `ConstrainedBox` still shrink-wraps: on a screen where the keypad fits
+    // in less, the sheet is no taller than before.
+    autoHeightFraction: 0.55,
+    // The sheet hands the height to us so "Set · Raise to …" can be pinned.
+    scrollable: false,
     child: BetKeypadSheet(
       legal: legal,
       currentBet: currentBet,
@@ -143,43 +161,59 @@ class _BetKeypadSheetState extends State<BetKeypadSheet> {
             ],
           ),
           const SizedBox(height: AllInSpace.md),
-          SizedBox(
-            height: 36,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: detents.length,
-              separatorBuilder: (_, _) => const SizedBox(width: AllInSpace.sm),
-              itemBuilder: (context, i) {
-                final detent = detents[i];
-                return _DetentChip(
-                  label: detent.label,
-                  selected: detent.value == chips,
-                  onTap:
-                      () => setState(
-                        () => _entry = fmtBb(detent.value, _bigBlind),
-                      ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: AllInSpace.md),
-          for (final row in const [
-            ['1', '2', '3'],
-            ['4', '5', '6'],
-            ['7', '8', '9'],
-            ['.', '0', '⌫'],
-          ])
-            Padding(
-              padding: const EdgeInsets.only(bottom: AllInSpace.sm),
-              child: Row(
+          // Everything between the display and the commit button gives way
+          // first when the 40 % detent cannot hold all of §4.5's parts.
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final key in row) ...[
-                    if (key != row.first) const SizedBox(width: AllInSpace.sm),
-                    Expanded(child: _Key(label: key, onTap: () => _type(key))),
-                  ],
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: detents.length,
+                      separatorBuilder:
+                          (_, _) => const SizedBox(width: AllInSpace.sm),
+                      itemBuilder: (context, i) {
+                        final detent = detents[i];
+                        return _DetentChip(
+                          label: detent.label,
+                          selected: detent.value == chips,
+                          onTap:
+                              () => setState(
+                                () => _entry = fmtBb(detent.value, _bigBlind),
+                              ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AllInSpace.md),
+                  for (final row in const [
+                    ['1', '2', '3'],
+                    ['4', '5', '6'],
+                    ['7', '8', '9'],
+                    ['.', '0', '⌫'],
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AllInSpace.sm),
+                      child: Row(
+                        children: [
+                          for (final key in row) ...[
+                            if (key != row.first)
+                              const SizedBox(width: AllInSpace.sm),
+                            Expanded(
+                              child: _Key(label: key, onTap: () => _type(key)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
+          ),
           const SizedBox(height: AllInSpace.sm),
           AllInButton.primary(
             label: 'Set · Raise to ${fmtBb(chips, _bigBlind)}',

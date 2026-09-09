@@ -230,12 +230,16 @@ class FeltCanvas extends StatelessWidget {
           );
         }
 
-        final stack = Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(child: surface),
-            ...builder(context, felt),
-          ],
+        // The felt is a fixed dark material in both themes, so its props read
+        // against dark green rather than against the page (see [FeltTheme]).
+        final stack = FeltTheme(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: surface),
+              ...builder(context, felt),
+            ],
+          ),
         );
 
         return SizedBox(

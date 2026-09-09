@@ -581,7 +581,12 @@ class _Tiles extends StatelessWidget {
               child: StatTile(
                 label: 'Biggest win',
                 value: '${fmtSigned(summary.biggestWinBb)} bb',
-                tone: StatTone.good,
+                // A session with no winning hand reads "+0.0 bb"; colouring
+                // that green (and the matching "Biggest loss +0.0 bb" red)
+                // states an outcome that never happened, so a zero stays
+                // neutral — the same rule "Net" already follows.
+                tone:
+                    summary.biggestWinBb > 0 ? StatTone.good : StatTone.neutral,
               ),
             ),
             const SizedBox(width: AllInSpace.sm),
@@ -589,7 +594,8 @@ class _Tiles extends StatelessWidget {
               child: StatTile(
                 label: 'Biggest loss',
                 value: '${fmtSigned(summary.biggestLossBb)} bb',
-                tone: StatTone.bad,
+                tone:
+                    summary.biggestLossBb < 0 ? StatTone.bad : StatTone.neutral,
               ),
             ),
           ],

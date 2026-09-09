@@ -111,9 +111,42 @@ class CoachingReviewCard extends ConsumerWidget {
           ],
           if (metrics.recentMistakes.isNotEmpty) ...[
             const SizedBox(height: AllInSpace.md),
-            Text(
-              StatsCopy.recentNegativeEv,
-              style: AllInText.body(13, weight: FontWeight.w600, color: c.text),
+            // "−EV" is not a word: the heading says what it means and the ⓘ
+            // teaches the term (TONE.md "define it in the same breath").
+            Semantics(
+              button: true,
+              label: '${StatsCopy.recentNegativeEv}, explain',
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: () => _explainNegativeEv(context, ref),
+                  borderRadius: BorderRadius.circular(AllInRadius.sm),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AllInSpace.xs,
+                    ),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            StatsCopy.recentNegativeEv,
+                            style: AllInText.body(
+                              13,
+                              weight: FontWeight.w600,
+                              color: c.text,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AllInSpace.xs),
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 15,
+                          color: c.textFaint,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
             for (final d in metrics.recentMistakes)
               _DecisionRow(
@@ -135,6 +168,17 @@ class CoachingReviewCard extends ConsumerWidget {
   }
 
   /// §3.4's H1: the sentence, the numbers behind it, the rule, and a way on.
+  void _explainNegativeEv(BuildContext context, WidgetRef ref) {
+    showStatsExplainer(
+      context,
+      ref,
+      title: StatsCopy.recentNegativeEv,
+      body: StatsCopy.recentNegativeEvBody,
+      math: StatsCopy.recentNegativeEvExpert,
+      expert: StatsCopy.recentNegativeEvExpert,
+    );
+  }
+
   void _explainLeak(BuildContext context, WidgetRef ref, String sentence) {
     final leak = metrics.leak;
     final (String math, String expert, String lesson) = switch (sentence) {
@@ -295,15 +339,22 @@ class _DecisionRow extends StatelessWidget {
       action: decision.action,
       archetype: decision.villainArchetype,
     );
-    final right = StatsCopy.decisionNumbers(
+    final facts = StatsCopy.decisionNumbers(
       equity: decision.equity,
       potOdds: decision.potOdds,
-      evBb: decision.evBb,
     );
+    final amount = StatsCopy.decisionAmount(decision.evBb);
+    // Principle 8 / §13: verdicts and results never share a colour scale in
+    // one row. The price and the win rate are neutral facts, so they are
+    // muted; only the money is coloured, and it is coloured on the *money*
+    // scale — painting "+4.5 bb" in the loss red said the opposite of what
+    // the number meant.
+    final money =
+        decision.evBb < 0 ? c.bad : (decision.evBb > 0 ? c.good : c.textMuted);
 
     return Semantics(
       button: onTap != null,
-      label: '$left, $right',
+      label: '$left, $facts, $amount',
       child: ExcludeSemantics(
         child: InkWell(
           onTap: onTap,
@@ -312,8 +363,10 @@ class _DecisionRow extends StatelessWidget {
             height: 44,
             child: Row(
               children: [
+                // The teaching sentence is the part worth reading, so it gets
+                // the width; the mono numbers keep their `FittedBox`.
                 Expanded(
-                  flex: 4,
+                  flex: 6,
                   child: Text(
                     left,
                     maxLines: 1,
@@ -325,14 +378,25 @@ class _DecisionRow extends StatelessWidget {
                 // The numbers never wrap and never clip: at 1.3× the line
                 // scales down rather than pushing the row off screen (§13).
                 Expanded(
-                  flex: 6,
+                  flex: 4,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
-                    child: Text(
-                      right,
-                      maxLines: 1,
-                      style: AllInText.mono(12, color: c.bad),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          facts,
+                          maxLines: 1,
+                          style: AllInText.mono(12, color: c.textMuted),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          amount,
+                          maxLines: 1,
+                          style: AllInText.mono(12, color: money),
+                        ),
+                      ],
                     ),
                   ),
                 ),

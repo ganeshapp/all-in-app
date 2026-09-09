@@ -22,6 +22,8 @@
 library;
 
 import 'package:allin/app/routes.dart';
+
+import '../hand_log_format.dart';
 import 'package:allin/data/preflop_charts.g.dart';
 import 'package:allin/engine/engine.dart';
 import 'package:allin/features/play/providers/guess_provider.dart';
@@ -226,10 +228,12 @@ ResultsSummary resultsSummary(TableState table, HandSummary summary) {
       summary.potResults.isEmpty
           ? const <int>[]
           : summary.potResults.first.winners;
-  final winnerNames = [
+  // A split pot is a list of people, not a CSV: "You and Ivey win with two
+  // pair.", never "You, Ivey wins with two pair." Same joiner as the log.
+  final winnerNames = HandLog.joinNames([
     for (final id in mainWinners)
       if (id >= 0 && id < table.players.length) table.players[id].name,
-  ].join(', ');
+  ]);
 
   EvaluatedHand? winnerHand;
   for (final entry in summary.showdown) {
@@ -239,6 +243,12 @@ ResultsSummary resultsSummary(TableState table, HandSummary summary) {
     }
   }
 
+  // §4.12's template is `"{names} wins with {hand}."`, written for a desktop
+  // whose hero had a name. Here the hero is literally called "You", so the
+  // verb agrees with its subject — the same rule `HandLog` already applies to
+  // the ticker and the P2 log ("You win 2 bb", never "You wins 2 bb").
+  final plural = mainWinners.length > 1 || mainWinners.contains(0);
+
   return ResultsSummary(
     netBb: netBb,
     caption: won ? ResultsCopy.wonThePot : ResultsCopy.handOver,
@@ -246,8 +256,9 @@ ResultsSummary resultsSummary(TableState table, HandSummary summary) {
         winnerNames.isEmpty
             ? ''
             : winnerHand != null
-            ? '$winnerNames wins with ${winnerHand.name.toLowerCase()}.'
-            : '$winnerNames takes it down.',
+            ? '$winnerNames ${plural ? 'win' : 'wins'} with '
+                '${winnerHand.name.toLowerCase()}.'
+            : '$winnerNames ${plural ? 'take' : 'takes'} it down.',
   );
 }
 

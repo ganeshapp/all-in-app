@@ -19,6 +19,7 @@ import '../../../theme/tokens.dart';
 import '../../../theme/typography.dart';
 import '../../../widgets/widgets.dart';
 import '../content/drill_copy.dart';
+import '../content/drill_rationale.dart';
 
 /// The width §10.4 gives the D1 grading matrix.
 const double kDrillGradeMatrixWidth = 326;
@@ -79,13 +80,29 @@ class DrillFeedbackHeader extends StatelessWidget {
                     ),
                   ),
                 ),
+                // A bare signed integer in the corner said nothing about what
+                // it counted; §5.4 calls this the *rating* change, so the row
+                // says so (the full explainer stays behind the stats sheet's
+                // `DrillCopy.ratingTooltip`).
                 if (delta != null && delta != 0)
-                  Text(
-                    fmtSigned(delta, 0),
-                    style: AllInText.mono(
-                      15,
-                      color: delta > 0 ? c.good : c.bad,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        fmtSigned(delta, 0),
+                        style: AllInText.mono(
+                          15,
+                          color: delta > 0 ? c.good : c.bad,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DrillCopy.ratingUnit,
+                        style: AllInText.body(12, color: c.textFaint),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -137,7 +154,10 @@ class DrillFeedbackBody extends StatelessWidget {
 
   final Puzzle puzzle;
 
-  /// `GradeResult.rationale` — verbatim from the engine.
+  /// `GradeResult.rationale` — verbatim from the engine. It is *not* rendered
+  /// as layer 1: [DrillRationale.plain] re-writes the verdict in the coach's
+  /// voice from the puzzle's structured fields, and this expert wording moves
+  /// to the top of "Show me the math" (§5.3 layer 2, TONE.md).
   final String rationale;
 
   /// The 48 pt secondary row (lesson link · "Drill 5 similar").
@@ -170,6 +190,9 @@ class DrillFeedbackBody extends StatelessWidget {
   /// exploitative one.
   static List<String> mathLinesFor(Puzzle p) {
     final lines = <String>[];
+    // Layer 2 leads with the engine's own sentence whenever layer 1 replaced
+    // it: the expert wording is kept in full, one disclosure away.
+    if (DrillRationale.plain(p) != null) lines.add(p.rationale);
     final equity = p.equity;
     final odds = p.potOdds;
     if (p.kind == PuzzleKind.exploit && equity != null) {
@@ -196,7 +219,10 @@ class DrillFeedbackBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(rationale, style: AllInText.body(17, color: c.text, height: 1.45)),
+        Text(
+          DrillRationale.plain(puzzle) ?? rationale,
+          style: AllInText.body(17, color: c.text, height: 1.45),
+        ),
         if (mixed) ...[
           const SizedBox(height: AllInSpace.sm),
           Text(

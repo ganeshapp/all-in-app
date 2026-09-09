@@ -412,4 +412,64 @@ void main() {
       },
     );
   });
+
+  group('coach notes carry the spot they were made at (§16.4, §7.7)', () {
+    test(
+      'street and action are the engine labels, not the note title',
+      () async {
+        final store = KeyValueStore.memory();
+        final container = makeContainer(
+          seed: 11,
+          coachEnabled: true,
+          store: store,
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(sessionProvider.notifier);
+        SessionState read() => container.read(sessionProvider);
+
+        notifier.newSession(const TableOptions(seats: 6));
+        await settle();
+
+        // Play until the coach has graded a hero decision, and read the
+        // snapshot while that note is still in `reviewLog` — the next deal
+        // clears it (§4.8).
+        var notes = const <Map<String, Object?>>[];
+        outer:
+        for (var hand = 0; hand < 8; hand++) {
+          for (var i = 0; i < 60 && !read().handOver; i++) {
+            if (read().table?.toAct == 0) {
+              final legal = read().legal;
+              if (legal == null) break;
+              await notifier.heroAction(
+                legal.canCheck ? const Action.check() : const Action.call(),
+              );
+            } else {
+              notifier.stepBot();
+            }
+            await settle();
+            final snap = store.getJson(kSessionSnapshotKey);
+            final log = snap is Map ? snap['reviewLog'] : null;
+            if (log is List && log.isNotEmpty) {
+              notes = log.cast<Map<String, Object?>>();
+              break outer;
+            }
+          }
+          if (read().handOver) notifier.deal();
+          await settle();
+        }
+
+        expect(notes, isNotEmpty, reason: 'the coach graded nothing to check');
+        const streetLabels = {'preflop', 'flop', 'turn', 'river', 'showdown'};
+        const actionLabels = {'fold', 'check', 'call', 'bet', 'raise', 'post'};
+        for (final note in notes) {
+          // These two are what `ReplayModel.noteAt` matches a frame on (§7.7)
+          // and what Stats' coaching-review rows open a hand at (§7.1). Storing
+          // the verdict headline ("Your call") in `action` made both dead.
+          expect(streetLabels, contains(note['street']));
+          expect(actionLabels, contains(note['action']));
+          expect(note['action'], isNot(note['title']));
+        }
+      },
+    );
+  });
 }

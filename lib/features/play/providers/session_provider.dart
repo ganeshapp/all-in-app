@@ -371,6 +371,14 @@ class SessionNotifier extends Notifier<SessionState> {
   Timer? _skipTimer;
   HHHand? _currentHH;
 
+  /// The street and action each coached decision was made on, keyed by review
+  /// id. `CoachReview` carries neither, and `hand_json.coachNotes[]` (§16.4)
+  /// stores `street` / `action` so the replayer can find the frame the note
+  /// belongs to (§7.7) and Stats' coaching-review rows can open it there
+  /// (§7.1). Reading them off `state.table` when the hand is written would
+  /// give every note the street the *hand* ended on.
+  final Map<int, ({String street, String action})> _decisionSpots = {};
+
   /// The roster restored from a snapshot whose table half was unreadable.
   List<Player>? _restoredRoster;
 
@@ -572,6 +580,7 @@ class SessionNotifier extends Notifier<SessionState> {
     }
 
     _reviewSeq = 1;
+    _decisionSpots.clear();
     _currentHH = null;
     _restoredRoster = null;
     state = SessionState(
@@ -631,6 +640,7 @@ class SessionNotifier extends Notifier<SessionState> {
       holes: {0: next.players[0].hole},
     );
 
+    _decisionSpots.clear();
     state = state.copyWith(
       table: next,
       reviewLog: const [],
@@ -793,21 +803,28 @@ class SessionNotifier extends Notifier<SessionState> {
     return encodeJsonMap(json);
   }
 
-  CoachNoteRecord _noteRecord(CoachReview r) => CoachNoteRecord(
-    street: (state.table?.street ?? Street.preflop).label,
-    action: r.title,
-    verdict: r.verdict.label,
-    title: r.title,
-    plain: r.plain ?? r.text,
-    text: r.text,
-    steps: r.steps ?? const [],
-    expert: r.expert?.join('\n'),
-    equity: r.equity,
-    potOdds: r.potOdds,
-    evBb: r.evChips == null ? null : r.evChips! / state.bigBlind,
-    villainName: r.villainName,
-    villainRange: r.villainRange,
-  );
+  CoachNoteRecord _noteRecord(CoachReview r) {
+    // §16.4's schema keeps `street` / `action` (the spot) apart from `title`
+    // (the verdict's headline). They are what `ReplayModel.noteAt` matches a
+    // frame on, so they must be the engine's own labels — "river" / "bet",
+    // never "Your call" — and they must be the *decision's* street.
+    final spot = _decisionSpots[r.id];
+    return CoachNoteRecord(
+      street: spot?.street ?? (state.table?.street ?? Street.preflop).label,
+      action: spot?.action ?? '',
+      verdict: r.verdict.label,
+      title: r.title,
+      plain: r.plain ?? r.text,
+      text: r.text,
+      steps: r.steps ?? const [],
+      expert: r.expert?.join('\n'),
+      equity: r.equity,
+      potOdds: r.potOdds,
+      evBb: r.evChips == null ? null : r.evChips! / state.bigBlind,
+      villainName: r.villainName,
+      villainRange: r.villainRange,
+    );
+  }
 
   /* ------------------------------------------------------------ hero acts */
 
@@ -837,6 +854,13 @@ class SessionNotifier extends Notifier<SessionState> {
       _noteCoachFailure(t);
       return;
     }
+
+    // The spot this verdict was computed against — `t` is the table *before*
+    // the action, so `t.street` is the street the decision was made on.
+    _decisionSpots[review.id] = (
+      street: t.street.label,
+      action: action.type.label,
+    );
 
     // §4.8: a verdict that resolves after the hand changed is recorded but
     // never shown as a chip.

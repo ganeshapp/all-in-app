@@ -16,7 +16,7 @@ import '../../engine/format.dart';
 import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
 
-/// One slot on the rail: `Min · ⅓ · ½ · ⅔ · ¾ · Pot · All-in`.
+/// One slot on the rail: `Min · 1/3 · 1/2 · 2/3 · 3/4 · Pot · All-in`.
 class RailDetent {
   const RailDetent({
     required this.label,
@@ -31,7 +31,7 @@ class RailDetent {
   /// Raise-to total in chips.
   final int value;
 
-  /// ⅓ and ⅔ drop their labels at 360 and stay unlabelled ticks (§4.2.3).
+  /// 1/3 and 2/3 drop their labels at 360 and stay unlabelled ticks (§4.2.3).
   final bool optionalLabel;
 
   /// Screen-reader wording ("one third pot").

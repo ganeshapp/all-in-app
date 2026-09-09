@@ -143,10 +143,16 @@ abstract final class HomeCopy {
   static const String coachLabel = 'Coach';
   static const String coachAction = 'Show me why ›';
 
-  /// §3.4 source 2 — the read-accuracy line *(desktop)*.
+  /// §3.4 source 2 — the read-accuracy line.
+  ///
+  /// The desktop wording sent the user after two names that appear on no
+  /// screen in this app: nothing is labelled "Guess & Peek" (the flow is the
+  /// eye on a seat, titled "Read {name}'s range") and the Study lesson is
+  /// called "Range-Building Drill", not a "Range-Building exercise".
   static const String coachReadLine =
-      'Your range reads are often off — drill Guess & Peek and the '
-      'Range-Building exercise.';
+      'Your reads on what opponents might hold are often off — tap the eye on '
+      'a seat during a hand to practise, or open the Range-Building Drill in '
+      'Study.';
 
   /// §3.4 source 3 — yesterday's debrief line *(desktop shape)*.
   static String coachDebriefLine(String label, double evBb) =>
@@ -154,8 +160,14 @@ abstract final class HomeCopy {
       "it's in your Review queue.";
 
   /// §3.4 source 4 — nothing recorded yet *(new)*.
+  ///
+  /// This is the first coach sentence a new user ever reads, and Home never
+  /// explains "EV" anywhere, so the name is glossed in the same breath it
+  /// first appears (TONE.md). The Review and Stats empty states say the same.
   static const String coachNoData =
-      "Play a session with the EV Coach on and I'll start noticing patterns.";
+      'Play a session with the coach on — it grades every decision by how '
+      "much money it makes or loses (that's the EV Coach) — and I'll start "
+      'noticing patterns.';
 
   /* ------------------------------------------------------------- H1 */
 

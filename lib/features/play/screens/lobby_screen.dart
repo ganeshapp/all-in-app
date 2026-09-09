@@ -87,11 +87,16 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       subtitle: PlayCopy.lobbySubtitle,
       body: ListView(
         controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(
+        // `AllInScaffold` keeps `SafeArea(bottom: false)`, so the shell's
+        // chrome inset (tab bar + Session pill, published by `TabScaffold` as
+        // `MediaQuery.padding.bottom`) has to be reserved here — without it the
+        // Recent sessions rows sit under the pill and the list is not even
+        // scrollable enough to reach them (§2.1).
+        padding: EdgeInsets.fromLTRB(
           AllInSpace.lg,
           0,
           AllInSpace.lg,
-          AllInSpace.xl,
+          AllInSpace.xl + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           if (session.active) ...[

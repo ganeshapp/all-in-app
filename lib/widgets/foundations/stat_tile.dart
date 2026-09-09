@@ -42,6 +42,17 @@ class StatTile extends StatelessWidget {
   static const double heightSmall = 72;
   static const double heightLarge = 96;
 
+  /// The ⓘ hit target (§13's 44 pt floor) and the glyph centred inside it.
+  static const double infoTarget = 44;
+  static const double infoGlyph = 16;
+
+  /// How far the ⓘ *glyph* reaches into the padded content box, plus 4 pt of
+  /// air. Only this much is reserved beside the label — reserving the whole
+  /// 44 pt target left "WIN RATE" 30 pt at 360 and it rendered as "WIN R…".
+  /// The target keeps its 44 pt; it simply overlaps the label's dead space.
+  static const double infoReserve =
+      (infoTarget - infoGlyph) / 2 - AllInSpace.md + infoGlyph + 4;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -65,23 +76,38 @@ class StatTile extends StatelessWidget {
               Flexible(
                 child: Text(
                   label.toUpperCase(),
-                  maxLines: 1,
+                  // Two lines rather than an ellipsis: at 360 pt and at 1.3×
+                  // text a KPI label is wider than a third of the row, and a
+                  // truncated stat name ("WIN R…") names nothing. The tile's
+                  // height is a minimum, so it grows to hold the wrap (§13).
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AllInText.eyebrow(c.textFaint),
                 ),
               ),
-              if (onInfo != null) const SizedBox(width: 44),
+              if (onInfo != null) const SizedBox(width: infoReserve),
             ],
           ),
           const SizedBox(height: AllInSpace.xs),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AllInText.mono(
-              big ? 26 : 20,
-              weight: FontWeight.w700,
-              color: valueColor,
+          // The value is the tile. A label may wrap and a sub-line may
+          // ellipsise, but "−10.5" truncated to "−10…" is the one thing this
+          // component must never do — at 360 pt and 1.3× text a three-across
+          // KPI row is narrower than the number. It scales down instead, and
+          // only ever from 20/26 pt, so it stays far above §13's 11 pt floor.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: AllInText.mono(
+                  big ? 26 : 20,
+                  weight: FontWeight.w700,
+                  color: valueColor,
+                ),
+              ),
             ),
           ),
           if (sub != null) ...[
@@ -120,11 +146,11 @@ class StatTile extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTap: onInfo,
                   child: SizedBox(
-                    width: 44,
-                    height: 44,
+                    width: infoTarget,
+                    height: infoTarget,
                     child: Icon(
                       Icons.info_outline,
-                      size: 16,
+                      size: infoGlyph,
                       color: c.textFaint,
                     ),
                   ),

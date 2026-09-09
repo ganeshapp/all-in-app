@@ -51,7 +51,11 @@ class SettingGroup extends StatelessWidget {
               left: AllInSpace.xs,
               bottom: AllInSpace.sm,
             ),
-            child: Eyebrow(label, color: c.gold),
+            // The default `textFaint`, like every other screen's group label
+            // (Home "NEXT UP", Play "NEW TABLE", Study "TOOLS", Stats). Gold
+            // is the coach's accent; six gold headings down a settings page
+            // spent it on structural chrome.
+            child: Eyebrow(label),
           ),
           AnimatedContainer(
             duration: AllInMotion.of(
@@ -88,6 +92,7 @@ class SettingRow extends StatelessWidget {
     super.key,
     required this.title,
     this.description,
+    this.descriptionSpans,
     this.trailing,
     this.below,
     this.onTap,
@@ -98,6 +103,10 @@ class SettingRow extends StatelessWidget {
 
   final String title;
   final String? description;
+
+  /// Rich alternative to [description] — the four-colour row paints each suit
+  /// glyph in the colour it is naming (§9). Wins over [description] when set.
+  final List<InlineSpan>? descriptionSpans;
   final Widget? trailing;
   final Widget? below;
 
@@ -133,17 +142,18 @@ class SettingRow extends StatelessWidget {
       title,
       style: AllInText.body(16, weight: FontWeight.w600, color: titleColor),
     );
+    final descriptionStyle = AllInText.body(
+      13,
+      color: enabled ? c.textMuted : c.textFaint,
+      height: 1.45,
+    );
+    final spans = descriptionSpans;
     final descriptionText =
-        description == null
+        spans != null
+            ? Text.rich(TextSpan(children: spans), style: descriptionStyle)
+            : description == null
             ? null
-            : Text(
-              description!,
-              style: AllInText.body(
-                13,
-                color: enabled ? c.textMuted : c.textFaint,
-                height: 1.45,
-              ),
-            );
+            : Text(description!, style: descriptionStyle);
 
     final body = Padding(
       padding: const EdgeInsets.symmetric(

@@ -18,6 +18,7 @@ import 'package:allin/engine/engine.dart';
 import 'package:allin/engine/types.dart' as poker show Action;
 import 'package:allin/features/onboarding/providers/onboarding_provider.dart';
 import 'package:allin/features/onboarding/widgets/coach_marks.dart';
+import 'package:allin/features/play/hand_log_format.dart';
 import 'package:allin/features/play/providers/raise_sizing.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/providers/table_layout_provider.dart';
@@ -388,105 +389,129 @@ class _TableScreenState extends ConsumerState<TableScreen>
     final metrics = TableMetrics.of(width, session.options.seats);
     final coachOn = settings.coachEnabled && !session.coachOffThisSession;
 
-    return Scaffold(
-      backgroundColor: c.ink900,
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: media.padding.bottom),
-          child: Column(
-            children: [
-              TableTopBar(
-                handNumber: table?.handNumber ?? 0,
-                netBb: session.netBb,
-                paceMode: settings.paceMode,
-                compact: width < 390,
-                coachCount: session.reviewLog.length,
-                coachVerdict:
-                    session.reviewLog.isEmpty
-                        ? null
-                        : session.reviewLog.last.verdict,
-                showCoach: coachOn,
-                pulseBadge: session.pendingBlocking != null,
-                reducedMotion: reduced,
-                onBack: _leave,
-                onTitle: () => _openSessionSheet(SessionSegment.session),
-                onCoach: _openCoachSheet,
-                onPaceToggle: () {
-                  ref
-                      .read(sessionProvider.notifier)
-                      .setPace(
-                        settings.paceMode == PaceMode.auto
-                            ? PaceMode.manual
-                            : PaceMode.auto,
-                      );
-                  ref.read(hapticsProvider).toggle();
-                },
-                onPaceLongPress:
-                    () => _openSessionSheet(SessionSegment.options),
-              ),
-              _TickerBand(
-                session: session,
-                onTap: () => _openSessionSheet(SessionSegment.log),
-              ),
-              if (session.resumeCaption != null)
-                _Caption(text: session.resumeCaption!),
-              Expanded(
-                child: MediaQuery(
-                  data: media.copyWith(
-                    textScaler: media.textScaler.clamp(
-                      maxScaleFactor: kFeltMaxTextScale,
+    // §2.5 / §16.1: system back on P1 leaves the table (pause + toast + pop),
+    // exactly as the `‹` chevron does. The table is reached with `go`, so
+    // without this the root navigator has nothing to pop and Android's back
+    // closes the app mid-session instead.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _leave();
+      },
+      child: Scaffold(
+        backgroundColor: c.ink900,
+        body: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: media.padding.bottom),
+            child: Column(
+              children: [
+                TableTopBar(
+                  handNumber: table?.handNumber ?? 0,
+                  netBb: session.netBb,
+                  paceMode: settings.paceMode,
+                  compact: width < 390,
+                  margin: metrics.margin,
+                  coachCount: session.reviewLog.length,
+                  coachVerdict:
+                      session.reviewLog.isEmpty
+                          ? null
+                          : session.reviewLog.last.verdict,
+                  // §4.8: the badge appears "whenever reviewLog is
+                  // non-empty". Keying it on the *setting* opened every hand
+                  // with a grey `◉ 0` in the busiest corner of the screen — a
+                  // dead control that reads as a disabled feature rather than
+                  // an empty counter. It now fades in with the first note.
+                  showCoach: coachOn && session.reviewLog.isNotEmpty,
+                  pulseBadge: session.pendingBlocking != null,
+                  reducedMotion: reduced,
+                  onBack: _leave,
+                  onTitle: () => _openSessionSheet(SessionSegment.session),
+                  onCoach: _openCoachSheet,
+                  onPaceToggle: () {
+                    ref
+                        .read(sessionProvider.notifier)
+                        .setPace(
+                          settings.paceMode == PaceMode.auto
+                              ? PaceMode.manual
+                              : PaceMode.auto,
+                        );
+                    ref.read(hapticsProvider).toggle();
+                  },
+                  onPaceLongPress:
+                      () => _openSessionSheet(SessionSegment.options),
+                ),
+                // The ticker sits on the same page grid as the top bar above it
+                // and the action zone below it — it ran edge to edge too.
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: metrics.margin),
+                  child: _TickerBand(
+                    session: session,
+                    onTap: () => _openSessionSheet(SessionSegment.log),
+                  ),
+                ),
+                if (session.resumeCaption != null)
+                  _Caption(text: session.resumeCaption!),
+                Expanded(
+                  child: MediaQuery(
+                    data: media.copyWith(
+                      textScaler: media.textScaler.clamp(
+                        maxScaleFactor: kFeltMaxTextScale,
+                      ),
+                    ),
+                    child: _FeltBand(
+                      session: session,
+                      metrics: metrics,
+                      settings: settings,
+                      reducedMotion: reduced,
+                      enableHaptics: haptics,
+                      coachOn: coachOn,
+                      collapseResults: _collapseResults,
+                      onSeatTap: _openPlayerSheet,
+                      onSeatEye: _openReadRange,
+                      onSeatLongPress: _openReadRange,
+                      onActionPill: (_) => _explainLastMove(),
+                      onChipTap: _openCoachSheet,
+                      onCoachRowTap: _openCoachSheet,
+                      onDealMeIn: () {
+                        ref.read(sessionProvider.notifier).newSession();
+                      },
+                      onFeltTap: () {
+                        ref.read(coachMarksProvider.notifier).dismiss();
+                        ref.read(sessionProvider.notifier).tapFelt();
+                      },
+                      onResultsTouch:
+                          () =>
+                              ref
+                                  .read(sessionProvider.notifier)
+                                  .cancelAutoDeal(),
                     ),
                   ),
-                  child: _FeltBand(
-                    session: session,
-                    metrics: metrics,
-                    settings: settings,
-                    reducedMotion: reduced,
-                    enableHaptics: haptics,
-                    coachOn: coachOn,
-                    collapseResults: _collapseResults,
-                    onSeatTap: _openPlayerSheet,
-                    onSeatEye: _openReadRange,
-                    onSeatLongPress: _openReadRange,
-                    onActionPill: (_) => _explainLastMove(),
-                    onChipTap: _openCoachSheet,
-                    onCoachRowTap: _openCoachSheet,
-                    onDealMeIn: () {
-                      ref.read(sessionProvider.notifier).newSession();
-                    },
-                    onFeltTap: () {
-                      ref.read(coachMarksProvider.notifier).dismiss();
-                      ref.read(sessionProvider.notifier).tapFelt();
-                    },
-                    onResultsTouch:
-                        () =>
-                            ref.read(sessionProvider.notifier).cancelAutoDeal(),
-                  ),
                 ),
-              ),
-              const SizedBox(height: TableMetrics.heroStripGap),
-              if (ref.watch(visibleCoachMarkProvider) == CoachMark.swipe)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: AllInSpace.xs),
-                  child: CoachMarkCaption(
-                    mark: CoachMark.swipe,
-                    pointer: CoachMarkPointer.down,
+                const SizedBox(height: TableMetrics.heroStripGap),
+                if (ref.watch(visibleCoachMarkProvider) == CoachMark.swipe)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: AllInSpace.xs),
+                    child: CoachMarkCaption(
+                      mark: CoachMark.swipe,
+                      pointer: CoachMarkPointer.down,
+                    ),
                   ),
+                _heroStrip(session, metrics, width, haptics),
+                const SizedBox(height: AllInSpace.xs),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: metrics.margin),
+                  child: _contextRow(session, settings, reduced, haptics),
                 ),
-              _heroStrip(session, metrics, width, haptics),
-              const SizedBox(height: AllInSpace.xs),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: metrics.margin),
-                child: _contextRow(session, settings, reduced, haptics),
-              ),
-              const SizedBox(height: AllInSpace.sm),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: metrics.margin),
-                child: _actionRow(session, settings, reduced, haptics),
-              ),
-              const SizedBox(height: AllInSpace.sm),
-            ],
+                const SizedBox(height: AllInSpace.sm),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: metrics.margin),
+                  child: _actionRow(session, settings, reduced, haptics),
+                ),
+                const SizedBox(height: AllInSpace.sm),
+              ],
+            ),
           ),
         ),
       ),
@@ -852,7 +877,11 @@ class _TickerBand extends ConsumerWidget {
               text: headsUpHint,
               kind: LogKind.info,
             )
-            : (table == null || table.log.isEmpty ? null : table.log.last);
+            : (table == null || table.log.isEmpty
+                ? null
+                // The engine writes "You raises to 58"; the phone says
+                // "You raise to 2.9 bb" (hand_log_format.dart).
+                : _mobile(table.log.last, table.bigBlind));
 
     return Ticker(
       entry: entry,
@@ -862,10 +891,23 @@ class _TickerBand extends ConsumerWidget {
         final log = table?.log;
         if (log == null || log.isEmpty) return;
         Clipboard.setData(
-          ClipboardData(text: log.map((e) => e.text).join('\n')),
+          ClipboardData(
+            text: HandLog.clipboardText(log, bigBlind: table!.bigBlind),
+          ),
         );
         AllInToast.show(context, PlayCopy.handLogCopied);
       },
+    );
+  }
+
+  /// The entry the ticker shows: same id, street and kind, mobile wording.
+  static LogEntry _mobile(LogEntry entry, int bigBlind) {
+    final line = HandLog.line(entry, bigBlind: bigBlind);
+    return LogEntry(
+      id: entry.id,
+      street: entry.street,
+      text: line.text,
+      kind: entry.kind,
     );
   }
 }

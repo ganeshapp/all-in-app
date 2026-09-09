@@ -15,6 +15,7 @@ import 'package:allin/features/drills/content/drill_copy.dart';
 import 'package:allin/features/drills/providers/drill_generator.dart';
 import 'package:allin/features/drills/providers/drill_stores.dart';
 import 'package:allin/features/drills/screens/drills_screen.dart';
+import 'package:allin/features/drills/widgets/feedback_content.dart';
 import 'package:allin/features/drills/widgets/review_empty.dart';
 import 'package:allin/services/clock.dart';
 import 'package:allin/services/persistence.dart';
@@ -115,7 +116,10 @@ void main() {
     expect(find.byType(AnswerRow), findsOneWidget);
     expect(find.text(DrillCopy.yourHand), findsOneWidget);
     expect(find.text('KQs'), findsOneWidget);
-    expect(find.text(DrillCopy.sourceHeuristic), findsOneWidget);
+    expect(
+      find.text(DrillCopy.sourceHeuristic.split(' · ').first),
+      findsOneWidget,
+    );
     expect(find.text('Fold'), findsOneWidget);
     expect(find.text('Call 8 bb'), findsOneWidget);
     expect(find.text('Raise to 24 bb'), findsOneWidget);
@@ -136,7 +140,17 @@ void main() {
     expect(find.byType(FeedbackPanel), findsOneWidget);
     expect(find.text(DrillCopy.correct), findsOneWidget);
     expect(find.text('+18'), findsOneWidget);
-    expect(find.textContaining('the call makes money'), findsOneWidget);
+    // Layer 1 is the coach's own sentence, not the engine's expert wording
+    // (TONE.md): counts, big blinds, no "equity" / "pot odds" / hand codes.
+    expect(
+      find.textContaining('you need to win about 1 time in 4'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('the call makes money'),
+      findsNothing,
+      reason: 'the engine string belongs to layer 2, not layer 1',
+    );
     expect(find.text(DrillCopy.folding), findsOneWidget);
     expect(
       find.textContaining('Calling: +2.6 bb per try'),
@@ -197,13 +211,21 @@ void main() {
             ),
       ),
     );
-    expect(find.text(DrillCopy.sourceChart), findsOneWidget);
+    expect(find.text(DrillCopy.sourceChart.split(' · ').first), findsOneWidget);
     await _answer(tester, 'Raise to 2.5 bb');
 
     expect(find.text(DrillCopy.correct), findsOneWidget);
     expect(find.text(DrillCopy.folding), findsNothing);
     await _openLayer(tester, CoachCopy.showMath);
-    expect(find.text(CoachCopy.noMathChartSpot), findsOneWidget);
+    // A chart spot has no equity arithmetic, but it does have the engine's own
+    // percentage sentence — that is exactly what layer 2 is for, so the
+    // "no math here" placeholder no longer applies.
+    expect(find.text(CoachCopy.noMathChartSpot), findsNothing);
+    expect(
+      find.textContaining('the call makes money'),
+      findsOneWidget,
+      reason: 'the engine wording leads layer 2',
+    );
   });
 
   testWidgets('layer 3 opens to the grading range, and to its own line for a '
@@ -238,7 +260,7 @@ void main() {
             ),
       ),
     );
-    expect(find.text(DrillCopy.sourceLeak), findsOneWidget);
+    expect(find.text(DrillCopy.sourceLeak.split(' · ').first), findsOneWidget);
     await _answer(tester, 'Call 8 bb');
     await _openLayer(tester, CoachCopy.expertDetail);
 
@@ -246,10 +268,67 @@ void main() {
     expect(find.byType(RangeMatrix), findsNothing);
   });
 
+  testWidgets('the compact detent shows there is more note below', (
+    tester,
+  ) async {
+    // §5.3 lets the compact middle scroll, but a sentence that simply stopped
+    // under the grabber read as a rendering fault. The fade + chevron says
+    // there is more, and tapping it expands.
+    await pumpDrills(
+      tester,
+      const DrillsScreen(),
+      overrides: _overrides(puzzle: (_) => testPuzzle()),
+    );
+    await _answer(tester, 'Call 8 bb');
+    await tester.pumpAndSettle();
+
+    final chevron = find.descendant(
+      of: find.byType(FeedbackPanel),
+      matching: find.byIcon(Icons.keyboard_arrow_down_rounded),
+    );
+    expect(chevron, findsOneWidget);
+
+    final compactTop = tester.getTopLeft(find.byType(FeedbackPanel)).dy;
+    await tester.tap(chevron);
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byType(FeedbackPanel)).dy,
+      lessThan(compactTop),
+      reason: 'tapping the affordance expands the panel',
+    );
+    // Expanded, there is nothing below the fold to advertise.
+    expect(chevron, findsNothing);
+  });
+
+  testWidgets('the rating delta says what it counts', (tester) async {
+    await pumpDrills(
+      tester,
+      const DrillsScreen(),
+      overrides: _overrides(puzzle: (_) => testPuzzle()),
+    );
+    await _answer(tester, 'Fold');
+    expect(
+      find.descendant(
+        of: find.byType(DrillFeedbackHeader),
+        matching: find.text(DrillCopy.ratingUnit),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('the compact panel never covers the board or the hero cards', (
     tester,
   ) async {
-    for (final size in const [Size(360, 780), Size(390, 844), Size(430, 932)]) {
+    // §5.3: compact top = hero-cards bottom + 8. The 411×914 column is the
+    // one that used to lose: a flat 220 pt panel floor beat the anchor, so the
+    // panel was pinned *above* the hero's hole cards and cut in half the one
+    // hand the user is being graded on.
+    for (final size in const [
+      Size(360, 780),
+      Size(390, 844),
+      Size(411, 914),
+      Size(430, 932),
+    ]) {
       await pumpDrills(
         tester,
         const DrillsScreen(),
@@ -265,7 +344,32 @@ void main() {
         greaterThan(boardBottom),
         reason: 'compact top = hero-cards bottom + 8 at ${size.width}',
       );
+
+      // The hero's own cards are the lowest thing on the felt; nothing about
+      // them may be behind the panel.
+      final cards = find.descendant(
+        of: find.byType(DrillTable),
+        matching: find.byType(PlayingCardView),
+      );
+      expect(cards, findsWidgets);
+      final cardsBottom = tester
+          .widgetList<PlayingCardView>(cards)
+          .indexed
+          .map((e) => tester.getRect(cards.at(e.$1)).bottom)
+          .reduce((a, b) => a > b ? a : b);
+      expect(
+        panelTop,
+        greaterThanOrEqualTo(cardsBottom),
+        reason: 'the hero hole cards must clear the panel at ${size.width}',
+      );
+
+      // §5.3 pins the primary at every detent.
       expect(find.text(DrillCopy.nextPuzzle), findsOneWidget);
+      expect(
+        tester.getRect(find.text(DrillCopy.nextPuzzle)).bottom,
+        lessThanOrEqualTo(size.height),
+        reason: 'Next puzzle stays pinned on screen at ${size.width}',
+      );
     }
   });
 
@@ -340,7 +444,7 @@ void main() {
       find.text('Stacks 12 bb · Blinds 0.5/1 · Nash chip-EV, no antes'),
       findsOneWidget,
     );
-    expect(find.text(DrillCopy.sourceNash), findsOneWidget);
+    expect(find.text(DrillCopy.sourceNash.split(' · ').first), findsOneWidget);
     expect(find.byType(IcmBanner), findsNothing);
     expect(find.text('You · 12 bb'), findsOneWidget);
     expect(find.text('Fold'), findsOneWidget);
@@ -487,7 +591,7 @@ void main() {
       const DrillsScreen(),
       overrides: _overrides(puzzle: (_) => testPuzzle()),
     );
-    await tester.tap(find.text(DrillCopy.sourceHeuristic));
+    await tester.tap(find.text(DrillCopy.sourceHeuristic.split(' · ').first));
     await tester.pumpAndSettle();
 
     expect(find.text(DrillCopy.gradingPostflop), findsOneWidget);
@@ -545,7 +649,10 @@ void main() {
       ),
     );
 
-    expect(find.text(DrillCopy.sourceExploit), findsOneWidget);
+    expect(
+      find.text(DrillCopy.sourceExploit.split(' · ').first),
+      findsOneWidget,
+    );
     expect(find.text('46/7'), findsOneWidget, reason: "the Station's HUD");
 
     await _answer(tester, 'Bet 5.4');
@@ -603,7 +710,7 @@ void main() {
 
     expect(find.byType(IcmBanner), findsOneWidget);
     expect(find.text(scenario), findsOneWidget);
-    expect(find.text(DrillCopy.sourceIcm), findsOneWidget);
+    expect(find.text(DrillCopy.sourceIcm.split(' · ').first), findsOneWidget);
     expect(find.text('You · 25 bb'), findsOneWidget);
     expect(find.text('25 bb'), findsOneWidget, reason: "the BB's live stack");
 

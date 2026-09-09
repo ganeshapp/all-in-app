@@ -128,8 +128,14 @@ class _HandNoteEditorState extends ConsumerState<HandNoteEditor> {
     final c = context.colors;
     final insets = MediaQuery.viewInsetsOf(context).bottom;
 
+    // `AllInSheet` draws chrome only — every sheet body owns its own padding.
     return Padding(
-      padding: EdgeInsets.only(bottom: insets),
+      padding: EdgeInsets.fromLTRB(
+        AllInSpace.lg,
+        AllInSpace.sm,
+        AllInSpace.lg,
+        insets + AllInSpace.lg + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -321,26 +327,36 @@ class _TagChip extends StatelessWidget {
       selected: selected,
       label: label,
       child: ExcludeSemantics(
+        // Every box here shrink-wraps horizontally, or the chip fills the
+        // `Wrap` and the five presets stack into five full-width rows
+        // (§7.6 asks for chips: 36 tall inside a 44 pt target). Both `Center`
+        // and `Container(alignment:)` take `constraints.biggest` unless a
+        // `widthFactor` says otherwise.
         child: SizedBox(
           height: 44,
           child: Center(
+            widthFactor: 1,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onTap,
               child: Container(
                 height: 36,
                 padding: const EdgeInsets.symmetric(horizontal: AllInSpace.md),
-                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: selected ? c.gold.withValues(alpha: 0.16) : c.ink850,
                   borderRadius: BorderRadius.circular(AllInRadius.pill),
                   border: Border.all(color: selected ? c.gold : c.line),
                 ),
-                child: Text(
-                  label,
-                  style: AllInText.body(
-                    13,
-                    color: selected ? c.gold : c.textMuted,
+                // `widthFactor: 1` keeps the horizontal shrink-wrap while the
+                // label still centres in the 36 pt height.
+                child: Align(
+                  widthFactor: 1,
+                  child: Text(
+                    label,
+                    style: AllInText.body(
+                      13,
+                      color: selected ? c.gold : c.textMuted,
+                    ),
                   ),
                 ),
               ),

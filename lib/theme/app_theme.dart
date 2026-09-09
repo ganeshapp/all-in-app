@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'tokens.dart';
 import 'typography.dart';
@@ -10,6 +11,29 @@ import 'typography.dart';
 class AllInAppTheme {
   static ThemeData dark() => _build(AllInColors.dark, Brightness.dark);
   static ThemeData light() => _build(AllInColors.light, Brightness.light);
+
+  /// Transparent bars so the felt and the tab bar own the safe areas; icon
+  /// brightness follows the **resolved** brightness of the theme in force.
+  ///
+  /// This is keyed on [Brightness] rather than on `AppThemeMode` so a future
+  /// `system` mode cannot invert the status bar: whatever `MaterialApp`
+  /// actually rendered is what the bars are told about. `AllInApp` publishes it
+  /// through an `AnnotatedRegion`, which re-applies it on every theme change —
+  /// setting it once in `main()` left the clock, signal and battery white on
+  /// the #F4F6F9 page after switching to Light at runtime.
+  static SystemUiOverlayStyle overlayStyle(Brightness brightness) {
+    final dark = brightness == Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor:
+          dark ? AllInColors.dark.ink850 : AllInColors.light.ink850,
+      systemNavigationBarIconBrightness:
+          dark ? Brightness.light : Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
+    );
+  }
 
   static ThemeData _build(AllInColors c, Brightness brightness) {
     final scheme = ColorScheme(

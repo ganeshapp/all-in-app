@@ -9,6 +9,7 @@ library;
 import 'package:allin/engine/types.dart' as poker show Action;
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/play_copy.dart';
+import 'package:allin/features/play/widgets/table_top_bar.dart';
 import 'package:allin/services/persistence/table_options_store.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,17 @@ void main() {
     testWidgets('6-max in the light theme', (tester) async {
       await seatedTable(tester, seats: 6, dark: false);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no coach badge until the hand has a note (§4.8)', (
+      tester,
+    ) async {
+      // Keying the badge on the *setting* opened every hand with a grey
+      // "◉ 0" pill in the busiest corner — a dead control that reads as a
+      // disabled feature rather than an empty counter. §4.8 shows it
+      // "whenever reviewLog is non-empty".
+      await seatedTable(tester, seats: 6);
+      expect(find.byType(CoachBadge), findsNothing);
     });
   });
 
@@ -222,6 +234,32 @@ void main() {
       expect(find.text(PlayCopy.stepHint), findsOneWidget);
     });
 
+    // §2.5 / §16.1: system back on P1 leaves the table the way `‹` does. The
+    // table is reached with `go`, so without a `PopScope` the root navigator
+    // has nothing to pop and Android's back closed the app mid-session.
+    testWidgets('system back leaves the table instead of the app', (
+      tester,
+    ) async {
+      final container = await seatedTable(tester, seats: 6, toHero: false);
+      expect(container.read(sessionProvider).paused, isFalse);
+
+      final popped = await tester.binding.handlePopRoute();
+      await tester.pump();
+      await settleWidgets(tester);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // The route handled the pop itself — the engine never saw it.
+      expect(popped, isTrue);
+      // §4.14: no dialog, the session pauses and the lobby is showing.
+      expect(container.read(sessionProvider).active, isTrue);
+      expect(container.read(sessionProvider).paused, isTrue);
+      expect(find.text(PlayCopy.lobbyTitle), findsWidgets);
+      // §4.14's "Session paused" toast lives 2.5 s; let it retire.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('tapping a seat plate opens P6', (tester) async {
       await seatedTable(tester, seats: 6, toHero: false);
       await tester.tap(find.byType(SeatPlate).first, warnIfMissed: false);
@@ -229,5 +267,43 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text(PlayCopy.readTheirRange), findsOneWidget);
     });
+  });
+
+  // The top bar and the ticker used to run edge to edge, which left the pace
+  // pill's border ~2 pt from the bezel under the action row's 16 pt margin.
+  group('§4.2 the header bands sit on the page grid', () {
+    for (final size in [phone360, phone390, phone430]) {
+      final expected = size.width >= 430 ? 20.0 : 16.0;
+
+      testWidgets('${size.width.toInt()} pt keeps a $expected pt margin', (
+        tester,
+      ) async {
+        final semantics = tester.ensureSemantics();
+        await seatedTable(tester, seats: 6, size: size);
+
+        // The bar itself still spans the screen — the margin is its padding,
+        // so the ink of a pressed control never runs to the bezel.
+        final bar = tester.getRect(find.byType(TableTopBar));
+        expect(bar.left, 0);
+        expect(bar.width, size.width);
+
+        // The pace pill is the last thing in the bar: its own border, not
+        // just its hit box, has to clear the bezel by the page margin.
+        final pill = tester.getRect(find.bySemanticsLabel(RegExp('^Pace, ')));
+        expect(pill.right, lessThanOrEqualTo(size.width - expected + 0.01));
+
+        // The back chevron's 44 pt target starts at the margin, not at 0.
+        final back = tester.getRect(find.bySemanticsLabel('Leave table'));
+        expect(back.left, closeTo(expected, 0.01));
+        expect(back.width, greaterThanOrEqualTo(44));
+
+        // The ticker is the third band on the same grid.
+        final ticker = tester.getRect(find.byType(Ticker));
+        expect(ticker.left, closeTo(expected, 0.01));
+        expect(ticker.right, closeTo(size.width - expected, 0.01));
+
+        semantics.dispose();
+      });
+    }
   });
 }

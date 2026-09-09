@@ -11,7 +11,7 @@
 library;
 
 import '../../engine/engine.dart'
-    show fmtPct, fmtSigned, jsIntString, jsRound, jsToFixed;
+    show fmtNeed, fmtPct, fmtSigned, fmtTimes, jsToFixed, kArchetypes;
 
 abstract final class StatsCopy {
   /* ------------------------------------------------------------ T0 header */
@@ -99,9 +99,17 @@ abstract final class StatsCopy {
   static const String readAccuracyBody =
       'How close your painted ranges have been to the range the coach '
       'assumed, averaged over every Peek you have scored.';
+
+  /// §4.9's prose says "(recall + precision) / 2", but the engine scores the
+  /// *harmonic* mean (`coach.dart`: `2·p·r / (p + r)`), so the arithmetic mean
+  /// cannot reproduce the number printed above it — TONE.md's honesty rule
+  /// makes the code the authority. The spec cross-reference is dropped too: a
+  /// section number means nothing to a user. Mirrors the Peek card
+  /// (`play/widgets/coach_copy.dart`).
   static const String readAccuracyExpert =
-      "Each score is (recall + precision) / 2 against the coach's assumed "
-      'range — §4.9.';
+      'Each score balances two things — how much of their range you covered, '
+      'and how much of what you painted was really in it. '
+      'Score = 2 × coverage × precision ÷ (coverage + precision).';
 
   /// "The mean of your last {n} Peek scores: {list}." *(mobile)*.
   static String readAccuracyMath({required int n, required String list}) =>
@@ -137,24 +145,45 @@ abstract final class StatsCopy {
 
   static const String coachingReviewCard = 'Coaching review';
 
-  /// Desktop empty state *(desktop)*.
+  /// Desktop empty state, with "EV Coach" glossed the first time it appears
+  /// on this screen (TONE.md).
   static const String coachingReviewEmpty =
-      'Play with the EV Coach on and your reviewed decisions, leaks and '
-      'mistakes will appear here.';
+      'Play with the coach on — it grades every decision by how much money it '
+      "makes or loses (that's the EV Coach) — and your reviewed decisions, "
+      'leaks and mistakes will appear here.';
 
   static const String verdictMistakes = 'Mistakes';
   static const String verdictThinSpots = 'Thin spots';
   static const String verdictGreatPlays = 'Great plays';
 
-  /// U+2212 minus, exactly as the desktop heading *(desktop)*.
-  static const String recentNegativeEv = 'Recent −EV decisions';
+  /// The desktop heading is "Recent −EV decisions"; "−EV" is never glossed on
+  /// this screen, so the phone says what it means and leaves the term to the
+  /// ⓘ explainer (TONE.md).
+  static const String recentNegativeEv = 'Decisions that cost you money';
+
+  /// The ⓘ on that heading: where the banned shorthand is actually taught.
+  static const String recentNegativeEvBody =
+      'The decisions in your coached log that lost the most money on average. '
+      'Each row shows the price the pot was offering, how often your hand '
+      'actually won, and what the choice cost.';
+  static const String recentNegativeEvExpert =
+      'Ranked by expected value (EV) — the average big blinds a decision wins '
+      'or loses if you made it many times. Coaches write a losing one as −EV.';
 
   static const String reviewTheseSpots = 'Review these spots ›';
 
-  /// The read-accuracy leak line appended to `leaksFromDecisions` *(desktop)*.
+  /// The read-accuracy leak line appended to `leaksFromDecisions`.
+  ///
+  /// The desktop wording named two things that do not exist on the phone:
+  /// nothing is labelled "Guess & Peek" (the flow is the eye on a seat, titled
+  /// "Read {name}'s range") and there is no "Range-Building exercise" — the
+  /// Study lesson is called "Range-Building Drill". A beginner sent looking
+  /// for two names that appear on no screen is simply stuck, so the line uses
+  /// the labels the app actually shows and the card routes to the lesson.
   static const String readAccuracyLeak =
-      'Your range reads are often off — drill Guess & Peek and the '
-      'Range-Building exercise.';
+      'Your reads on what opponents might hold are often off — tap the eye on '
+      'a seat during a hand to practise, or open the Range-Building Drill in '
+      'Study.';
 
   /// H1's "Show me the math" for a fold-mistake leak *(mobile §3.4)*.
   static String leakMath({
@@ -183,24 +212,42 @@ abstract final class StatsCopy {
 
   static const String openTheLesson = 'Open the lesson ›';
 
-  /// "River call vs Nit" — CSS-capitalised street + action *(desktop)*.
+  /// "River call vs a Calling Station" — CSS-capitalised street + action.
+  ///
+  /// The desktop suffixes the raw `Archetype.label` ("TAG", "LAG", "Nit",
+  /// "Station"). Those codes are glossed nowhere on this screen and "TAG" is
+  /// exactly the kind of abbreviation TONE.md bans, so the row prints the
+  /// archetype's readable `name` instead ("Tight-Aggressive").
   static String decisionRow({
     required String street,
     required String action,
     String? archetype,
   }) {
     final head = '${_capitalise(street)} $action';
-    return archetype == null ? head : '$head vs $archetype';
+    if (archetype == null) return head;
+    return '$head vs ${archetypeName(archetype)}';
   }
 
-  /// "17% eq · 25% needed · −2.0 bb" *(desktop)*.
+  /// `Archetype.label` → the readable name from `kArchetypes`.
+  static String archetypeName(String label) {
+    for (final entry in kArchetypes.entries) {
+      if (entry.key.label == label) return entry.value.name;
+    }
+    return label;
+  }
+
+  /// The desktop writes "17% eq · 25% needed · −2.0 bb". "eq" is never
+  /// glossed on this screen and TONE.md wants counts, not percentages, at
+  /// layer 1 — so the row reads "needed 1 time in 4 · won about 1 time in 6".
+  /// The bb amount is returned separately so the row can colour it on the
+  /// money scale rather than painting a *gain* in the loss colour (§13).
   static String decisionNumbers({
     required double equity,
     required double potOdds,
-    required double evBb,
-  }) =>
-      '${jsIntString(jsRound(equity * 100))}% eq · '
-      '${jsIntString(jsRound(potOdds * 100))}% needed · ${fmtSigned(evBb)} bb';
+  }) => 'needed ${fmtNeed(potOdds)} · won ${fmtTimes(equity)}';
+
+  /// The signed money at the end of a decision row: "−2.0 bb".
+  static String decisionAmount(double evBb) => '${fmtSigned(evBb)} bb';
 
   /* -------------------------------------------------------- style / table */
 

@@ -10,6 +10,7 @@ library;
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/app/routes.dart';
 import 'package:allin/engine/engine.dart';
+import 'package:allin/engine/types.dart' as poker show Card;
 import 'package:allin/features/stats/providers/data_actions.dart';
 import 'package:allin/features/stats/providers/replay_model.dart';
 import 'package:allin/features/stats/providers/stats_providers.dart';
@@ -212,6 +213,17 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
   /// record stored inside `hand_json` (§16.4).
   Future<void> _openNote(CoachNoteRecord note, StoredHand stored) {
     final settings = ref.read(settingsProvider);
+    // `CoachNoteView` reads the street off the board it is given, so the board
+    // has to be the one the *decision* saw — the stored hand's board is the
+    // river, which made a pre-flop note's header read "· River" over five
+    // community cards it was never computed against.
+    final board = stored.hand.board;
+    final Iterable<poker.Card> visible = switch (note.street) {
+      'flop' => board.take(3),
+      'turn' => board.take(4),
+      'river' || 'showdown' => board.take(5),
+      _ => const <poker.Card>[],
+    };
     final review = CoachReview(
       id: 0,
       kind: ReviewKind.decision,
@@ -223,7 +235,7 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
       evChips: note.evBb,
       villainName: note.villainName,
       villainRange: note.villainRange,
-      board: stored.hand.board,
+      board: visible.toList(growable: false),
       plain: note.plain,
       text: note.text ?? note.plain,
       steps: note.steps,
@@ -235,15 +247,24 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
       reducedMotion: settings.reducedMotion,
       builder:
           (sheetContext) => SingleChildScrollView(
-            child: CoachNoteView(
-              review: review,
-              readOnly: true,
-              bigBlind: 1,
-              alwaysExpandMath: settings.alwaysExpandMath,
-              enableHaptics: settings.haptics,
-              reducedMotion: settings.reducedMotion,
-              onDismiss: () => Navigator.of(sheetContext).pop(),
-              dismissLabel: CoachCopy.close,
+            // `AllInSheet` draws chrome only; the body owns its padding.
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AllInSpace.lg,
+                0,
+                AllInSpace.lg,
+                AllInSpace.xl + MediaQuery.paddingOf(sheetContext).bottom,
+              ),
+              child: CoachNoteView(
+                review: review,
+                readOnly: true,
+                bigBlind: 1,
+                alwaysExpandMath: settings.alwaysExpandMath,
+                enableHaptics: settings.haptics,
+                reducedMotion: settings.reducedMotion,
+                onDismiss: () => Navigator.of(sheetContext).pop(),
+                dismissLabel: CoachCopy.close,
+              ),
             ),
           ),
     );

@@ -25,20 +25,24 @@ enum DrillMode {
   /// The verbatim chip label.
   final String label;
 
-  /// The verbatim blurb behind D4.
+  /// The blurb behind D4 — the text a beginner reads to choose what to
+  /// practise, so it leads with one plain sentence saying what they will be
+  /// asked to do and keeps the expert clause second (TONE.md).
   String get blurb => switch (this) {
     DrillMode.mixed =>
-      'Pre-flop charts + post-flop pot-odds/equity. Opponent type is '
-          'irrelevant — play solid baseline poker.',
+      'A bit of everything: which hands to play before the flop, and whether '
+          'the price is right after it. Who you are up against does not '
+          'matter here — play solid baseline poker.',
     DrillMode.pushfold =>
-      'Short-stack shove/fold and call-a-shove spots, graded by computed Nash '
-          'equilibrium tables (chip-EV, no antes).',
+      'Very short stacks: all in or fold, nothing in between. Answers come '
+          'from solved tables (Nash equilibrium, chip-EV, no antes).',
     DrillMode.exploit =>
-      'Best deviation vs a KNOWN opponent type — the spots where the right '
-          'play differs from balanced, with both numbers shown.',
+      'Spots where the best play changes because you know how this opponent '
+          'plays. Both the standard answer and the adjusted one are shown.',
     DrillMode.leaks =>
-      'Your coach-flagged leaks and missed drills on a spaced schedule — beat '
-          'a spot 3 times over days to retire it.',
+      'The decisions the coach flagged and the drills you missed, brought '
+          'back on a spaced schedule — beat a spot 3 times over days to '
+          'retire it.',
   };
 
   /// The practice modes (everything but Review) update rating and streaks.
@@ -56,6 +60,10 @@ enum DrillMode {
 abstract final class DrillCopy {
   // ------------------------------------------------------------- header
   static const String title = 'Drills';
+
+  /// What D1's signed header number counts. Without it "−7" is a bare integer
+  /// with nothing on the panel to say what it measures.
+  static const String ratingUnit = 'rating';
 
   /// D3 · the Rating tooltip (verbatim).
   static const String ratingTooltip =
@@ -126,6 +134,15 @@ abstract final class DrillCopy {
   static const String sourceNash = 'Push/Fold · computed Nash';
   static const String sourceChart = 'Pre-flop chart · 100bb baseline';
   static const String sourceHeuristic = 'Post-flop heuristic · fundamentals';
+
+  /// The short form for the D0 hand line, where the pill shares a 44 pt row
+  /// with the hand label and truncated at ~60 % ("Pre-flop chart · 100b…").
+  /// The full [sourceLabel] and its explainer live one tap away in the sheet.
+  static String sourceLabelShort(Puzzle p) {
+    final full = sourceLabel(p);
+    final dot = full.indexOf(' · ');
+    return dot < 0 ? full : full.substring(0, dot);
+  }
 
   /// The pill for a spot (desktop `DrillControls`).
   static String sourceLabel(Puzzle p) {
@@ -271,9 +288,10 @@ abstract final class DrillCopy {
       'meantime.';
 
   static const String noSpotsBody =
-      'Play a session with the EV Coach on, or miss a practice drill, and the '
-      "spot lands here on a spaced-repetition schedule until you've beaten it "
-      'three times.';
+      'Play a session with the coach on — it grades every decision by how '
+      "much money it makes or loses (that's the EV Coach) — or miss a "
+      'practice drill, and the spot lands here on a spaced-repetition '
+      "schedule until you've beaten it three times.";
 
   static const String playASession = 'Play a session';
   static const String drillMixed = 'Drill Mixed';

@@ -126,6 +126,7 @@ class CoachNoteView extends StatelessWidget {
     this.onViewRange,
     this.onDismiss,
     this.dismissLabel,
+    this.pinnedFooter = false,
     this.onOpenGlossary,
     this.onDisclosureToggle,
     this.enableHaptics = true,
@@ -168,6 +169,7 @@ class CoachNoteView extends StatelessWidget {
     this.enableHaptics = true,
     this.reducedMotion = false,
   }) : variant = CoachNoteVariant.drill,
+       pinnedFooter = false,
        review = null,
        bigBlind = 20,
        blocking = false,
@@ -199,6 +201,7 @@ class CoachNoteView extends StatelessWidget {
     this.enableHaptics = true,
     this.reducedMotion = false,
   }) : variant = CoachNoteVariant.peek,
+       pinnedFooter = false,
        review = null,
        bigBlind = 20,
        blocking = false,
@@ -262,6 +265,10 @@ class CoachNoteView extends StatelessWidget {
   /// "Next puzzle" button belongs to `FeedbackPanel`, not to this widget.
   final Widget? actions;
 
+  /// True when the host renders [footerButtons] itself, pinned. The row is
+  /// then left out of the scrolling body so it is not drawn twice.
+  final bool pinnedFooter;
+
   /// "4 more of this spot type coming up".
   final String? footerCaption;
 
@@ -320,6 +327,13 @@ class CoachNoteView extends StatelessWidget {
     }
     return clause;
   }
+
+  /// The note's own button row ("View range" / "Got it"), or null.
+  ///
+  /// A host that pins its primary — P3's sheet (§1.1: "Got it lives in the
+  /// bottom 160 pt") — renders this itself and passes `pinnedFooter: true` so
+  /// the row is not also appended to the scrolling body.
+  Widget? footerButtons(BuildContext context) => _buttons(context);
 
   @override
   Widget build(BuildContext context) {
@@ -730,7 +744,7 @@ class CoachNoteView extends StatelessWidget {
         );
     }
 
-    final buttons = _buttons(context);
+    final buttons = pinnedFooter ? null : _buttons(context);
     if (buttons != null) {
       widgets
         ..add(const SizedBox(height: AllInSpace.md))

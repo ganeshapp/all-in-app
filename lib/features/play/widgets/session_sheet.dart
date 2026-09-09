@@ -10,9 +10,11 @@
 library;
 
 import 'package:allin/engine/engine.dart';
+import 'package:allin/features/play/hand_log_format.dart';
 import 'package:allin/features/play/providers/play_providers.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/hand_note_sheet.dart';
+import 'package:allin/features/play/widgets/hero_labels.dart';
 import 'package:allin/features/play/widgets/play_copy.dart';
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/services/persistence/settings_store.dart';
@@ -210,10 +212,11 @@ class _LogTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GestureDetector(
-            onLongPress: () => _copy(context, current),
+            onLongPress: () => _copy(context, current, session.bigBlind),
             child: Eyebrow('HAND #${current.number}'),
           ),
-          for (final entry in current.entries) _LogLine(entry: entry),
+          for (final entry in current.entries)
+            _LogLine(line: HandLog.line(entry, bigBlind: session.bigBlind)),
           for (final review in session.reviewLog)
             _NoteRow(
               review: review,
@@ -222,10 +225,11 @@ class _LogTab extends StatelessWidget {
           for (final hand in shown)
             _CollapsedHand(
               hand: hand,
+              bigBlind: session.bigBlind,
               netBb: _netFor(hand.number),
               expanded: expanded == hand.number,
               onTap: () => onExpand(hand.number),
-              onLongPress: () => _copy(context, hand),
+              onLongPress: () => _copy(context, hand, session.bigBlind),
             ),
           if (previous.length > collapsedCap)
             Semantics(
@@ -259,36 +263,38 @@ class _LogTab extends StatelessWidget {
     return null;
   }
 
-  void _copy(BuildContext context, LogHand hand) {
+  void _copy(BuildContext context, LogHand hand, int bigBlind) {
     Clipboard.setData(
-      ClipboardData(text: hand.entries.map((e) => e.text).join('\n')),
+      ClipboardData(
+        text: HandLog.clipboardText(hand.entries, bigBlind: bigBlind),
+      ),
     );
     AllInToast.show(context, PlayCopy.handLogCopied);
   }
 }
 
 class _LogLine extends StatelessWidget {
-  const _LogLine({required this.entry});
+  const _LogLine({required this.line});
 
-  final LogEntry entry;
+  /// Already rewritten for the phone — second person, big blinds.
+  final HandLogLine line;
 
   @override
   Widget build(BuildContext context) {
-    final hero = entry.text.startsWith('You ');
     return SizedBox(
       height: 32,
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          entry.text,
+          line.text,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AllInText.body(
             14,
             color:
-                hero
+                line.isHero
                     ? context.colors.text
-                    : Ticker.colorFor(context, entry.kind),
+                    : Ticker.colorFor(context, line.kind),
           ),
         ),
       ),
@@ -340,6 +346,7 @@ class _NoteRow extends StatelessWidget {
 class _CollapsedHand extends StatelessWidget {
   const _CollapsedHand({
     required this.hand,
+    required this.bigBlind,
     required this.netBb,
     required this.expanded,
     required this.onTap,
@@ -347,6 +354,7 @@ class _CollapsedHand extends StatelessWidget {
   });
 
   final LogHand hand;
+  final int bigBlind;
   final double? netBb;
   final bool expanded;
   final VoidCallback onTap;
@@ -398,7 +406,8 @@ class _CollapsedHand extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final entry in hand.entries) _LogLine(entry: entry),
+                for (final entry in hand.entries)
+                  _LogLine(line: HandLog.line(entry, bigBlind: bigBlind)),
               ],
             ),
           ),
@@ -509,6 +518,10 @@ class _SessionTab extends ConsumerWidget {
             _HandRow(
               number: hand.id,
               startedAt: hand.startedAt,
+              // A net amount alone does not identify a hand, so after 60 of
+              // them there is no way to find the one you want to re-examine
+              // without opening them one at a time. The hero's cards do.
+              heroCards: hand.holes[0],
               netBb: hand.heroNet / session.bigBlind,
               hasNote: (notes.noteFor(hand.startedAt)?.note ?? '').isNotEmpty,
               onReplay:
@@ -547,6 +560,7 @@ class _HandRow extends StatelessWidget {
   const _HandRow({
     required this.number,
     required this.startedAt,
+    required this.heroCards,
     required this.netBb,
     required this.hasNote,
     required this.onReplay,
@@ -555,10 +569,19 @@ class _HandRow extends StatelessWidget {
 
   final int number;
   final int startedAt;
+
+  /// The hero's two cards, or null on a hand that was never dealt to them.
+  final List<String>? heroCards;
   final double netBb;
   final bool hasNote;
   final VoidCallback? onReplay;
   final VoidCallback onNote;
+
+  String get _cards {
+    final cards = heroCards;
+    if (cards == null || cards.length < 2) return '';
+    return '${prettyCard(cards[0])} ${prettyCard(cards[1])}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -568,15 +591,26 @@ class _HandRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 52,
+            width: 44,
             child: Text('#$number', style: AllInText.mono(14, color: c.text)),
+          ),
+          SizedBox(
+            width: 64,
+            child: Text(
+              _cards,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AllInText.mono(13, color: c.textMuted),
+            ),
           ),
           Expanded(
             child: Text(
               '${fmtSigned(netBb)} bb',
+              textAlign: TextAlign.right,
               style: AllInText.mono(14, color: netBb >= 0 ? c.good : c.bad),
             ),
           ),
+          const SizedBox(width: AllInSpace.sm),
           Semantics(
             button: true,
             label: 'Replay hand $number',

@@ -138,11 +138,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
     return ListView(
       controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(
+      // The shell's chrome (tab bar + Session pill) is published as
+      // `MediaQuery.padding.bottom`; reserving it here keeps the Data card's
+      // last rows — "Import hands" and "Reset all progress" — reachable.
+      padding: EdgeInsets.fromLTRB(
         AllInSpace.lg,
         0,
         AllInSpace.lg,
-        AllInSpace.xxl,
+        AllInSpace.xxl + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         KpiGrid(metrics: metrics),

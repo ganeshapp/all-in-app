@@ -203,21 +203,26 @@ class SeatPlate extends StatelessWidget {
       showStepGlyph:
           state == SeatPlateState.toAct && turnMode == TurnRingMode.breathing,
       reducedMotion: reducedMotion,
-      child: AnimatedOpacity(
-        opacity: folded ? 0.55 : 1,
-        duration: duration,
-        child: Container(
-          width: size.width,
-          height: size.height,
-          padding: EdgeInsets.symmetric(
-            horizontal: variant == SeatPlateVariant.compact ? 6 : 8,
-            vertical: 6,
-          ),
-          decoration: BoxDecoration(
-            color: c.ink800.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: c.line, width: 1),
-          ),
+      // §4.3's "folded dims to 55 %" dims the plate's *contents*, not the
+      // plate. Fading the whole widget took its `ink800 @ 92 %` background
+      // down to ~51 % opaque, so the felt's radial highlight, inner hairline
+      // and seat ring read straight through: the plate stopped being an
+      // object and became a smudge. (The tucked cards keep their own 0.30.)
+      child: Container(
+        width: size.width,
+        height: size.height,
+        padding: EdgeInsets.symmetric(
+          horizontal: variant == SeatPlateVariant.compact ? 6 : 8,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: c.ink800.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: c.line, width: 1),
+        ),
+        child: AnimatedOpacity(
+          opacity: folded ? 0.55 : 1,
+          duration: duration,
           child: MediaQuery.withClampedTextScaling(
             // §4.2.4: felt text stops scaling at 1.15×.
             maxScaleFactor: 1.15,

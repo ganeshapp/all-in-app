@@ -176,7 +176,6 @@ class _DrillTableState extends State<DrillTable> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final hero = widget.seats.firstWhere(
       (s) => s.isHero,
       orElse: () => widget.seats.first,
@@ -221,7 +220,9 @@ class _DrillTableState extends State<DrillTable> {
                           children: [
                             Text(
                               _streetCaption(widget.frame.street),
-                              style: AllInText.eyebrow(c.textMuted),
+                              style: AllInText.eyebrow(
+                                AllInColors.dark.textMuted,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             PotPill(
@@ -287,7 +288,10 @@ class _DrillTableState extends State<DrillTable> {
                         alignment: Alignment.topCenter,
                         child: Text(
                           widget.heroCaption ?? 'You · ${hero.pos.label}',
-                          style: AllInText.mono(11, color: c.gold),
+                          style: AllInText.mono(
+                            11,
+                            color: AllInColors.dark.gold,
+                          ),
                         ),
                       ),
                     ],

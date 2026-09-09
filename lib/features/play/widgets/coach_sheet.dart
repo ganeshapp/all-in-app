@@ -98,6 +98,10 @@ Future<void> defaultCoachSheet(
   dismissible: !request.blocking,
   showGrabber: !request.blocking,
   reducedMotion: request.reducedMotion,
+  // The page pins its own footer ("View range" / "Got it"): at M, inside the
+  // sheet's scroll view, the only way out of a blocking note was below the
+  // fold until the user dragged the sheet to L (§1.1).
+  scrollable: false,
   builder:
       (sheetContext) => CoachSheetBody(
         request: request,
@@ -281,7 +285,36 @@ class _CoachSheetBodyState extends ConsumerState<CoachSheetBody> {
     final review = _withArchetypeBlurb(_review);
     final hasRange = _review.villainRange?.isNotEmpty ?? false;
 
+    final note = CoachNoteView(
+      review: review,
+      bigBlind: request.bigBlind.toDouble(),
+      blocking: request.blocking,
+      readOnly: _fromList,
+      heroCards: request.heroCards,
+      alwaysExpandMath: request.alwaysExpandMath,
+      enableHaptics: haptics,
+      reducedMotion: reduced,
+      pinnedFooter: true,
+      cardBuilder:
+          (context, card, width) => PlayingCardView(
+            card: card,
+            width: width,
+            fourColorDeck: ref.watch(
+              settingsProvider.select((s) => s.fourColorDeck),
+            ),
+          ),
+      // §4.8: "View range" pushes P5 **inside** this sheet. A host's own
+      // destination is only used when there is no range to show in place.
+      onViewRange:
+          hasRange ? () => _go(CoachSheetPage.range) : request.onViewRange,
+      onDismiss: widget.onClose,
+    );
+
     return _Page(
+      footer: Builder(
+        builder:
+            (context) => note.footerButtons(context) ?? const SizedBox.shrink(),
+      ),
       children: <Widget>[
         if (_fromList)
           _NavRow(
@@ -302,29 +335,7 @@ class _CoachSheetBodyState extends ConsumerState<CoachSheetBody> {
               _go(CoachSheetPage.notes);
             },
           ),
-        CoachNoteView(
-          review: review,
-          bigBlind: request.bigBlind.toDouble(),
-          blocking: request.blocking,
-          readOnly: _fromList,
-          heroCards: request.heroCards,
-          alwaysExpandMath: request.alwaysExpandMath,
-          enableHaptics: haptics,
-          reducedMotion: reduced,
-          cardBuilder:
-              (context, card, width) => PlayingCardView(
-                card: card,
-                width: width,
-                fourColorDeck: ref.watch(
-                  settingsProvider.select((s) => s.fourColorDeck),
-                ),
-              ),
-          // §4.8: "View range" pushes P5 **inside** this sheet. A host's own
-          // destination is only used when there is no range to show in place.
-          onViewRange:
-              hasRange ? () => _go(CoachSheetPage.range) : request.onViewRange,
-          onDismiss: widget.onClose,
-        ),
+        note,
       ],
     );
   }
@@ -404,25 +415,56 @@ class _CoachSheetBodyState extends ConsumerState<CoachSheetBody> {
 
 /// One page of the sheet. `AllInSheet` already scrolls its child (§10.1), so
 /// every page is a plain `Column`.
+/// One page of P3/P4/P5.
+///
+/// The sheet hands its box to this page (`scrollable: false`), so the page —
+/// not the sheet — decides what scrolls. [footer] is **pinned** above the
+/// bottom inset: §1.1 puts "Got it" in the bottom 160 pt, and as the last item
+/// of the sheet's own scroll view it opened below the fold on every blocking
+/// verdict — an extra drag on the most frequently repeated interruption in a
+/// session. Same pattern as `FeedbackPanel`.
 class _Page extends StatelessWidget {
-  const _Page({required this.children});
+  const _Page({required this.children, this.footer});
 
   final List<Widget> children;
+  final Widget? footer;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      AllInSpace.lg,
-      0,
-      AllInSpace.lg,
-      AllInSpace.xl,
-    ),
-    child: Column(
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: children,
-    ),
-  );
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            primary: true,
+            padding: EdgeInsets.fromLTRB(
+              AllInSpace.lg,
+              0,
+              AllInSpace.lg,
+              footer == null ? AllInSpace.xl + bottom : AllInSpace.md,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: children,
+            ),
+          ),
+        ),
+        if (footer != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AllInSpace.lg,
+              0,
+              AllInSpace.lg,
+              AllInSpace.lg + bottom,
+            ),
+            child: footer,
+          ),
+      ],
+    );
+  }
 }
 
 /// The 44 pt row that moves between the sheet's pages: a back chevron on the

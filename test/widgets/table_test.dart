@@ -12,6 +12,7 @@ import 'dart:math';
 
 import 'package:allin/engine/engine.dart';
 import 'package:allin/theme/app_theme.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -157,6 +158,92 @@ Widget _sixMaxFelt(TableState state, _FeltSpec spec) {
 }
 
 void main() {
+  group('the felt is a fixed dark material in both themes', () {
+    // The felt is theme-invariant (`FeltCanvas` paints AllInColors.felt in
+    // both themes), so everything that sits on it must read against dark
+    // green. In Light, `context.colors` would flip seat plates to a near-white
+    // box and every mono number on the felt to goldLight (#96701C — a dark
+    // ochre on dark green). `FeltTheme` pins the dark palette for the whole
+    // prop stack instead.
+    testWidgets('felt props resolve AllInColors.dark under a light theme', (
+      tester,
+    ) async {
+      AllInColors? inside;
+      await pumpTable(
+        tester,
+        dark: false,
+        SizedBox(
+          width: 320,
+          height: 220,
+          child: FeltCanvas(
+            builder:
+                (context, felt) => [
+                  felt.at(
+                    0.5,
+                    0.5,
+                    child: Builder(
+                      builder: (context) {
+                        inside = context.colors;
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ],
+          ),
+        ),
+      );
+      expect(inside, isNotNull);
+      expect(identical(inside, AllInColors.dark), isTrue);
+      // Sanity: the page around the felt really is the light palette.
+      expect(
+        AllInAppTheme.light().extension<AllInTheme>()!.colors.ink800,
+        AllInColors.light.ink800,
+      );
+    });
+
+    testWidgets('the six-max plates and pills stay dark-palette in light', (
+      tester,
+    ) async {
+      final state = sixMaxHand();
+      await pumpTable(
+        tester,
+        dark: false,
+        _sixMaxFelt(state, _specs.first),
+        size: _specs.first.screen,
+      );
+      expect(tester.takeException(), isNull);
+
+      // Every mono number painted on the felt uses the dark palette's
+      // goldLight (#F4DD92), never the light theme's #96701C.
+      final monos = tester
+          .widgetList<Text>(find.byType(Text))
+          .where((t) => t.style?.color == AllInColors.light.goldLight);
+      expect(monos, isEmpty);
+
+      // The plate background is the dark ink800, not the light near-white.
+      final plateFills =
+          tester
+              .widgetList<Container>(
+                find.descendant(
+                  of: find.byKey(const ValueKey('seat-1')),
+                  matching: find.byType(Container),
+                ),
+              )
+              .map((c) => c.decoration)
+              .whereType<BoxDecoration>()
+              .map((d) => d.color)
+              .toList();
+      expect(
+        plateFills,
+        contains(AllInColors.dark.ink800.withValues(alpha: 0.92)),
+      );
+      expect(
+        plateFills,
+        isNot(contains(AllInColors.light.ink800.withValues(alpha: 0.92))),
+      );
+    });
+  });
+
   group('FeltCanvas + SeatPlate + BoardRow geometry (§4.2)', () {
     for (final spec in _specs) {
       testWidgets('six-max felt lays out cleanly at ${spec.screen.width}', (
@@ -291,6 +378,60 @@ void main() {
   });
 
   group('SeatPlate (§4.3)', () {
+    testWidgets('a folded plate dims its contents, not the plate', (
+      tester,
+    ) async {
+      // Fading the whole widget took the plate's `ink800 @ 92 %` background to
+      // ~51 % opaque, so the felt's radial highlight, inner hairline and seat
+      // ring read straight through it — the plate stopped being an object.
+      final state = sixMaxHand();
+      final folded = Player(
+        id: 1,
+        name: state.players[1].name,
+        isHero: false,
+        stack: state.players[1].stack,
+        archetype: state.players[1].archetype,
+        hasFolded: true,
+      );
+      await pumpTable(
+        tester,
+        SeatPlate(
+          key: const ValueKey('folded'),
+          player: folded,
+          plateSize: const Size(104, 58),
+          holeCardWidth: 30,
+          bigBlind: state.bigBlind,
+          state: SeatPlateState.folded,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final fills =
+          tester
+              .widgetList<Container>(
+                find.descendant(
+                  of: find.byKey(const ValueKey('folded')),
+                  matching: find.byType(Container),
+                ),
+              )
+              .map((w) => w.decoration)
+              .whereType<BoxDecoration>()
+              .map((d) => d.color)
+              .toList();
+      expect(fills, contains(AllInColors.dark.ink800.withValues(alpha: 0.92)));
+
+      // The dimming `Opacity` is *inside* the plate's Container, never above
+      // it, so the background keeps its own alpha.
+      final opacityUnderPlate = find.descendant(
+        of: find.descendant(
+          of: find.byKey(const ValueKey('folded')),
+          matching: find.byType(Container),
+        ),
+        matching: find.byType(AnimatedOpacity),
+      );
+      expect(opacityUnderPlate, findsWidgets);
+    });
+
     testWidgets('the eye rect wins inside its quadrant, the plate elsewhere', (
       tester,
     ) async {
@@ -540,8 +681,71 @@ void main() {
       );
       expect(find.text('Fold'), findsOneWidget);
       expect(find.text('Call 2 bb'), findsOneWidget);
-      expect(find.text('Raise to 7.5'), findsOneWidget);
+      expect(find.text('Raise to 7.5 bb'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a tap at the button centre commits; the amount opens P13', (
+      tester,
+    ) async {
+      // The keypad zone used to be the right 60 % of an opaque button whose
+      // label is centred, so the visual centre of "Raise to 7.5 bb" — the
+      // natural thumb target — opened a sheet instead of raising.
+      var raises = 0;
+      var amountTaps = 0;
+      await pumpTable(
+        tester,
+        SizedBox(
+          width: 358,
+          child: ActionRow(
+            state: ActionRowState.heroToAct,
+            legal: facingRaise,
+            raiseTo: 150,
+            heroStack: 2000,
+            enableHaptics: false,
+            onBetRaise: () => raises++,
+            onRaiseAmountTap: () => amountTaps++,
+          ),
+        ),
+      );
+
+      final label = find.text('Raise to 7.5 bb');
+      await tester.tapAt(tester.getCenter(label));
+      await tester.pump();
+      expect(raises, 1, reason: 'the label centre must commit');
+      expect(amountTaps, 0);
+
+      // The right edge — the amount run — still opens the keypad.
+      final button = tester.getRect(find.byType(AllInButton).last);
+      await tester.tapAt(Offset(button.right - 8, button.center.dy));
+      await tester.pump();
+      expect(amountTaps, 1, reason: 'the amount still opens P13');
+      expect(raises, 1);
+    });
+
+    test('the amount zone never swallows the button centre', () {
+      // Measured from the right edge: the trailing gap plus the amount run,
+      // clamped to 44 pt … 35 % of the button.
+      for (final width in const [180.0, 203.0, 358.0]) {
+        for (final label in const [
+          'Raise to 7.5 bb',
+          'Bet 4.5 bb',
+          'All-in 100 bb',
+          'Raise',
+        ]) {
+          final zone = ActionRow.amountZoneWidth(
+            TextScaler.noScaling,
+            label,
+            width,
+          );
+          expect(zone, lessThanOrEqualTo(width * 0.5), reason: '$label@$width');
+          expect(
+            width - zone,
+            greaterThan(width / 2),
+            reason: 'the centre of $label at $width must commit',
+          );
+        }
+      }
     });
 
     testWidgets('A — no bet to call is Check + Bet', (tester) async {
@@ -559,7 +763,7 @@ void main() {
       );
       expect(find.text('Fold'), findsNothing);
       expect(find.text('Check'), findsOneWidget);
-      expect(find.text('Bet 4.5'), findsOneWidget);
+      expect(find.text('Bet 4.5 bb'), findsOneWidget);
     });
 
     testWidgets('A — the maximum reads All-in', (tester) async {
@@ -575,7 +779,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('All-in 100'), findsOneWidget);
+      expect(find.text('All-in 100 bb'), findsOneWidget);
     });
 
     testWidgets('A — a call that commits the stack says so', (tester) async {
@@ -606,7 +810,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Raise to 7.5'), findsNothing);
+      expect(find.text('Raise to 7.5 bb'), findsNothing);
       expect(find.text('Call 2 bb'), findsOneWidget);
     });
 
@@ -680,9 +884,35 @@ void main() {
       expect(folds, 1);
     });
 
-    test('above 1.3x the labels drop their amounts', () {
-      expect(ActionRow.dropAmounts(const TextScaler.linear(1.3)), isFalse);
+    // §4.2.4 words it as "above 1.3×", but at 1.3× the long labels already
+    // overflow at every supported width (411 pt rendered "Call 1 …" /
+    // "Raise t…"), and §4.5's exact commit is unconditional — so the step is
+    // taken *at* 1.3×.
+    test('at 1.3x and above the labels drop their amounts', () {
+      expect(ActionRow.dropAmounts(const TextScaler.linear(1.15)), isFalse);
+      expect(ActionRow.dropAmounts(const TextScaler.linear(1.3)), isTrue);
       expect(ActionRow.dropAmounts(const TextScaler.linear(1.5)), isTrue);
+    });
+
+    testWidgets('at 1.3x neither commit label is ellipsised', (tester) async {
+      await pumpTable(
+        tester,
+        const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(1.3)),
+          child: SizedBox(
+            width: 328, // 360 pt minus the §4.2.3 margins.
+            child: ActionRow(
+              state: ActionRowState.heroToAct,
+              legal: facingRaise,
+              raiseTo: 150,
+              heroStack: 2000,
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Call'), findsOneWidget);
+      expect(find.text('Raise'), findsOneWidget);
+      expect(find.textContaining('…'), findsNothing);
     });
   });
 
@@ -782,17 +1012,24 @@ void main() {
   });
 
   group('Chip, badge, ticker, results (§4.8 / §4.2 / §4.12)', () {
-    test('the chip shows the first clause of layer 1', () {
-      expect(
-        CoachChip.firstClause(
-          'You paid 8 bb to win a pot of 24 bb — you need to win 1 in 4.',
-        ),
-        'You paid 8 bb to win a pot of 24 bb',
+    test('the chip shows a chip-length first clause of layer 1', () {
+      // §10.3 models `title` and `clause` separately: the chip is ~250 pt and
+      // spends ~80 on "Nice play · ", so a long first clause ellipsised at
+      // exactly its payload ("You paid 1 bb to win a…"). The full sentence is
+      // one tap away in P3.
+      final long = CoachChip.firstClause(
+        'You paid 8 bb to win a pot of 24 bb — you need to win 1 in 4.',
       );
+      expect(long.length, lessThanOrEqualTo(CoachChip.maxClauseChars + 1));
+      expect(long, endsWith('…'));
+      expect(long, startsWith('You paid 8 bb to win'));
+
+      // Clauses that already fit are left exactly as they are.
       expect(
         CoachChip.firstClause('Betting with the goods. Keep going.'),
         'Betting with the goods',
       );
+      expect(CoachChip.firstClause('Nice fold; too expensive.'), 'Nice fold');
     });
 
     test('verdict labels are the desktop META strings', () {
@@ -968,18 +1205,53 @@ void main() {
       expect(tester.getSize(find.byType(BetPill)).height, 44);
     });
 
-    testWidgets('the hero pill says "(you)"', (tester) async {
+    testWidgets('the hero pill says "(you)" when it fits', (tester) async {
       await pumpTable(
         tester,
         const BetPill(
           kind: BetPillKind.blind,
           amount: 20,
           isHero: true,
-          maxWidth: 40,
+          maxWidth: 400,
         ),
       );
       expect(find.text('1 bb (you)'), findsOneWidget);
     });
+
+    testWidgets(
+      // §4.2 gives the hero pill 36–44 pt and §4.2’s wireframe writes
+      // "● 2 bb (you)" into it; the two cannot both hold, and §13’s 11 pt
+      // legibility floor is the one that wins. `FittedBox` used to scale the
+      // whole row down to ~5 pt instead — so the pill grows past its nominal
+      // width rather than shrinking the hero's own number.
+      'the hero pill grows past maxWidth rather than shrink below 11 pt',
+      (tester) async {
+        await pumpTable(
+          tester,
+          const BetPill(
+            kind: BetPillKind.blind,
+            amount: 20,
+            isHero: true,
+            maxWidth: 40,
+          ),
+        );
+        expect(find.text('1 bb (you)'), findsOneWidget);
+        final style = tester.widget<Text>(find.text('1 bb (you)')).style;
+        expect(style?.fontSize, 11);
+
+        // The text is laid out at its full 11 pt: the `FittedBox` never
+        // scales it, because the pill widened to fit instead.
+        final text = tester.renderObject<RenderBox>(find.text('1 bb (you)'));
+        final fitted = tester.renderObject<RenderBox>(
+          find.ancestor(
+            of: find.text('1 bb (you)'),
+            matching: find.byType(FittedBox),
+          ),
+        );
+        expect(fitted.size.width, greaterThan(40));
+        expect(fitted.size.width, greaterThanOrEqualTo(text.size.width));
+      },
+    );
 
     test('engine action labels map to pill kinds', () {
       expect(BetPill.kindFromActionLabel('Raise'), BetPillKind.raise);

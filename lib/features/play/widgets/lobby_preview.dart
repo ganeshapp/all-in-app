@@ -32,7 +32,6 @@ class LobbyFeltPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final layout = FeltLayout.fromSeats(seats);
 
     return SizedBox(
@@ -54,14 +53,18 @@ class LobbyFeltPreview extends StatelessWidget {
                 felt.at(
                   0.50,
                   0.86,
-                  child: _Disc(size: dot, color: c.gold, filled: true),
+                  child: _Disc(
+                    size: dot,
+                    color: AllInColors.dark.gold,
+                    filled: true,
+                  ),
                 ),
                 for (final seat in felt.plateSeats)
                   felt.place(
                     felt.seatAnchor(seat),
                     child: _Disc(
                       size: dot,
-                      color: c.text.withValues(alpha: 0.72),
+                      color: AllInColors.dark.text.withValues(alpha: 0.72),
                     ),
                   ),
                 if (ante > 0)
