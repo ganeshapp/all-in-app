@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 
 import '../../theme/motion.dart';
 import '../../theme/tokens.dart';
-import '../../theme/typography.dart';
 
 enum TurnRingMode {
   /// Manual pace: 1.6 s breathing pulse.
@@ -140,14 +139,14 @@ class _TurnRingState extends State<TurnRing>
           Positioned(
             top: 2,
             right: 4,
+            // An `Icon`, not the literal U+25B6: that codepoint defaults to
+            // emoji presentation, so Android drew this "step" hint as a
+            // bright orange NotoColorEmoji square on the felt.
             child: IgnorePointer(
-              child: Text(
-                '▶',
-                style: AllInText.body(
-                  9,
-                  color: ringColor.withValues(alpha: 0.55),
-                  height: 1,
-                ),
+              child: Icon(
+                Icons.play_arrow_rounded,
+                size: 10,
+                color: ringColor.withValues(alpha: 0.55),
               ),
             ),
           ),

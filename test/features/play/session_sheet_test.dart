@@ -30,6 +30,45 @@ Set<Color?> _dots(WidgetTester tester) =>
         .toSet();
 
 void main() {
+  testWidgets('YOUR STYLE renders its "no data yet" dash muted', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final container = makeContainer();
+    addTearDown(container.dispose);
+    // A brand-new session: the hero has seen no hands, so VPIP/PFR has
+    // nothing to say and the tile shows an em dash.
+    container
+        .read(sessionProvider.notifier)
+        .newSession(const TableOptions(seats: 6));
+    await settleWidgets(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AllInAppTheme.dark(),
+          home: const Scaffold(
+            body: SessionSheet(initialSegment: SessionSegment.session),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tile = tester.widget<StatTile>(
+      find.byWidgetPredicate((w) => w is StatTile && w.label == 'Your style'),
+    );
+    expect(tile.value, '—');
+    // Not the default text colour: an em dash in the reading colour reads as
+    // a result, like the P6 VPIP/PFR tiles it mirrors.
+    expect(tile.tone, StatTone.muted);
+  });
+
   testWidgets('a hand the coach flagged carries its verdict colour', (
     tester,
   ) async {

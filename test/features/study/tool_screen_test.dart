@@ -8,6 +8,7 @@ import 'package:allin/features/study/screens/tool_screen.dart';
 import 'package:allin/features/study/widgets/study_path.dart';
 import 'package:allin/features/study/widgets/study_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'harness.dart';
@@ -61,6 +62,29 @@ void main() {
           size: size,
         );
         expect(tester.takeException(), isNull, reason: '${tool.id} @$size');
+      }
+    }
+  });
+
+  // The title shares its row with the back chevron and "Open lesson ›". At
+  // 360 pt × 1.3× even "Equity calc" overran that slot and read "Equity c…";
+  // the tool's own name is the one thing S3's header has to say.
+  testWidgets('no tool name is truncated at 360 pt, 1.3x text', (tester) async {
+    for (final tool in kStudyTools) {
+      await pumpStudyApp(
+        tester,
+        location: AllInRoutes.toolPath(tool.id),
+        size: const Size(360, 780),
+        textScale: 1.3,
+      );
+      final title = find.text(tool.label);
+      expect(title, findsWidgets, reason: '${tool.id} has no header title');
+      for (final element in title.evaluate()) {
+        expect(
+          (element.renderObject! as RenderParagraph).didExceedMaxLines,
+          isFalse,
+          reason: '${tool.id} is truncated in its header',
+        );
       }
     }
   });

@@ -121,6 +121,51 @@ void main() {
     semantics.dispose();
   });
 
+  // The row shares one height, so a short tile beside a tall one has slack.
+  // The `Stack` inside the tile used to hand its content that height as a
+  // maximum and pin it to `topStart`, so at 360 pt — where WIN RATE wraps
+  // both its label and its sub-line — HANDS and NET floated at the top of a
+  // tall tile over a band of dead space.
+  for (final scale in <double>[1.0, 1.3]) {
+    testWidgets('a short tile centres itself in a stretched row, ${scale}x', (
+      tester,
+    ) async {
+      await _pumpProgress(tester, size: _phone360, textScale: scale);
+
+      final short = find.ancestor(
+        of: find.text('HANDS'),
+        matching: find.byType(StatTile),
+      );
+      final tall = find.ancestor(
+        of: find.text('WIN RATE'),
+        matching: find.byType(StatTile),
+      );
+      final tile = tester.getRect(short);
+      expect(
+        tile.height,
+        tester.getRect(tall).height,
+        reason: 'the KPI row does not share a height any more',
+      );
+
+      final label = tester.getRect(find.text('HANDS'));
+      final value = tester.getRect(
+        find.descendant(
+          of: short,
+          matching: find.text(tester.widget<StatTile>(short).value),
+        ),
+      );
+      final above = label.top - tile.top;
+      final below = tile.bottom - value.bottom;
+      expect(
+        below - above,
+        closeTo(0, 4),
+        reason:
+            'HANDS sits ${above.toStringAsFixed(1)} from the top and '
+            '${below.toStringAsFixed(1)} from the bottom of its tile',
+      );
+    });
+  }
+
   testWidgets('the tiles grow rather than clip at 1.3x text (§13)', (
     tester,
   ) async {

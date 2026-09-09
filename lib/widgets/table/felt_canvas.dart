@@ -98,22 +98,68 @@ class FeltGeometry {
     ),
   );
 
-  /// §4.2's invariant: tucked hole cards must never overlap the rail.
-  /// `cardTop = seatCentreY − plateHeight/2 − peek` and the rail's inner edge
-  /// is at `railWidth`. Debug builds only; a failure is a layout bug.
+  /// The lowest seat centre whose tucked cards still clear the rail:
+  /// `cardTop = seatCentreY − plateHeight/2 − peek` must be ≥ [railWidth]
+  /// (§4.2's invariant).
+  double railClearedCentreY({
+    required double plateHeight,
+    required double peek,
+  }) => railWidth + peek + plateHeight / 2;
+
+  /// [seatAnchor], nudged down when the felt is too short for the seat's
+  /// plate to clear the rail.
+  ///
+  /// The felt is the table's one flexible band: it absorbs whatever the fixed
+  /// rows leave. At 360 × 780 with the system insets and 1.3× text it came out
+  /// 435.3 pt tall, and the top seat's anchor (0.14) put its cards 9.94 pt
+  /// down — 0.06 inside the 10 pt rail. Asserting on the raw fraction turned
+  /// that sixteenth of a pixel into a red error box over the whole table, so
+  /// the geometry now *satisfies* the invariant instead of only checking it.
+  Offset seatAnchorClearingRail({
+    required int seat,
+    required double plateHeight,
+    required double peek,
+  }) {
+    final a = seatAnchor(seat);
+    final floor = railClearedCentreY(plateHeight: plateHeight, peek: peek);
+    return a.dy >= floor ? a : Offset(a.dx, floor);
+  }
+
+  /// How far [seatAnchorClearingRail] had to move [seat], in points.
+  double railClearanceDeficit({
+    required int seat,
+    required double plateHeight,
+    required double peek,
+  }) => math.max(
+    0.0,
+    railClearedCentreY(plateHeight: plateHeight, peek: peek) -
+        seatAnchor(seat).dy,
+  );
+
+  /// §4.2's invariant, as a debug check. A sub-point deficit is the flexible
+  /// felt rounding against a fixed anchor and [seatAnchorClearingRail] absorbs
+  /// it; anything past [railClearanceTolerance] is a real layout bug.
   bool debugCardsClearRail({
     required int seat,
     required double plateHeight,
     required double peek,
   }) {
-    final cardTop = seatAnchor(seat).dy - plateHeight / 2 - peek;
-    assert(
-      cardTop >= railWidth,
-      'seat $seat hole cards start at $cardTop, inside the '
-      '$railWidth pt rail of a ${size.width}×${size.height} felt',
+    final deficit = railClearanceDeficit(
+      seat: seat,
+      plateHeight: plateHeight,
+      peek: peek,
     );
-    return cardTop >= railWidth;
+    assert(
+      deficit <= railClearanceTolerance,
+      'seat $seat hole cards start ${deficit.toStringAsFixed(1)} pt inside '
+      'the $railWidth pt rail of a ${size.width}×${size.height} felt — more '
+      'than the $railClearanceTolerance pt the anchor may be nudged',
+    );
+    return deficit <= railClearanceTolerance;
   }
+
+  /// How far a seat may be nudged down before the felt is simply too short.
+  static const double railClearanceTolerance = 12;
 
   // ---- §4.2 / §4.2.1 / §4.2.2 anchor tables (fractions of the canvas) ----
 

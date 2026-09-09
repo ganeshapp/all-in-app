@@ -7,8 +7,11 @@
 /// themes without an overflow.
 library;
 
+import 'dart:math' as math;
+
 import 'package:allin/engine/coach.dart';
 import 'package:allin/theme/app_theme.dart';
+import 'package:allin/theme/tokens.dart';
 import 'package:allin/widgets/charts/diverging_bar.dart';
 import 'package:allin/widgets/charts/heatmap_grid.dart';
 import 'package:allin/widgets/charts/line_chart.dart';
@@ -24,6 +27,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const Size _phone390 = Size(390, 844);
+
+/// WCAG relative luminance.
+double _luminance(Color c) {
+  double channel(double v) =>
+      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+  return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+}
+
+/// WCAG contrast ratio between two opaque colours.
+double _contrast(Color a, Color b) {
+  final la = _luminance(a);
+  final lb = _luminance(b);
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+}
 
 Future<void> pumpCoach(
   WidgetTester tester,
@@ -427,6 +444,47 @@ void main() {
       expect(find.text('50 %'), findsOneWidget);
       expect(find.textContaining('White line'), findsNothing);
     });
+
+    // The caption reads "White line = 21 % needed", and in Light the unfilled
+    // track is #D2DAE4 — a pure white line on it is 1.4:1, i.e. gone. The
+    // line keeps its colour; the always-dark edge beside it is what carries
+    // the contrast.
+    for (final dark in const [true, false]) {
+      testWidgets('the needed marker stays visible on the track, '
+          '${dark ? 'dark' : 'light'}', (tester) async {
+        await pumpCoach(
+          tester,
+          // Pot odds well past the equity, so the marker sits on the bare
+          // track rather than on the verdict fill.
+          const EquityBar(equity: 0.12, potOdds: 0.8, villainName: 'Ivey'),
+          dark: dark,
+        );
+        expect(find.textContaining('White line'), findsOneWidget);
+
+        final colors = dark ? AllInColors.dark : AllInColors.light;
+        final marker = find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.color != null &&
+              w.constraints?.maxWidth == EquityBar.markerWidth,
+        );
+        expect(marker, findsOneWidget, reason: 'no marker edge');
+        final edge = Color.alphaBlend(
+          tester.widget<Container>(marker).color!,
+          colors.ink600,
+        );
+        // White carries the contrast in Dark, the edge carries it in Light —
+        // one of them has to, whichever theme this is.
+        expect(
+          math.max(
+            _contrast(edge, colors.ink600),
+            _contrast(AllInColors.cardFaceTop, colors.ink600),
+          ),
+          greaterThanOrEqualTo(3.0),
+          reason: 'the needed marker disappears into the track',
+        );
+      });
+    }
   });
 
   group('charts', () {

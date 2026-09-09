@@ -34,9 +34,17 @@ abstract final class SummaryCopy {
   /// The debrief card's eyebrow *(desktop)*.
   static const String debriefEyebrow = 'How you played (before how it paid)';
 
-  /// §4.13 *(new)* — the degenerate debrief.
+  /// §4.13 *(new)* — the degenerate debrief, when the coach was switched off.
   static const String noCoachedDecisions =
       'No coached decisions this session — the EV Coach was off.';
+
+  /// The same degenerate case with the coach ON: nothing was graded because no
+  /// decision reached it (a session ended before the hero acted). Saying "the
+  /// EV Coach was off" here would be a lie the user can disprove in one tap —
+  /// see the copy-change table in docs/ARCHITECTURE.md.
+  static const String noDecisionsYet =
+      'No decisions to grade yet — the EV Coach had nothing to weigh in on this '
+      'session.';
 
   /// §4.13, verbatim.
   static String showdownLine(int showdowns) =>
@@ -121,15 +129,19 @@ SessionDebrief buildDebrief({
   required SessionCounters counters,
   required int lifetimeCoached,
   required int lifetimeFlagged,
+  bool coachWasOff = true,
 }) {
   final n = counters.coachedDecisions;
   final m = counters.flaggedDecisions;
 
   if (n == 0) {
-    return const SessionDebrief(
-      paragraph: SummaryCopy.noCoachedDecisions,
-      mathLines: <String>[],
-      expertLines: <String>[],
+    return SessionDebrief(
+      paragraph:
+          coachWasOff
+              ? SummaryCopy.noCoachedDecisions
+              : SummaryCopy.noDecisionsYet,
+      mathLines: const <String>[],
+      expertLines: const <String>[],
     );
   }
 
@@ -310,6 +322,7 @@ SessionSummaryData assembleSummary({
   required List<HHHand> history,
   required int lifetimeCoached,
   required int lifetimeFlagged,
+  bool coachWasOff = true,
   int? handsFallback,
   double? netBbOverride,
   double? bb100Override,
@@ -344,6 +357,7 @@ SessionSummaryData assembleSummary({
       counters: counters,
       lifetimeCoached: lifetimeCoached,
       lifetimeFlagged: lifetimeFlagged,
+      coachWasOff: coachWasOff,
     ),
     rows: [
       for (final h in history.reversed)
@@ -395,6 +409,11 @@ final sessionSummaryProvider =
           handsFallback: session.counters.hands,
           netBbOverride: session.netBb,
           bb100Override: session.bb100,
+          // Only claim "the coach was off" when it actually was: either the
+          // setting is off, or it was switched off during this session.
+          coachWasOff:
+              !ref.read(settingsProvider).coachEnabled ||
+              session.coachOffThisSession,
         );
       }
 

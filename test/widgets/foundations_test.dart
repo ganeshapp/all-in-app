@@ -1026,12 +1026,25 @@ void main() {
         ),
       );
       final button = tester.getSize(find.byType(AllInButton)).width;
-      final label = tester.getSize(find.text('Raise to 7.5 bb')).width;
+      // The *room* the label got, not the width Inter happens to need for
+      // this string — the regression is about the padding, and a label that
+      // fits comfortably would otherwise mask it.
+      final room =
+          tester
+              .renderObject<RenderBox>(find.text('Raise to 7.5 bb'))
+              .constraints
+              .maxWidth;
       expect(button, 130);
       expect(
-        label,
+        room,
         greaterThanOrEqualTo(button - 2 * 8),
         reason: 'the label must get all but 8 pt of padding a side',
+      );
+      expect(
+        tester
+            .renderObject<RenderParagraph>(find.text('Raise to 7.5 bb'))
+            .didExceedMaxLines,
+        isFalse,
       );
     });
   });

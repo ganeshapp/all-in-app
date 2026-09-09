@@ -433,8 +433,9 @@ class _SessionTab extends ConsumerWidget {
     final c = context.colors;
     final hero = session.table?.players[0];
     final seen = hero?.handsSeen ?? 0;
+    final enoughStyle = hero != null && seen >= SeatPlate.minSample;
     final style =
-        hero != null && seen >= SeatPlate.minSample
+        enoughStyle
             ? '${(hero.vpipCount / seen * 100).round()}/'
                 '${(hero.pfrCount / seen * 100).round()} · ${seen}h'
             : '—';
@@ -494,6 +495,10 @@ class _SessionTab extends ConsumerWidget {
                 child: StatTile(
                   label: 'Your style',
                   value: style,
+                  // Before the sample is big enough the em dash is "no data
+                  // yet", not a reading — it says so in the colour too, like
+                  // the P6 VPIP/PFR tiles it mirrors.
+                  tone: enoughStyle ? StatTone.neutral : StatTone.muted,
                   infoSemanticLabel: 'What VPIP and PFR mean',
                   onInfo:
                       () => _explain(

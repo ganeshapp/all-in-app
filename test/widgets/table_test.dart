@@ -324,6 +324,66 @@ void main() {
       });
     }
 
+    // Regression: the felt is the table's one flexible band, and at 360 × 780
+    // with the system insets and 1.3× text it came out 435.3 pt tall — 0.06 pt
+    // short of what the top seat's anchor needs to keep its cards off the
+    // rail. The raw assertion turned that into a red error box over the whole
+    // table. The geometry now satisfies the invariant instead.
+    test('a felt a hair too short nudges the seat instead of failing', () {
+      const felt = FeltGeometry(
+        // The exact size the device produced.
+        size: Size(328, 435.26666666666665),
+        layout: FeltLayout.six,
+        railWidth: 10,
+      );
+      const plateHeight = 54.0;
+      const peek = 24.0;
+
+      // The raw anchor really is inside the rail…
+      expect(
+        felt.seatAnchor(3).dy - plateHeight / 2 - peek,
+        lessThan(felt.railWidth),
+      );
+      // …the deficit is sub-point, so the check passes…
+      final deficit = felt.railClearanceDeficit(
+        seat: 3,
+        plateHeight: plateHeight,
+        peek: peek,
+      );
+      expect(deficit, greaterThan(0));
+      expect(deficit, lessThan(1));
+      expect(
+        felt.debugCardsClearRail(seat: 3, plateHeight: plateHeight, peek: peek),
+        isTrue,
+      );
+      // …and the anchor the felt actually places the seat at clears the rail.
+      final cleared = felt.seatAnchorClearingRail(
+        seat: 3,
+        plateHeight: plateHeight,
+        peek: peek,
+      );
+      expect(cleared.dx, felt.seatAnchor(3).dx);
+      expect(
+        cleared.dy - plateHeight / 2 - peek,
+        greaterThanOrEqualTo(felt.railWidth),
+      );
+
+      // A felt short enough to move a seat past the tolerance is still a bug.
+      const tiny = FeltGeometry(
+        size: Size(328, 300),
+        layout: FeltLayout.six,
+        railWidth: 10,
+      );
+      expect(
+        tiny.railClearanceDeficit(
+          seat: 3,
+          plateHeight: plateHeight,
+          peek: peek,
+        ),
+        greaterThan(FeltGeometry.railClearanceTolerance),
+      );
+    });
+
     testWidgets('felt survives 1.15x text without overflowing', (tester) async {
       final state = sixMaxHand();
       await pumpTable(tester, _sixMaxFelt(state, _specs[1]), textScale: 1.3);
@@ -850,7 +910,15 @@ void main() {
       expect(find.text('Pause · tap the table'), findsOneWidget);
 
       await pump(ActionRowState.botAuto, autoPaused: true);
-      expect(find.text('Paused · tap to resume ▶'), findsOneWidget);
+      expect(find.text('Paused · tap to resume'), findsOneWidget);
+      // Regression: the play glyph used to be a literal U+25B6 in the label,
+      // which Android drew from NotoColorEmoji — a bright orange square in
+      // the middle of the palette. It is an `Icon` now.
+      expect(
+        find.byIcon(Icons.play_arrow_rounded),
+        findsOneWidget,
+        reason: 'the resume affordance must be an icon, not an emoji glyph',
+      );
 
       await pump(ActionRowState.handOver);
       expect(find.text('Next hand  ›'), findsOneWidget);

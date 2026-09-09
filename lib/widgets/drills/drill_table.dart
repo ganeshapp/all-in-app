@@ -13,6 +13,8 @@
 /// replay one frame per 40 pt (§5.2, §12).
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -35,11 +37,25 @@ const List<Offset> kDrillSeatAnchors = [
   Offset(0.11, 0.60),
 ];
 
+/// The top-centre seat: the only one with no felt above it.
+///
+/// Its plate grows with the user's text size and its column straddles the
+/// anchor, so the growth goes *upwards* too — at 360 pt × 1.3× the two tucked
+/// card backs were painted over "Rating 1064 · 38 % · 2/2", hiding the
+/// separator and slicing the 2. [DrillTable] nudges this seat down by exactly
+/// the overhang (see `topSeatCentreY`) rather than re-anchoring it, so at
+/// every size that already fits the layout is untouched.
+const int kDrillTopSeat = 2;
+
 /// The hero's anchor.
 const Offset kDrillHeroAnchor = Offset(0.50, 0.85);
 
 /// The board's anchor.
 const Offset kDrillBoardAnchor = Offset(0.50, 0.47);
+
+/// The street caption + pot pill sit with their *bottom* on this anchor,
+/// just above the board.
+const Offset kDrillStreetCaptionAnchor = Offset(0.50, 0.35);
 
 /// Card and plate sizes for a given table-box height (§5.1: 44×62 / 48×67 at
 /// 390×844, 40×56 at 360×780).
@@ -57,11 +73,71 @@ class DrillTableMetrics {
   final double plateWidth;
   final double plateHeight;
 
+  /// The width of a seat's two tucked cards, and the gap under them.
+  static const double seatCardWidth = 20;
+  static const double seatCardGap = 2;
+
+  /// A seat plate's rendered height at [scaler]: 3 pt of padding and a 1 pt
+  /// border a side, the position line and the caption, and the HUD line on the
+  /// exploit spots that carry one. Never below the §5.1 nominal
+  /// [plateHeight].
+  double plateHeightAt(TextScaler scaler, {bool hud = false}) => math.max(
+    plateHeight,
+    8 +
+        scaler.scale(12) * 1.1 +
+        scaler.scale(10.5) * 1.2 +
+        (hud ? scaler.scale(10) * 1.4 : 0),
+  );
+
+  /// The whole seat column: cards, gap, plate.
+  double seatColumnHeight(TextScaler scaler, {bool hud = false}) =>
+      PlayingCardView.heightFor(seatCardWidth) +
+      seatCardGap +
+      plateHeightAt(scaler, hud: hud);
+
   /// The compact detent's ceiling: the bottom of the hero's cards (§5.1).
   double heroCardsBottom(double tableTop, double tableHeight) =>
       tableTop +
       tableHeight * kDrillHeroAnchor.dy +
       PlayingCardView.heightFor(heroCardWidth) / 2;
+
+  /// The gap the top seat keeps above the street caption.
+  static const double topSeatCaptionGap = 4;
+
+  /// The centre [kDrillTopSeat] is drawn at: its §5.1 anchor, or far enough
+  /// down that its cards stay inside the table box — but never so far that
+  /// the plate lands on the street caption below it.
+  ///
+  /// The two bounds cross only when the box is too short for the felt at all
+  /// (360 × 780 at 1.3× text with a session leaves it about 200 pt). The
+  /// caption wins there, because the pot is the number the spot turns on, and
+  /// `DrillTable`'s clip trims whatever the cards have left over rather than
+  /// letting them paint over the stats strip.
+  double topSeatCentreY(
+    double tableHeight,
+    TextScaler scaler, {
+    bool hud = false,
+  }) {
+    final column = seatColumnHeight(scaler, hud: hud);
+    final wanted = math.max(
+      kDrillSeatAnchors[kDrillTopSeat].dy * tableHeight,
+      column / 2,
+    );
+    final ceiling =
+        tableHeight * kDrillStreetCaptionAnchor.dy -
+        topSeatCaptionGap -
+        streetBlockHeight(scaler) -
+        column / 2;
+    return math.min(wanted, math.max(0, ceiling));
+  }
+
+  /// The street caption's own type size (`AllInText.eyebrow`).
+  static const double streetCaptionSize = 10.5;
+
+  /// The caption + 2 pt gap + pot pill, which hang from
+  /// [kDrillStreetCaptionAnchor] by their bottom.
+  static double streetBlockHeight(TextScaler scaler) =>
+      PotPill.height + 2 + scaler.scale(streetCaptionSize) * 1.4;
 
   static DrillTableMetrics forHeight(double height) =>
       height >= 285
@@ -190,111 +266,128 @@ class _DrillTableState extends State<DrillTable> {
         return Semantics(
           container: true,
           label: widget.semanticLabel ?? _summary(hero),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragDown: (_) {
-              _dragX = 0;
-              _touch(true);
-            },
-            onHorizontalDragUpdate: (d) => _scrub(d.delta.dx),
-            onHorizontalDragEnd: (_) {
-              _dragX = 0;
-              _touch(false);
-            },
-            onHorizontalDragCancel: () {
-              _dragX = 0;
-              _touch(false);
-            },
-            child: Opacity(
-              opacity: widget.dimmed ? 0.8 : 1,
-              child: FeltCanvas(
-                builder:
-                    (context, felt) => [
-                      // Street caption + pot pill, just above the board.
-                      felt.at(
-                        0.50,
-                        0.35,
-                        alignment: Alignment.bottomCenter,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _streetCaption(widget.frame.street),
-                              style: AllInText.eyebrow(
-                                AllInColors.dark.textMuted,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            PotPill(
-                              street: widget.frame.street,
-                              pot: widget.frame.pot,
-                              bigBlind: widget.bb.round().clamp(1, 1 << 30),
-                            ),
-                          ],
-                        ),
-                      ),
-                      felt.at(
-                        kDrillBoardAnchor.dx,
-                        kDrillBoardAnchor.dy,
-                        child: BoardRow(
-                          cards: widget.frame.board,
-                          size: m.boardCardWidth,
-                          fourColorDeck: widget.fourColorDeck,
-                        ),
-                      ),
-                      for (var i = 0; i < others.length && i < 5; i++)
+          // Nothing on the felt may paint outside the table box. The seats
+          // carry their tucked cards above their plates, and the box is the
+          // only flexible band on D0: at 360 × 780 with 1.3× text and a live
+          // session it comes out ~200 pt, and the top seat's card backs
+          // landed on the stats strip above. `topSeatCentreY` gets them
+          // inside wherever the box allows it; this is the backstop for the
+          // sizes where nothing can.
+          child: ClipRect(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragDown: (_) {
+                _dragX = 0;
+                _touch(true);
+              },
+              onHorizontalDragUpdate: (d) => _scrub(d.delta.dx),
+              onHorizontalDragEnd: (_) {
+                _dragX = 0;
+                _touch(false);
+              },
+              onHorizontalDragCancel: () {
+                _dragX = 0;
+                _touch(false);
+              },
+              child: Opacity(
+                opacity: widget.dimmed ? 0.8 : 1,
+                child: FeltCanvas(
+                  builder:
+                      (context, felt) => [
+                        // Street caption + pot pill, just above the board.
                         felt.at(
-                          kDrillSeatAnchors[i].dx,
-                          kDrillSeatAnchors[i].dy,
-                          child: _DrillPlate(
-                            seat: others[i],
-                            caption: _caption(others[i]),
-                            metrics: m,
-                            ringColor:
-                                others[i].pos == widget.highlightSeat
-                                    ? widget.highlightColor
-                                    : null,
-                            hud:
-                                others[i].pos == widget.highlightSeat
-                                    ? widget.highlightHud
-                                    : null,
-                          ),
-                        ),
-                      felt.at(
-                        kDrillHeroAnchor.dx,
-                        kDrillHeroAnchor.dy,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (final card in widget.hole)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 4),
-                                child: PlayingCardView(
-                                  card: card,
-                                  width: m.heroCardWidth,
-                                  fourColorDeck: widget.fourColorDeck,
+                          kDrillStreetCaptionAnchor.dx,
+                          kDrillStreetCaptionAnchor.dy,
+                          alignment: Alignment.bottomCenter,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _streetCaption(widget.frame.street),
+                                style: AllInText.eyebrow(
+                                  AllInColors.dark.textMuted,
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-                      felt.place(
-                        Offset(
-                          size.width * kDrillHeroAnchor.dx,
-                          size.height * kDrillHeroAnchor.dy +
-                              PlayingCardView.heightFor(m.heroCardWidth) / 2 +
-                              2,
-                        ),
-                        alignment: Alignment.topCenter,
-                        child: Text(
-                          widget.heroCaption ?? 'You · ${hero.pos.label}',
-                          style: AllInText.mono(
-                            11,
-                            color: AllInColors.dark.gold,
+                              const SizedBox(height: 2),
+                              PotPill(
+                                street: widget.frame.street,
+                                pot: widget.frame.pot,
+                                bigBlind: widget.bb.round().clamp(1, 1 << 30),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                        felt.at(
+                          kDrillBoardAnchor.dx,
+                          kDrillBoardAnchor.dy,
+                          child: BoardRow(
+                            cards: widget.frame.board,
+                            size: m.boardCardWidth,
+                            fourColorDeck: widget.fourColorDeck,
+                          ),
+                        ),
+                        for (var i = 0; i < others.length && i < 5; i++)
+                          felt.place(
+                            Offset(
+                              size.width * kDrillSeatAnchors[i].dx,
+                              i == kDrillTopSeat
+                                  ? m.topSeatCentreY(
+                                    size.height,
+                                    MediaQuery.textScalerOf(context),
+                                    hud: others[i].pos == widget.highlightSeat,
+                                  )
+                                  : size.height * kDrillSeatAnchors[i].dy,
+                            ),
+                            child: _DrillPlate(
+                              seat: others[i],
+                              caption: _caption(others[i]),
+                              metrics: m,
+                              ringColor:
+                                  others[i].pos == widget.highlightSeat
+                                      ? widget.highlightColor
+                                      : null,
+                              hud:
+                                  others[i].pos == widget.highlightSeat
+                                      ? widget.highlightHud
+                                      : null,
+                            ),
+                          ),
+                        felt.at(
+                          kDrillHeroAnchor.dx,
+                          kDrillHeroAnchor.dy,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final card in widget.hole)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: PlayingCardView(
+                                    card: card,
+                                    width: m.heroCardWidth,
+                                    fourColorDeck: widget.fourColorDeck,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        felt.place(
+                          Offset(
+                            size.width * kDrillHeroAnchor.dx,
+                            size.height * kDrillHeroAnchor.dy +
+                                PlayingCardView.heightFor(m.heroCardWidth) / 2 +
+                                2,
+                          ),
+                          alignment: Alignment.topCenter,
+                          child: Text(
+                            widget.heroCaption ?? 'You · ${hero.pos.label}',
+                            style: AllInText.mono(
+                              11,
+                              color: AllInColors.dark.gold,
+                            ),
+                          ),
+                        ),
+                      ],
+                ),
               ),
             ),
           ),
@@ -356,7 +449,7 @@ class _DrillPlate extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 2),
                   child: PlayingCardView(
-                    width: 20,
+                    width: DrillTableMetrics.seatCardWidth,
                     faceDown: true,
                     greyscale: folded,
                   ),

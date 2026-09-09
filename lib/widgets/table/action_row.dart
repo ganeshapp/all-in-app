@@ -82,7 +82,8 @@ class ActionRow extends StatefulWidget {
   /// What state F is dimming.
   final ActionRowState underlyingState;
 
-  /// Auto pace, user-paused: the button reads "Paused · tap to resume ▶".
+  /// Auto pace, user-paused: the button reads "Paused · tap to resume" with a
+  /// play glyph after it.
   final bool autoPaused;
 
   final VoidCallback? onFold;
@@ -332,8 +333,13 @@ class _ActionRowState extends State<ActionRow> {
         ActionRowState.botAuto => _fullWidth(
           label:
               widget.autoPaused
-                  ? 'Paused · tap to resume ▶'
+                  ? 'Paused · tap to resume'
                   : 'Pause · tap the table',
+          // U+25B6 in the label string has emoji presentation by default, so
+          // Android drew it from NotoColorEmoji: a bright orange square in the
+          // middle of the palette (§9's one-accent rule). The icon font is the
+          // only glyph source the theme controls.
+          trailing: widget.autoPaused ? Icons.play_arrow_rounded : null,
           variant: AllInButtonVariant.secondary,
           onPressed: widget.onPauseResume,
         ),
@@ -359,12 +365,14 @@ class _ActionRowState extends State<ActionRow> {
   Widget _fullWidth({
     required String label,
     required AllInButtonVariant variant,
+    IconData? trailing,
     VoidCallback? onPressed,
     VoidCallback? onLongPressStart,
     VoidCallback? onLongPressEnd,
   }) {
     final button = AllInButton(
       label: label,
+      trailing: trailing,
       variant: variant,
       size: AllInButtonSize.lg,
       expand: true,

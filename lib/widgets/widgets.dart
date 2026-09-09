@@ -22,6 +22,7 @@ export 'foundations/progress_bar_thin.dart';
 export 'foundations/stat_tile.dart';
 export 'foundations/term_popover.dart';
 export 'foundations/term_text.dart';
+export 'foundations/text_fit.dart';
 
 // §10.1 Chart primitives — lib/widgets/charts/
 export 'charts/diverging_bar.dart';

@@ -5,6 +5,8 @@
 /// Play-only composition: every part comes from `lib/widgets/table/` (§16.3).
 library;
 
+import 'dart:math' as math;
+
 import 'package:allin/engine/engine.dart';
 import 'package:allin/features/play/providers/table_layout_provider.dart';
 import 'package:allin/theme/tokens.dart';
@@ -122,7 +124,14 @@ class TableFelt extends StatelessWidget {
         for (final seat in geometry.plateSeats) {
           if (seat >= table.players.length) continue;
           final player = table.players[seat];
-          final anchor = geometry.seatAnchor(seat);
+          // The cleared anchor, not the raw fraction: a felt that came out a
+          // fraction of a point too short must not tuck the cards under the
+          // rail (§4.2's invariant).
+          final anchor = geometry.seatAnchorClearingRail(
+            seat: seat,
+            plateHeight: metrics.plateSize.height,
+            peek: metrics.cardPeek,
+          );
           final mirrored = anchor.dx < geometry.size.width / 2;
           assert(
             geometry.debugCardsClearRail(
@@ -167,29 +176,41 @@ class TableFelt extends StatelessWidget {
         }
 
         // ---- bet / action pills ---------------------------------------
+        // Built first, placed second: the hero's pill is the one that carries
+        // "(you)" and so outgrows its §4.2 budget (36 pt at 360) to about 104,
+        // and §4.2.3's clearance table wants 7.8 pt of daylight between it and
+        // the seat-1 pill 11 pt above. It has to know how wide its neighbours
+        // came out before it can find a row of its own.
+        final pills = <int, ({BetPill widget, Offset anchor})>{};
         for (final player in table.players) {
           final pill = _pillFor(player);
           if (pill == null) continue;
-          children.add(
-            geometry.place(
-              geometry.betAnchor(player.id),
-              child: BetPill(
-                kind: pill.kind,
-                amount: pill.amount,
-                label: pill.label,
-                bigBlind: bb,
-                isHero: player.isHero,
-                maxWidth:
-                    player.isHero ? metrics.heroBetPillMax : metrics.betPillMax,
-                reducedMotion: reducedMotion,
-                semanticLabel: '${player.name} ${pill.label ?? ''}'.trim(),
-                onTap:
-                    onActionPill == null || player.isHero
-                        ? null
-                        : () => onActionPill!(player.id),
-              ),
+          pills[player.id] = (
+            widget: BetPill(
+              kind: pill.kind,
+              amount: pill.amount,
+              label: pill.label,
+              bigBlind: bb,
+              isHero: player.isHero,
+              maxWidth:
+                  player.isHero ? metrics.heroBetPillMax : metrics.betPillMax,
+              reducedMotion: reducedMotion,
+              semanticLabel: '${player.name} ${pill.label ?? ''}'.trim(),
+              onTap:
+                  onActionPill == null || player.isHero
+                      ? null
+                      : () => onActionPill!(player.id),
             ),
+            anchor: geometry.betAnchor(player.id),
           );
+        }
+        final heroPillY = _heroBetPillY(pills);
+        for (final entry in pills.entries) {
+          final anchor =
+              entry.key == 0
+                  ? Offset(entry.value.anchor.dx, heroPillY)
+                  : entry.value.anchor;
+          children.add(geometry.place(anchor, child: entry.value.widget));
         }
 
         // ---- coach chip zone ------------------------------------------
@@ -273,6 +294,40 @@ class TableFelt extends StatelessWidget {
     if (label == null) return null;
     if (label != 'Fold' && label != 'Check') return null;
     return _Pill(kind: BetPill.kindFromActionLabel(label), label: label);
+  }
+
+  /// Clearance the hero's pill keeps from a pill it would otherwise sit on.
+  static const double heroPillClearance = 4;
+
+  /// The y the hero's bet pill is drawn at: its §4.2 anchor, or far enough
+  /// below a neighbour's pill to clear it.
+  ///
+  /// §4.2's clearance table budgets 7.8 pt between "hero pill right" and
+  /// "seat-1 pill left" at 360 — but that assumes the hero's pill honours its
+  /// 36 pt nominal width, and it does not: "● 0.5 bb (you)" needs ~104 pt at
+  /// the 11 pt legibility floor, so at 360 the three pills on that row ran
+  /// into each other, and at 1.3× text they overlapped outright. Where the
+  /// row is wide enough the anchor is untouched; where it is not, the hero
+  /// takes a row of its own, which is the one direction with space (the coach
+  /// chip zone is 0.79).
+  static double _heroBetPillY(
+    Map<int, ({BetPill widget, Offset anchor})> pills,
+  ) {
+    final hero = pills[0];
+    if (hero == null) return 0;
+    var y = hero.anchor.dy;
+    final heroHalf = hero.widget.layoutWidth / 2;
+    for (final entry in pills.entries) {
+      if (entry.key == 0) continue;
+      final other = entry.value;
+      // Rows that already clear each other vertically are fine.
+      if ((other.anchor.dy - hero.anchor.dy).abs() >= BetPill.height) continue;
+      final otherHalf = other.widget.layoutWidth / 2;
+      final gap = (other.anchor.dx - hero.anchor.dx).abs();
+      if (gap >= heroHalf + otherHalf + heroPillClearance) continue;
+      y = math.max(y, other.anchor.dy + BetPill.height + heroPillClearance);
+    }
+    return y;
   }
 
   /// §13's live table summary.

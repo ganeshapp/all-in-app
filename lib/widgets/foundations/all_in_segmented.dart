@@ -4,14 +4,13 @@
 /// because gold marks the active choice everywhere (§16.5).
 library;
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/motion.dart';
 import '../../theme/tokens.dart';
 import '../../theme/typography.dart';
+import 'text_fit.dart';
 
 class AllInSegmented extends StatelessWidget {
   const AllInSegmented({
@@ -125,28 +124,18 @@ class AllInSegmented extends StatelessWidget {
 
     // Measured bold — the selected weight — so moving the selection never
     // reflows the row.
-    final direction = Directionality.of(context);
-    var widest = 0.0;
-    for (final label in labels) {
-      widest = math.max(widest, _measure(label, target, direction));
-    }
-    if (widest <= room) return target;
-    return math.max(target * room / widest, math.min(minLabelSize, target));
-  }
-
-  static double _measure(String label, double size, TextDirection direction) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: label,
-        style: AllInText.body(size, weight: FontWeight.w700, height: 1.1),
-      ),
-      textDirection: direction,
-      maxLines: 1,
-      textScaler: TextScaler.noScaling,
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
+    return fitFontSize(
+      labels: labels,
+      width: room,
+      size: target,
+      minSize: minLabelSize,
+      direction: Directionality.of(context),
+      styleAt:
+          (size) => resolve(
+            context,
+            AllInText.body(size, weight: FontWeight.w700, height: 1.1),
+          ),
+    );
   }
 }
 

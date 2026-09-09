@@ -150,6 +150,16 @@ class StatTile extends StatelessWidget {
         border: Border.all(color: c.line),
       ),
       child: Stack(
+        // `passthrough`, not the default loose fit: a `StatTile` in a
+        // stretched row (the KPI grid's `IntrinsicHeight`) is as tall as the
+        // tallest tile beside it, and a loose `Stack` handed its child that
+        // height as a *maximum* — so the Column shrank to its content and the
+        // Stack's `topStart` alignment pinned it to the top. At 360 pt "WIN
+        // RATE" wraps its label and its sub-line, and HANDS and NET beside it
+        // floated at the top of a 120 pt tile over a band of dead space. With
+        // the incoming constraints passed through, `MainAxisAlignment.center`
+        // does what it says.
+        fit: StackFit.passthrough,
         children: [
           ExcludeSemantics(child: content),
           if (onInfo != null)

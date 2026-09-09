@@ -9,6 +9,8 @@ import 'package:allin/features/play/screens/lobby_screen.dart';
 import 'package:allin/features/play/widgets/lobby_preview.dart';
 import 'package:allin/features/play/widgets/play_copy.dart';
 import 'package:allin/services/persistence/settings_store.dart';
+import 'package:allin/widgets/widgets.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'harness.dart';
@@ -143,6 +145,39 @@ void main() {
       expect(find.textContaining('6-max · 0 hands'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    // The line sits in a narrow slot beside the ⓘ menu and "Resume ›". At
+    // 360 pt the full rung ellipsised in the middle of the net amount —
+    // "6-max · 0 hands · +0.…" — so it drops a whole clause instead.
+    for (final scale in <double>[1.0, 1.3]) {
+      testWidgets(
+        'the §4.1 line never truncates its number at 360, ${scale}x',
+        (tester) async {
+          final container = makeContainer(seed: 1);
+          addTearDown(container.dispose);
+          container.read(sessionProvider.notifier).newSession();
+          await settleWidgets(tester);
+          await pumpApp(
+            tester,
+            container: container,
+            location: '/play',
+            size: phone360,
+            textScale: scale,
+          );
+
+          final line = find.descendant(
+            of: find.byType(AllInCard),
+            matching: find.textContaining('+0.0 bb'),
+          );
+          expect(line, findsOneWidget, reason: 'the net amount is not intact');
+          expect(
+            tester.renderObject<RenderParagraph>(line).didExceedMaxLines,
+            isFalse,
+            reason: 'the resume line is truncated',
+          );
+        },
+      );
+    }
 
     testWidgets('"Deal me in" over a paused session asks first', (
       tester,

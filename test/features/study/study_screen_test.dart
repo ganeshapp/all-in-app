@@ -6,6 +6,7 @@ import 'package:allin/features/study/widgets/study_path.dart';
 import 'package:allin/services/persistence/key_value_store.dart';
 import 'package:allin/services/persistence/study_store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'harness.dart';
@@ -67,13 +68,24 @@ void main() {
             final box = tester.renderObject<RenderBox>(
               find.text(tool.subtitle),
             );
-            expect(text.maxLines, 2);
-            // Two lines of gloss have to fit inside the tile the grid
-            // reserved for them.
+            // The grid solves the run's line count: two normally, three where
+            // the narrowest tile needs it (360 pt), never more.
+            expect(text.maxLines, inInclusiveRange(2, ToolsGrid.maxGlossLines));
+            // …and the gloss has to fit inside the tile reserved for it.
             expect(
               box.size.height,
-              lessThanOrEqualTo(ToolsGrid.tileHeight(scale)),
+              lessThanOrEqualTo(ToolsGrid.tileHeight(scale, text.maxLines!)),
             );
+            // Neither the name nor the gloss may truncate (§6.1).
+            for (final string in <String>[tool.label, tool.subtitle]) {
+              expect(
+                tester
+                    .renderObject<RenderParagraph>(find.text(string))
+                    .didExceedMaxLines,
+                isFalse,
+                reason: '${tool.id}: "$string" is truncated',
+              );
+            }
           }
         });
       }

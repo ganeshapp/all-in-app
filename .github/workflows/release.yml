@@ -42,16 +42,25 @@ jobs:
           # Runners carry several build-tools versions; take the newest apksigner.
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           for apk in build/app/outputs/flutter-apk/app-*-release.apk; do
-            CERT=$("$APKSIGNER" verify --print-certs "$apk" | grep 'SHA-256 digest' | head -1)
+            # Capture first, then match with here-strings: this shell runs with
+            # -o pipefail, so piping into an early-exiting reader like `grep -q`
+            # or `head -1` can fail the step with SIGPIPE (141) even when the
+            # check itself passed.
+            CERTS=$("$APKSIGNER" verify --print-certs "$apk")
+            # "Android Debug" appears in the DN line, not the digest line.
+            case "$CERTS" in *"Android Debug"*) echo "refusing to release a debug-signed APK" >&2; exit 1;; esac
+            CERT=$(grep -m1 'SHA-256 digest' <<<"$CERTS" || true)
             echo "$apk: $CERT"
-            case "$CERT" in *"Android Debug"*) echo "refusing to release a debug-signed APK" >&2; exit 1;; esac
-            echo "$CERT" | grep -q '1abea51cfb66ae07c02a71d7a3f0ce9cfaab92ad67241bbd9ec4f5a0731107eb' || { echo "$apk is not signed with the All-In release keystore" >&2; exit 1; }
+            grep -qF '1abea51cfb66ae07c02a71d7a3f0ce9cfaab92ad67241bbd9ec4f5a0731107eb' <<<"$CERT" || { echo "$apk is not signed with the All-In release keystore" >&2; exit 1; }
           done
       - name: Verify ABI contents
         run: |
           cd build/app/outputs/flutter-apk
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            unzip -l "app-$abi-release.apk" | grep -q "lib/$abi/libflutter.so" || { echo "app-$abi-release.apk lacks lib/$abi" >&2; exit 1; }
+            # Same SIGPIPE-under-pipefail trap as the signing step: list into a
+            # variable, then match, so `unzip` is never killed mid-write.
+            ENTRIES=$(unzip -Z1 "app-$abi-release.apk")
+            grep -qxF "lib/$abi/libflutter.so" <<<"$ENTRIES" || { echo "app-$abi-release.apk lacks lib/$abi" >&2; exit 1; }
           done
       - name: Rename APKs
         run: |

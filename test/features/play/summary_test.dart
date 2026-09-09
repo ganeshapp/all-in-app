@@ -532,6 +532,55 @@ void main() {
       }
     });
   });
+
+  group('the empty-session debrief tells the truth about the coach', () {
+    SessionDebrief debriefWith({required bool coachWasOff}) => buildDebrief(
+      counters: const SessionCounters(),
+      lifetimeCoached: 0,
+      lifetimeFlagged: 0,
+      coachWasOff: coachWasOff,
+    );
+
+    test('says the coach was off only when it really was', () {
+      expect(
+        debriefWith(coachWasOff: true).paragraph,
+        SummaryCopy.noCoachedDecisions,
+      );
+      expect(
+        debriefWith(coachWasOff: true).paragraph,
+        contains('the EV Coach was off'),
+      );
+    });
+
+    test('with the coach on, never claims it was off', () {
+      final d = debriefWith(coachWasOff: false);
+      expect(d.paragraph, SummaryCopy.noDecisionsYet);
+      expect(d.paragraph, isNot(contains('was off')));
+      expect(d.paragraph, isNot(contains('No coached decisions')));
+    });
+
+    test('both variants keep the two placeholder disclosure rows', () {
+      for (final off in [true, false]) {
+        final d = debriefWith(coachWasOff: off);
+        expect(d.mathLines, isEmpty);
+        expect(d.expertLines, isEmpty);
+      }
+    });
+
+    test('a coached decision outranks either degenerate line', () {
+      final d = buildDebrief(
+        counters: const SessionCounters(
+          coachedDecisions: 4,
+          flaggedDecisions: 1,
+        ),
+        lifetimeCoached: 0,
+        lifetimeFlagged: 0,
+        coachWasOff: false,
+      );
+      expect(d.paragraph, isNot(SummaryCopy.noDecisionsYet));
+      expect(d.paragraph, isNot(SummaryCopy.noCoachedDecisions));
+    });
+  });
 }
 
 /// Posts a real `popRoute` on the navigation channel (`simulateSystemBack`

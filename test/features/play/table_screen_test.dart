@@ -76,6 +76,48 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    // §4.2.3's clearance table budgets 7.8 pt between the hero's bet pill and
+    // the seat-1 pill at 360 — "a negative number is a bug". The hero's pill
+    // carries "(you)" and grows to ~104 pt rather than shrink under §13's
+    // 11 pt floor, so at 360 the three pills on that row cut into each other,
+    // and at 1.3× text they overlapped outright.
+    for (final size in [phone360, phone390, phone430]) {
+      for (final scale in const [1.0, 1.3]) {
+        testWidgets(
+          'bet pills never overlap at ${size.width.toInt()}, ${scale}x',
+          (tester) async {
+            await seatedTable(
+              tester,
+              seats: 6,
+              size: size,
+              textScale: scale,
+              // Straight after the deal: both blinds are posted, so the
+              // hero's "(you)" pill shares its row with a neighbour's.
+              toHero: false,
+            );
+            expect(tester.takeException(), isNull);
+
+            final pills = <Rect>[
+              for (final e in find.byType(BetPill).evaluate())
+                tester.getRect(find.byWidget(e.widget)),
+            ];
+            expect(pills.length, greaterThanOrEqualTo(2));
+            for (var i = 0; i < pills.length; i++) {
+              for (var j = i + 1; j < pills.length; j++) {
+                expect(
+                  pills[i].overlaps(pills[j]),
+                  isFalse,
+                  reason:
+                      'two bet pills overlap at ${size.width}/$scale: '
+                      '${pills[i]} and ${pills[j]}',
+                );
+              }
+            }
+          },
+        );
+      }
+    }
+
     testWidgets('no coach badge until the hand has a note (§4.8)', (
       tester,
     ) async {

@@ -64,6 +64,13 @@ class EquityBar extends StatelessWidget {
         'this and the call makes money.',
   );
 
+  /// The "needed" marker: a 2 pt white core inside a 1 pt dark edge a side.
+  static const double markerCore = 2;
+  static const double markerWidth = markerCore + 2;
+
+  /// Enough to clear 3:1 against Light's #D2DAE4 track.
+  static const double markerEdgeAlpha = 0.6;
+
   static int _pct(double fraction) => jsRound(fraction * 100).toInt();
 
   static double _clamp01(double v) => v < 0 ? 0 : (v > 1 ? 1 : v);
@@ -110,10 +117,11 @@ class EquityBar extends StatelessWidget {
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
                 final fill = _clamp01(equity) * width;
-                final markerX = (_clamp01(odds) * width - 1).clamp(
-                  0.0,
-                  width > 2 ? width - 2 : 0.0,
-                );
+                final markerX = (_clamp01(odds) * width - markerWidth / 2)
+                    .clamp(
+                      0.0,
+                      width > markerWidth ? width - markerWidth : 0.0,
+                    );
                 return SizedBox(
                   height: height,
                   width: width,
@@ -139,9 +147,24 @@ class EquityBar extends StatelessWidget {
                           bottom: 0,
                           // The spec's "white 2 pt marker"; `cardFaceTop` is
                           // the token-legal pure white (§16.5 — no literals).
+                          //
+                          // In Light the unfilled track is #D2DAE4 and a pure
+                          // white line on it is 1.4:1 — invisible, under a
+                          // caption that says "White line = 21 % needed". The
+                          // line keeps its colour (and the caption stays
+                          // true); a 1 pt always-dark edge on each side is
+                          // what makes it readable, on the track and on the
+                          // verdict fill alike, in both themes.
                           child: Container(
-                            width: 2,
-                            color: AllInColors.cardFaceTop,
+                            width: markerWidth,
+                            alignment: Alignment.center,
+                            color: AllInColors.dark.ink900.withValues(
+                              alpha: markerEdgeAlpha,
+                            ),
+                            child: Container(
+                              width: markerCore,
+                              color: AllInColors.cardFaceTop,
+                            ),
                           ),
                         ),
                     ],

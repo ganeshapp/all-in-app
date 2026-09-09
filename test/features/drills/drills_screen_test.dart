@@ -744,6 +744,109 @@ void main() {
     }
   });
 
+  // Regression: the top-centre seat straddled its anchor, so its plate grew
+  // *upwards* with the user's text size. At 360 pt × 1.3× the two tucked card
+  // backs were painted over the stats strip — "Rating 1064 · 38 % · 2/2" lost
+  // its separator and the 2 was sliced in half.
+  testWidgets('no seat paints over the stats strip at 1.3x text', (
+    tester,
+  ) async {
+    for (final size in const [
+      Size(360, 780),
+      Size(390, 844),
+      Size(411, 914),
+      Size(430, 932),
+    ]) {
+      for (final scale in const [1.0, 1.3]) {
+        // The worst case on the smallest phone: 1.3× text *and* a live
+        // session, which grows the tab bar by a whole label line and leaves
+        // the felt about 200 pt. Nothing may escape the box even then.
+        final inset = size.width <= 360 && scale > 1 ? 96.0 : 0.0;
+        await pumpDrills(
+          tester,
+          const DrillsScreen(),
+          size: size,
+          textScale: scale,
+          bottomInset: inset,
+          overrides: _overrides(puzzle: (_) => testPuzzle()),
+        );
+
+        final felt = tester.getRect(find.byType(DrillTable));
+        final strip = tester.getRect(find.byType(StatsStrip));
+        expect(
+          strip.bottom,
+          lessThanOrEqualTo(felt.top + 0.5),
+          reason: 'the strip overlaps the table box at ${size.width}/$scale',
+        );
+        // Whatever the box's height, the felt is clipped to it, so nothing
+        // on it can reach the strip.
+        expect(
+          find.ancestor(
+            of: find.byType(FeltCanvas),
+            matching: find.byType(ClipRect),
+          ),
+          findsWidgets,
+          reason: 'the drill felt is not clipped to its box',
+        );
+
+        // And where the box has the room, every card back — the tucked seat
+        // cards included — stays inside it rather than being trimmed.
+        if (inset == 0) {
+          for (final card in find.byType(PlayingCardView).evaluate()) {
+            final rect = tester.getRect(find.byWidget(card.widget));
+            if (rect.width == 0) continue;
+            expect(
+              rect.top,
+              greaterThanOrEqualTo(felt.top - 0.5),
+              reason:
+                  'a card climbs out of the table box at '
+                  '${size.width}/$scale',
+            );
+          }
+        }
+
+        // …and the seat that was nudged down must not land on the street
+        // caption below it. The caption is the eyebrow above the pot pill:
+        // the topmost of the two street strings on the felt.
+        //
+        // Skipped in the squeezed case: at 360 × 780, 1.3× text *and* a live
+        // session the box is ~200 pt and the seat column plus the caption
+        // block are together taller than the felt above the board — see
+        // "Known gaps" in docs/ARCHITECTURE.md.
+        Rect rectOf(Element e) {
+          final box = e.renderObject! as RenderBox;
+          return box.localToGlobal(Offset.zero) & box.size;
+        }
+
+        final streets = <Rect>[
+          for (final street in const [
+            'PRE-FLOP',
+            'FLOP',
+            'TURN',
+            'RIVER',
+            'SHOWDOWN',
+          ])
+            ...find.text(street).evaluate().map(rectOf),
+        ];
+        expect(streets, isNotEmpty);
+        final street = streets.reduce((a, b) => a.top <= b.top ? a : b);
+        if (inset == 0) {
+          for (final label in const ['CO', 'MP', 'UTG', 'BTN', 'SB', 'BB']) {
+            for (final rect in find.text(label).evaluate().map(rectOf)) {
+              expect(
+                rect.overlaps(street),
+                isFalse,
+                reason:
+                    'the $label plate covers the street caption at '
+                    '${size.width}/$scale',
+              );
+            }
+          }
+        }
+      }
+    }
+  });
+
   testWidgets('the frame list (D2) opens from a long-press on the pill', (
     tester,
   ) async {

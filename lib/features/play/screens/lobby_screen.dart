@@ -241,13 +241,35 @@ class _ResumeCard extends StatelessWidget {
 
   static const double height = 96;
 
+  /// The summary is allowed to wrap once. At 360 pt × 1.3× the slot is ~145
+  /// pt, and measuring the rungs on one line alone dropped the whole line to
+  /// "+0.0 bb"; over two it still says how many hands.
+  static const int summaryLines = 2;
+
+  /// The summary line, longest first (§4.2.4's "label ladder"). The one-line
+  /// slot is narrow — 44 pt of ⓘ menu and "Resume ›" sit beside it — and at
+  /// 360 pt the full line ellipsised in the middle of the net amount:
+  /// "6-max · 0 hands · +0.…". A number truncated to "+0.…" is the one thing
+  /// this line must never show, so the rungs drop whole clauses instead.
+  static List<String> summaryRungs(SessionState session) {
+    final hands = session.counters.hands;
+    final count = '$hands hand${hands == 1 ? '' : 's'}';
+    final net = '${fmtSigned(session.netBb)} bb';
+    final seats = session.options.seatsLabel;
+    final age = relativeAge(session.savedAt);
+    return <String>[
+      '$seats · $count · $net · $age',
+      '$seats · $count · $net',
+      '$count · $net',
+      net,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final hands = session.counters.hands;
-    final line =
-        '${session.options.seatsLabel} · $hands hand${hands == 1 ? '' : 's'} · '
-        '${fmtSigned(session.netBb)} bb · ${relativeAge(session.savedAt)}';
+    final rungs = summaryRungs(session);
+    final line = rungs.first;
 
     return AnimatedContainer(
       duration: AllInMotion.of(context, AllInMotion.base, reduced: false),
@@ -263,8 +285,12 @@ class _ResumeCard extends StatelessWidget {
         onTap: onResume,
         semanticLabel: '${PlayCopy.sessionInProgress}. $line. Resume',
         padding: const EdgeInsets.all(AllInSpace.md),
-        child: SizedBox(
-          height: height - 2 * AllInSpace.md,
+        // A minimum, not a fixed height: the title shares its row with the
+        // ⓘ menu and "Resume ›" and gets ~145 pt at 360, which "Session in
+        // progress" overruns at 1.3× text. The card grows for the second
+        // line instead of ellipsising the one thing it says (§13).
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: height - 2 * AllInSpace.md),
           child: Row(
             children: [
               Expanded(
@@ -279,7 +305,7 @@ class _ResumeCard extends StatelessWidget {
                         Flexible(
                           child: Text(
                             PlayCopy.sessionInProgress,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AllInText.body(
                               15,
@@ -291,11 +317,34 @@ class _ResumeCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AllInSpace.xs),
-                    Text(
-                      line,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AllInText.mono(13, color: c.textMuted),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final style = resolve(
+                          context,
+                          AllInText.mono(13, color: c.textMuted),
+                        );
+                        final scaler = MediaQuery.textScalerOf(context);
+                        final direction = Directionality.of(context);
+
+                        bool fitsIn(String rung) {
+                          final painter = TextPainter(
+                            text: TextSpan(text: rung, style: style),
+                            textDirection: direction,
+                            textScaler: scaler,
+                            maxLines: summaryLines,
+                          )..layout(maxWidth: constraints.maxWidth);
+                          final ok = !painter.didExceedMaxLines;
+                          painter.dispose();
+                          return ok;
+                        }
+
+                        return Text(
+                          rungs.firstWhere(fitsIn, orElse: () => rungs.last),
+                          maxLines: summaryLines,
+                          overflow: TextOverflow.ellipsis,
+                          style: style,
+                        );
+                      },
                     ),
                   ],
                 ),

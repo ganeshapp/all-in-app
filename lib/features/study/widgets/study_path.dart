@@ -17,6 +17,8 @@
 /// and the label still owns its own line at every width and scale.
 library;
 
+import 'dart:math' as math;
+
 import 'package:allin/features/study/content/curriculum.dart';
 import 'package:allin/features/study/content/lesson_model.dart';
 import 'package:allin/theme/motion.dart';
@@ -239,31 +241,97 @@ class ToolsGrid extends StatelessWidget {
   final List<StudyTool> tools;
 
   /// The tile height for [textScale]: 8 pt of padding top and bottom, the
-  /// label's line, and room for the gloss to take two lines — which it does at
-  /// 360, where a tile is 160 pt wide (§6.1).
+  /// label's line, and room for the gloss to take [glossLines] lines.
   ///
   /// Every tile in a run is given the same height, so the grid keeps its
   /// rhythm whether a gloss wrapped or not.
-  static double tileHeight(double textScale) =>
-      16 + labelLine * textScale + 2 + 2 * glossLine * textScale;
+  static double tileHeight(double textScale, [int glossLines = 2]) =>
+      16 + labelLine * textScale + 2 + glossLines * glossLine * textScale;
 
   /// Inter 15 and Inter 12 at their rendered line heights.
   static const double labelLine = 19;
   static const double glossLine = 15.5;
+
+  /// §6.1's label and gloss sizes, and the floor the label may shrink to
+  /// before an ellipsis becomes the better failure (§13).
+  static const double labelSize = 15;
+  static const double glossSize = 12;
+  static const double minLabelSize = 13;
+
+  /// How many lines the gloss is allowed to take before it ellipsises.
+  static const int maxGlossLines = 3;
+
+  /// The text column inside a [tileWidth]-wide tile: the tile's 1 pt border
+  /// and padding on each side, the 20 pt icon and the gap after it.
+  static double textWidthIn(double tileWidth) =>
+      tileWidth - 2 - AllInSpace.md * 2 - 20 - AllInSpace.sm;
 
   /// Whether the grid reflows to a single column (§6.1).
   static bool singleColumn(double textScale) => textScale > 1.5;
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-    final one = singleColumn(scale);
-    final height = tileHeight(scale);
+    final scaler = MediaQuery.textScalerOf(context);
+    final scale = scaler.scale(14) / 14;
+    final direction = Directionality.of(context);
+    final labels = [for (final t in tools) t.label];
+
+    TextStyle labelStyle(double size) =>
+        resolve(context, AllInText.body(size, height: 1.27));
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = one ? 1 : 2;
-        final width =
+        double tileWidth(int columns) =>
             (constraints.maxWidth - (columns - 1) * AllInSpace.sm) / columns;
+
+        // §6.1's whole argument for two columns is that the *label* never
+        // truncates — "a tool whose name is truncated is a tool nobody
+        // opens". Two rules, in order: shrink the labels as one set (so six
+        // tiles still read as one grid), and if even the floor does not fit,
+        // take §6.1's own escape hatch and drop to one column. At 360 pt the
+        // text column is 106 and "Range explorer" needs 107.2, so it read
+        // "Range explo…"; at 360 × 1.3× nothing short of one column fits.
+        var columns = singleColumn(scale) ? 1 : 2;
+        var labelPx = _fittedLabel(
+          labels,
+          textWidthIn(tileWidth(columns)),
+          scaler,
+          direction,
+          labelStyle,
+        );
+        if (columns == 2 &&
+            labelPx <= scaler.scale(minLabelSize) &&
+            _widest(labels, labelStyle(labelPx), direction) >
+                textWidthIn(tileWidth(2))) {
+          columns = 1;
+          labelPx = _fittedLabel(
+            labels,
+            textWidthIn(tileWidth(1)),
+            scaler,
+            direction,
+            labelStyle,
+          );
+        }
+
+        final width = tileWidth(columns);
+        final text = textWidthIn(width);
+        final glossStyle = resolve(
+          context,
+          AllInText.body(glossSize, height: 1.3),
+        );
+
+        // The gloss is allowed a third line rather than ellipsising: at 360
+        // "How often one hand beats another" needs three, and the tile is
+        // sized from what the run actually needs.
+        var lines = 2;
+        for (final tool in tools) {
+          lines = math.max(
+            lines,
+            _glossLines(tool.subtitle, glossStyle, text, scaler, direction),
+          );
+        }
+        lines = math.min(lines, maxGlossLines);
+
         return Wrap(
           spacing: AllInSpace.sm,
           runSpacing: AllInSpace.sm,
@@ -271,20 +339,80 @@ class ToolsGrid extends StatelessWidget {
             for (final tool in tools)
               SizedBox(
                 width: width,
-                height: height,
-                child: _ToolTile(tool: tool, onTap: () => onOpen(tool)),
+                height: tileHeight(scale, lines),
+                child: _ToolTile(
+                  tool: tool,
+                  labelPx: labelPx,
+                  glossLines: lines,
+                  onTap: () => onOpen(tool),
+                ),
               ),
           ],
         );
       },
     );
   }
+
+  static double _fittedLabel(
+    List<String> labels,
+    double width,
+    TextScaler scaler,
+    TextDirection direction,
+    TextStyle Function(double) styleAt,
+  ) => fitFontSize(
+    labels: labels,
+    width: width,
+    size: scaler.scale(labelSize),
+    minSize: scaler.scale(minLabelSize),
+    direction: direction,
+    styleAt: styleAt,
+  );
+
+  static double _widest(
+    List<String> labels,
+    TextStyle style,
+    TextDirection direction,
+  ) {
+    var w = 0.0;
+    for (final label in labels) {
+      w = math.max(w, measureLabelWidth(label, style, direction));
+    }
+    return w;
+  }
+
+  static int _glossLines(
+    String gloss,
+    TextStyle style,
+    double width,
+    TextScaler scaler,
+    TextDirection direction,
+  ) {
+    if (!width.isFinite || width <= 0) return 2;
+    final painter = TextPainter(
+      text: TextSpan(text: gloss, style: style),
+      textDirection: direction,
+      textScaler: scaler,
+    )..layout(maxWidth: width);
+    final lines = painter.computeLineMetrics().length;
+    painter.dispose();
+    return lines;
+  }
 }
 
 class _ToolTile extends StatelessWidget {
-  const _ToolTile({required this.tool, required this.onTap});
+  const _ToolTile({
+    required this.tool,
+    required this.labelPx,
+    required this.glossLines,
+    required this.onTap,
+  });
 
   final StudyTool tool;
+
+  /// Already in rendered pixels (see `ToolsGrid.build`), so the label draws
+  /// with `TextScaler.noScaling`.
+  final double labelPx;
+  final int glossLines;
   final VoidCallback onTap;
 
   @override
@@ -318,15 +446,20 @@ class _ToolTile extends StatelessWidget {
                       tool.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AllInText.body(15, color: c.text),
+                      textScaler: TextScaler.noScaling,
+                      style: AllInText.body(
+                        labelPx,
+                        color: c.text,
+                        height: 1.27,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       tool.subtitle,
-                      maxLines: 2,
+                      maxLines: glossLines,
                       overflow: TextOverflow.ellipsis,
                       style: AllInText.body(
-                        12,
+                        ToolsGrid.glossSize,
                         color: c.textMuted,
                         height: 1.3,
                       ),
@@ -378,7 +511,10 @@ class QuickReferenceRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 1,
+                  // Two lines, not an ellipsis: at 360 pt × 1.3× the label
+                  // needs 262 pt of the 250 it gets and read "Quick reference
+                  // & glo…". The row is a `minHeight`, so it grows (§13).
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AllInText.body(15, color: c.text),
                 ),
@@ -543,7 +679,11 @@ class LessonRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   lesson.title,
-                  maxLines: 1,
+                  // Two lines, not an ellipsis: at 360 pt × 1.3× "Opening
+                  // Ranges by Position" and "Reading the HUD: VPIP & PFR"
+                  // both overrun, and the title is the entire row. 52 pt is a
+                  // `minHeight`, so the row grows instead (§13).
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AllInText.body(
                     15,

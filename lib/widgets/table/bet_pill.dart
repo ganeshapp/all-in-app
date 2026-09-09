@@ -94,6 +94,32 @@ class BetPill extends StatelessWidget {
     };
   }
 
+  /// The text this pill renders, "(you)" included.
+  String get renderedText {
+    final base = _text();
+    return isHero ? '$base (you)' : base;
+  }
+
+  /// Whether the pill carries its 7 pt chip disc.
+  bool get hasChip => amount != null && amount != 0;
+
+  /// The width this pill will lay out at.
+  ///
+  /// Callers that have to keep pills off each other need this *before* the
+  /// pill is built, because [maxWidth] is the §4.2 nominal width and not what
+  /// the pill actually takes — see [build].
+  double get layoutWidth => math.max(
+    maxWidth,
+    _needed(renderedText, _styleFor(hasChip), TextScaler.noScaling, hasChip),
+  );
+
+  /// The measured style. Colour does not affect width, so the caller-facing
+  /// [layoutWidth] can build it without a `BuildContext`.
+  static TextStyle _styleFor(bool hasChip) =>
+      hasChip
+          ? AllInText.mono(11)
+          : AllInText.body(11, weight: FontWeight.w600);
+
   /// The width the pill's row needs at its full 11 pt type.
   static double _needed(
     String text,
@@ -116,12 +142,11 @@ class BetPill extends StatelessWidget {
     final c = context.colors;
     final tone = toneOf(context, kind);
     final base = _text();
-    final hasChip = amount != null && amount != 0;
+    final hasChip = this.hasChip;
 
-    final style =
-        hasChip
-            ? AllInText.mono(11, color: c.goldLight)
-            : AllInText.body(11, weight: FontWeight.w600, color: tone);
+    final style = _styleFor(
+      hasChip,
+    ).copyWith(color: hasChip ? c.goldLight : tone);
     final withYou = '$base (you)';
     final text = isHero ? withYou : base;
 

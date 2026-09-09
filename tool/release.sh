@@ -15,10 +15,17 @@ flutter build apk --split-per-abi --release
 mkdir -p build/release
 for abi in arm64-v8a armeabi-v7a x86_64; do
   src="build/app/outputs/flutter-apk/app-$abi-release.apk"
-  cert=$("$APKSIGNER" verify --print-certs "$src" | grep 'SHA-256 digest' | head -1)
-  case "$cert" in *"Android Debug"*) echo "refusing: $src is debug-signed" >&2; exit 1;; esac
-  echo "$cert" | grep -q "$EXPECTED_SHA256" || { echo "refusing: $src is not signed with allin-release.jks" >&2; exit 1; }
-  unzip -l "$src" | grep -q "lib/$abi/libflutter.so" || { echo "refusing: $src lacks lib/$abi" >&2; exit 1; }
+  # Capture first, then match with here-strings: piping into `grep -q`/`head`
+  # makes the producer die of SIGPIPE, which `set -o pipefail` turns into a
+  # spurious "check failed". Never pipe into an early-exiting reader here.
+  certs=$("$APKSIGNER" verify --print-certs "$src")
+  # The debug key's identity is in the DN line ("CN=Android Debug"), not the
+  # digest line, so this has to look at the whole certificate dump.
+  case "$certs" in *"Android Debug"*) echo "refusing: $src is debug-signed" >&2; exit 1;; esac
+  cert=$(grep -m1 'SHA-256 digest' <<<"$certs" || true)
+  grep -qF "$EXPECTED_SHA256" <<<"$cert" || { echo "refusing: $src is not signed with allin-release.jks" >&2; exit 1; }
+  entries=$(unzip -Z1 "$src")
+  grep -qxF "lib/$abi/libflutter.so" <<<"$entries" || { echo "refusing: $src lacks lib/$abi" >&2; exit 1; }
   cp "$src" "build/release/allin-$VERSION-$abi.apk"
   echo "ok  build/release/allin-$VERSION-$abi.apk  ($(du -h "$src" | cut -f1))"
 done

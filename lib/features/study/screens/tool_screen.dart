@@ -75,7 +75,11 @@ class ToolScreen extends ConsumerWidget {
                     ),
                     child: Text(
                       spec?.label ?? 'Tools',
-                      maxLines: 1,
+                      // Two lines, not an ellipsis: the title shares its row
+                      // with the back chevron and "Open lesson ›", and at
+                      // 360 pt × 1.3× even "Equity calc" overran the slot.
+                      // The row has no fixed height, so it grows (§13).
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AllInText.display(20, color: c.text),
                     ),
