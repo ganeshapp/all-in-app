@@ -34,10 +34,28 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// The reference texts were produced with a fixed clock; `psDate` prints
 /// LOCAL time, so normalise the header's date to whatever this machine says.
-String _normaliseDate(String text, int startedAt) => text.replaceFirst(
-  RegExp(r' - \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ET'),
-  ' - ${psDate(startedAt)} ET',
-);
+/// Rewrites the header's timestamp AND its export id from `startedAt`.
+///
+/// `psDate` renders LOCAL time (desktop parity — `handHistory.ts` uses
+/// `Date.getHours()`), and a hand parsed out of a history text carries a
+/// `startedAt` that was itself read as local time. Both the printed date and
+/// the export id (`startedAt * 100 + id % 100`) therefore move with the
+/// machine's timezone, so a fixture written on one cannot be compared
+/// literally on another — that is what broke CI on a UTC runner while passing
+/// in Asia/Seoul. The expectation is anchored to the hand under test instead.
+String _normaliseDate(String text, int startedAt, {int? exportId}) {
+  var out = text.replaceFirst(
+    RegExp(r' - \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ET'),
+    ' - ${psDate(startedAt)} ET',
+  );
+  if (exportId != null) {
+    out = out.replaceFirst(
+      RegExp(r'PokerStars Hand #\d+:'),
+      'PokerStars Hand #$exportId:',
+    );
+  }
+  return out;
+}
 
 HHHand _craftedHand() => HHHand(
   id: 7,
@@ -664,6 +682,7 @@ Seat 1: A (button) mucked
 Seat 2: B (small blind) folded before Flop
 Seat 3: C (big blind) mucked''',
           h.startedAt,
+          exportId: exportHandId(h),
         ),
       );
     });

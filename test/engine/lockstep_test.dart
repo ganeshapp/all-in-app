@@ -162,6 +162,19 @@ void main() {
     }
   }
 
+  /// Blanks the wall-clock rendering in a PokerStars header line.
+  ///
+  /// `formatHand` prints LOCAL time (desktop parity — `handHistory.ts` uses
+  /// `Date.getHours()`), so the one line carrying a date differs between a
+  /// machine in Asia/Seoul and a UTC CI runner even though the hand, its
+  /// `startedAt` and its export id are identical. Everything else in the
+  /// transcript stays byte-exact; only this substring is masked, and the local
+  /// rendering itself is pinned separately in parity_review_game_test.dart.
+  String _tzAgnostic(String line) => line.replaceFirst(
+    RegExp(r' - \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ET'),
+    ' - <local time> ET',
+  );
+
   group('desktop lockstep transcript', () {
     test('fixture has sections', () => expect(sections.length, 4));
     for (final entry in sections.entries) {
@@ -179,7 +192,11 @@ void main() {
         );
         final want = entry.value;
         for (int i = 0; i < want.length && i < got.length; i++) {
-          expect(got[i], want[i], reason: 'line ${i + 1} of ${entry.key}');
+          expect(
+            _tzAgnostic(got[i]),
+            _tzAgnostic(want[i]),
+            reason: 'line ${i + 1} of ${entry.key}',
+          );
         }
         expect(got.length, want.length, reason: 'transcript length');
       });
