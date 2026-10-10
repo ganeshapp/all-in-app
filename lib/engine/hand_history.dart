@@ -109,6 +109,8 @@ class HHHand {
     List<Card>? board,
     List<PotResult>? potResults,
     this.heroNet = 0,
+    this.tableSize,
+    this.uncalled,
   }) : holes = holes ?? <int, List<Card>?>{},
        actions = actions ?? <HHAction>[],
        board = board ?? <Card>[],
@@ -136,6 +138,13 @@ class HHHand {
   /// Chips; imported hands: winnings only (approximate).
   num heroNet;
 
+  /// Seats at the table, even when some are sitting out. Null on imported and
+  /// pre-play-down hands, where the occupied seats are the table.
+  int? tableSize;
+
+  /// What the engine actually returned; absent on imported/legacy hands.
+  UncalledBet? uncalled;
+
   Map<String, Object?> toJson() {
     final holeKeys = holes.keys.where((k) => holes[k] != null).toList()..sort();
     return {
@@ -152,6 +161,13 @@ class HHHand {
       'board': board,
       'potResults': potResults.map(_potToJson).toList(),
       'heroNet': heroNet,
+      if (tableSize != null) 'tableSize': tableSize,
+      if (uncalled != null)
+        'uncalled': {
+          'playerId': uncalled!.playerId,
+          'amount': uncalled!.amount,
+          'inPot': uncalled!.inPot,
+        },
     };
   }
 
@@ -182,6 +198,15 @@ class HHHand {
             .map((p) => _potFromJson((p as Map).cast<String, Object?>()))
             .toList(),
     heroNet: (j['heroNet'] as num?) ?? 0,
+    tableSize: (j['tableSize'] as num?)?.toInt(),
+    uncalled:
+        j['uncalled'] == null
+            ? null
+            : UncalledBet(
+              playerId: ((j['uncalled']! as Map)['playerId'] as num).toInt(),
+              amount: ((j['uncalled']! as Map)['amount'] as num).toInt(),
+              inPot: (j['uncalled']! as Map)['inPot'] == true,
+            ),
   );
 }
 
@@ -298,6 +323,20 @@ String _nameOf(HHHand h, int? seat, [String fallback = '']) =>
     h.seats.firstWhereOrNull((s) => s.seat == seat)?.name ?? fallback;
 
 /// PokerStars-style text for one hand (desktop `formatHand`, verbatim).
+/// What a blind seat actually put in. A stack shorter than the blind posts all
+/// of it and no more, and the uncalled-bet arithmetic below is wrong whenever
+/// the nominal blind is used instead — which a play-down table, full of
+/// sub-blind stacks, hits often.
+num _postedBlind(HHHand h, int seat, num blind) {
+  for (final s in h.seats) {
+    if (s.seat == seat) {
+      final stack = s.stack;
+      return stack < blind ? (stack > 0 ? stack : 0) : blind;
+    }
+  }
+  return blind;
+}
+
 String formatHand(HHHand h) {
   final lines = <String>[];
   lines.add(
@@ -305,7 +344,7 @@ String formatHand(HHHand h) {
     '(${_jsNum(h.sb)}/${_jsNum(h.bb)}) - ${psDate(h.startedAt)} ET',
   );
   lines.add(
-    "Table 'All-In Dojo' ${h.seats.length}-max "
+    "Table 'All-In Dojo' ${h.tableSize ?? h.seats.length}-max "
     'Seat #${_seatNo(h.button)} is the button',
   );
 
@@ -352,8 +391,8 @@ String formatHand(HHHand h) {
   void emitStreet(Street street) {
     final acts = h.actions.where((a) => a.street == street).toList();
     if (street == Street.preflop) {
-      committed[h.sbSeat] = h.sb;
-      committed[h.bbSeat] = h.bb;
+      committed[h.sbSeat] = _postedBlind(h, h.sbSeat, h.sb);
+      committed[h.bbSeat] = _postedBlind(h, h.bbSeat, h.bb);
     } else {
       if (street == Street.flop && h.board.length >= 3) {
         lines.add('*** FLOP *** [${h.board.sublist(0, 3).join(' ')}]');
@@ -396,14 +435,32 @@ String formatHand(HHHand h) {
   final commits =
       h.seats.map((s) => (seat: s.seat, amt: committed[s.seat] ?? 0)).toList();
   mergeSort(commits, compare: (a, b) => _jsCompare(b.amt - a.amt));
-  final uncalled = commits.length > 1 ? commits[0].amt - commits[1].amt : 0;
-  final int? uncalledSeat = uncalled > 0 ? commits[0].seat : null;
+  // The engine says exactly what it returned and whether the pot results
+  // still carry it. Only an imported or pre-this-version hand has to be
+  // guessed at, and then a folded top contributor is never handed chips back:
+  // their unmatched excess stays in the pot as dead money.
+  final topLive = commits.length > 1 && !foldedOn.containsKey(commits[0].seat);
+  final derived = topLive ? commits[0].amt - commits[1].amt : 0;
+  final recorded = h.uncalled;
+  final num uncalled = recorded != null ? recorded.amount : derived;
+  final int? uncalledSeat =
+      uncalled > 0
+          ? (recorded != null ? recorded.playerId : commits[0].seat)
+          : null;
+  // Was it already taken out of `potResults`? The engine knows; a legacy hand
+  // only carries the whole pot when it folded out.
+  final uncalledStillInPot =
+      recorded != null ? recorded.inPot : live.length <= 1;
   if (uncalledSeat != null) {
     final name = _nameOf(h, uncalledSeat);
     lines.add('Uncalled bet (${_jsNum(uncalled)}) returned to $name');
   }
 
-  // What each seat actually collects (pot totals minus any returned bet).
+  // What each seat actually collects. A hand that folded out reports the
+  // whole pot, the winner's own uncalled bet included, so that has to come
+  // back out here. A showdown's pot results never carry it — the engine
+  // returns it before it awards anything — and neither do the "collected"
+  // lines of an imported history, so subtracting there would charge it twice.
   final collected = <int, num>{};
   for (final p in h.potResults) {
     for (final w in p.winners) {
@@ -411,7 +468,7 @@ String formatHand(HHHand h) {
       collected[w] = (collected[w] ?? 0) + jsRound(p.amount / p.winners.length);
     }
   }
-  if (uncalledSeat != null) {
+  if (uncalledSeat != null && uncalledStillInPot) {
     final v = (collected[uncalledSeat] ?? 0) - uncalled;
     collected[uncalledSeat] = v > 0 ? v : 0;
   }
@@ -514,9 +571,11 @@ List<ReplayFrame> buildReplayFrames(HHHand h) {
   for (final s in h.seats) {
     committed[s.seat] = 0;
   }
-  committed[h.sbSeat] = h.sb;
-  committed[h.bbSeat] = h.bb;
-  num pot = h.sb + h.bb;
+  final sbPosted = _postedBlind(h, h.sbSeat, h.sb);
+  final bbPosted = _postedBlind(h, h.bbSeat, h.bb);
+  committed[h.sbSeat] = sbPosted;
+  committed[h.bbSeat] = bbPosted;
+  num pot = sbPosted + bbPosted;
   final folded = <int>[];
   String bb(num chips) {
     final v = chips / h.bb;
@@ -596,6 +655,15 @@ List<ReplayFrame> buildReplayFrames(HHHand h) {
   final names =
       winnerIds.map((id) => _nameOf(h, id, 'Seat ${id + 1}')).toList();
   final total = h.potResults.fold<num>(0, (a, b) => a + b.amount);
+  // Chips nobody matched never reached the pot that gets won, so the closing
+  // frame shows the pot that was actually played for. A folded-out hand keeps
+  // the whole pot (`inPot`), and a hand with no record of a refund is left
+  // exactly as it was.
+  final refund = h.uncalled;
+  final num endPot =
+      refund != null && !refund.inPot
+          ? (pot - refund.amount > 0 ? pot - refund.amount : 0)
+          : pot;
   final endStreet =
       h.board.length >= 5
           ? Street.showdown
@@ -612,7 +680,7 @@ List<ReplayFrame> buildReplayFrames(HHHand h) {
               : 'Hand over.',
       street: endStreet,
       board: List<Card>.of(h.board),
-      pot: pot,
+      pot: endPot,
       folded: List<int>.of(folded),
       revealAll: true,
     ),

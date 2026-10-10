@@ -43,8 +43,7 @@ class SessionSummaryScreen extends ConsumerStatefulWidget {
       _SessionSummaryScreenState();
 }
 
-class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
-    with SingleTickerProviderStateMixin {
+class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen> {
   /// The last data we rendered. "Done" and "New session" reset the session
   /// while the route is still on screen, so the numbers are held here rather
   /// than blinking to zero during the transition.
@@ -52,25 +51,6 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
 
   /// True once a button that navigates away has been pressed.
   bool _leaving = false;
-
-  /// §2.5's blocked-back shake (busted). Built eagerly: a `late final` here
-  /// would be *created* by `dispose()` on a screen that never shook.
-  late final AnimationController _shake;
-
-  @override
-  void initState() {
-    super.initState();
-    _shake = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-    );
-  }
-
-  @override
-  void dispose() {
-    _shake.dispose();
-    super.dispose();
-  }
 
   bool get _live => widget.sessionId == null && !widget.readOnly;
 
@@ -99,8 +79,12 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
 
     if (summary.missing) return _missing(context);
 
+    // Two terminal endings, same shape: the table cannot deal another hand,
+    // so there is nothing to close this page back into.
     final busted = _live && summary.busted;
-    final canClose = _live && !busted;
+    final cleared = _live && summary.tableCleared;
+    final terminal = busted || cleared;
+    final canClose = _live && !terminal;
 
     final content = _Body(
       summary: summary,
@@ -111,47 +95,44 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
     );
 
     return PopScope(
-      canPop: !busted,
+      // Busted: ✕ is gone because there is no table left to go back to, so
+      // back cannot simply dismiss the page. It must still lead somewhere —
+      // refusing it stranded the user on this screen with "New session" as
+      // the only way off, so back ends the session and returns to the lobby,
+      // which is what "Done" does.
+      canPop: !terminal,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
           _onClosed();
         } else {
-          _blockedBack();
+          _done();
         }
       },
-      child: AnimatedBuilder(
-        animation: _shake,
-        builder: (context, child) {
-          final t = _shake.value;
-          // One 4 pt there-and-back over the 120 ms.
-          final dx = 4 * (t <= 0.5 ? t * 2 : (1 - t) * 2);
-          return Transform.translate(
-            offset: Offset(
-              t == 0 ? 0 : dx * (t < 0.25 || t > 0.75 ? 1 : -1),
-              0,
-            ),
-            child: child,
-          );
-        },
-        child: AllInScaffold(
-          title: _title(summary),
-          subtitle: widget.readOnly ? _subtitle(summary) : null,
-          leading:
-              canClose
-                  ? _CloseButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  )
-                  : null,
-          body: content,
-          bottom: _actions(summary, busted: busted),
-        ),
+      child: AllInScaffold(
+        title: _title(summary),
+        subtitle:
+            widget.readOnly
+                ? _subtitle(summary)
+                : cleared
+                ? SummaryCopy.tableClearedBody
+                : null,
+        leading:
+            canClose
+                ? _CloseButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                )
+                : null,
+        body: content,
+        bottom: _actions(summary, busted: terminal),
       ),
     );
   }
 
   String _title(SessionSummaryData summary) {
     if (widget.readOnly) return SummaryCopy.readOnlyTitle;
-    return summary.busted ? SummaryCopy.bustedTitle : SummaryCopy.title;
+    if (summary.busted) return SummaryCopy.bustedTitle;
+    if (summary.tableCleared) return SummaryCopy.tableClearedTitle;
+    return SummaryCopy.title;
   }
 
   String _subtitle(SessionSummaryData summary) =>
@@ -218,14 +199,14 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
             ),
           ],
         ),
-        if (!busted) ...[
-          const SizedBox(height: AllInSpace.xs),
-          AllInButton.ghost(
-            label: SummaryCopy.done,
-            expand: true,
-            onPressed: _done,
-          ),
-        ],
+        // Busted sessions keep "Done" too: the session is already over, and
+        // without it the only way off this page was to start another one.
+        const SizedBox(height: AllInSpace.xs),
+        AllInButton.ghost(
+          label: SummaryCopy.done,
+          expand: true,
+          onPressed: _done,
+        ),
       ],
     );
   }
@@ -255,19 +236,6 @@ class _SessionSummaryScreenState extends ConsumerState<SessionSummaryScreen>
   /// ✕ / system back: the session continues (§4.13, desktop parity).
   void _onClosed() {
     if (_live && !_leaving) ref.read(sessionProvider.notifier).closeSummary();
-  }
-
-  /// §2.5's blocked-back response: a 120 ms 4 pt shake plus `selectionClick`.
-  /// Under reduced motion the haptic alone is the answer.
-  void _blockedBack() {
-    ref.read(hapticsProvider).blockedBack();
-    final reduced =
-        ref.read(reducedMotionProvider) ||
-        MediaQuery.maybeDisableAnimationsOf(context) == true;
-    if (reduced) return;
-    _shake
-      ..reset()
-      ..forward();
   }
 
   /// "New session" rebuilds the table: the old session is recorded first so it

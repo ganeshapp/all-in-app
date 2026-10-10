@@ -45,6 +45,15 @@ abstract final class PlayCopy {
 
   static const List<String> seatLabels = ['Heads-up', '6-max', '9-max'];
   static const List<String> anteLabels = ['None', '0.25 bb'];
+
+  /// §4.1: what happens to a bot that runs out of chips *(mobile)*.
+  static const String bustedBotsRow = 'Busted bots';
+  static const List<String> bustedBotsLabels = ['Buy back in', 'Leave'];
+  static const String bustedBotsRebuy =
+      'A busted bot gets a fresh 100 bb, so every hand is a full table.';
+  static const String bustedBotsLeave =
+      'A busted bot leaves for good and the table plays down. Fewer players '
+      'means you can play far more hands.';
   static const List<String> paceLabels = ['Manual', 'Auto'];
   static const List<String> speedLabels = ['Slow', 'Normal', 'Fast'];
 

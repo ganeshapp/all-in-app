@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:allin/features/stats/providers/data_actions.dart';
+import 'package:allin/features/stats/providers/stats_providers.dart';
 import 'package:allin/features/stats/screens/all_hands_screen.dart';
 import 'package:allin/engine/engine.dart' show Verdict;
 import 'package:allin/features/stats/stats_copy.dart';
@@ -126,6 +127,48 @@ void main() {
     expect(colourOf('+3.0 bb'), colours.good);
     expect(colourOf('-2.0 bb'), colours.bad);
     expect(colourOf('+0.0 bb'), colours.textMuted);
+  });
+
+  // "Load more" asks `allHandsProvider` for a different family key, which
+  // starts out loading. Swapping the rows for a spinner collapsed the scroll
+  // view, so every tap threw the reader back to the top of the list.
+  testWidgets('Load more keeps your place in the list', (tester) async {
+    final fixture = StatsFixture();
+    for (int i = 0; i < kAllHandsPage + 5; i++) {
+      await fixture.addHand(
+        sixMaxHand(startedAt: 1781838000000 + i * 60000, id: i + 1),
+      );
+    }
+
+    await pumpStats(tester, const AllHandsScreen(), fixture: fixture);
+    await tester.pumpAndSettle();
+
+    final list = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text(StatsCopy.loadMore),
+      300,
+      scrollable: list,
+    );
+    await tester.pumpAndSettle();
+    final before = tester.widget<Scrollable>(list).controller!.offset;
+    expect(before, greaterThan(0));
+
+    await tester.tap(find.text(StatsCopy.loadMore));
+    await tester.pump(); // the frame the longer page is still loading in
+
+    // The rows the reader was looking at are still there — no spinner, and
+    // the viewport has not jumped back to the first hand.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      tester.widget<Scrollable>(list).controller!.offset,
+      closeTo(before, 100),
+    );
+
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Scrollable>(list).controller!.offset,
+      closeTo(before, 100),
+    );
   });
 
   testWidgets('no hands at all shows the desktop empty line', (tester) async {

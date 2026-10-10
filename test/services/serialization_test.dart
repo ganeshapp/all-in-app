@@ -133,6 +133,51 @@ void main() {
       expect(q.sittingOut, isTrue);
     });
 
+    // The snapshot is what a resumed session is rebuilt from, so a field the
+    // codec forgets is a setting that silently changes under the user.
+    test('round-trips the play-down setting and a returned bet', () {
+      final rng = Random(7);
+      var t = createTable(
+        const GameConfig(
+          seats: 6,
+          startingStack: 2000,
+          smallBlind: 10,
+          bigBlind: 20,
+          botRebuy: false,
+        ),
+        rng: rng,
+      );
+      t.players[3].stack = 0;
+      t = startHand(t, rng: rng);
+      t.summary = const HandSummary(
+        handNumber: 1,
+        potResults: [
+          PotResult(winners: [0], amount: 1000, potLabel: 'Pot'),
+        ],
+        showdown: [],
+        board: [],
+        heroNetChips: 0,
+        uncalled: UncalledBet(playerId: 1, amount: 1500, inPot: false),
+      );
+
+      final back = tableStateFromJson(
+        decodeJsonMap(jsonEncode(tableStateToJson(t)))!,
+      );
+
+      expect(back.config.botRebuy, isFalse, reason: 'the chosen mode survives');
+      expect(back.players[3].sittingOut, isTrue, reason: 'and who is out');
+      expect(back.summary!.uncalled!.playerId, 1);
+      expect(back.summary!.uncalled!.amount, 1500);
+      expect(back.summary!.uncalled!.inPot, isFalse);
+    });
+
+    test('a snapshot written before the setting existed keeps rebuys', () {
+      final json = tableStateToJson(dealtTable());
+      (json['config']! as Map).remove('botRebuy');
+      final back = tableStateFromJson(decodeJsonMap(jsonEncode(json))!);
+      expect(back.config.botRebuy, isTrue);
+    });
+
     test('a table with no summary stays null', () {
       final t = dealtTable();
       final back = tableStateFromJson(tableStateToJson(t));

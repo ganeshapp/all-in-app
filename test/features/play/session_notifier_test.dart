@@ -107,6 +107,74 @@ void main() {
       expect(read().rebought, contains(3));
       expect(read().table!.players[3].stack, greaterThan(0));
     });
+
+    // The engine's half of play-down is pinned in hand_engine_test; this is
+    // the half above it — the mode reaching the table, the caption staying
+    // quiet, the export keeping a constant table size, and the ending.
+    test(
+      'with rebuys off a busted bot leaves and the table plays down',
+      () async {
+        final container = makeContainer(seed: 5);
+        addTearDown(container.dispose);
+        final notifier = container.read(sessionProvider.notifier);
+        SessionState read() => container.read(sessionProvider);
+
+        notifier.newSession(const TableOptions(seats: 6, botRebuy: false));
+        await settle();
+        expect(read().table!.config.botRebuy, isFalse);
+
+        for (var i = 0; i < 200 && !read().handOver; i++) {
+          if (read().table!.toAct == 0) {
+            await notifier.heroAction(const Action.fold());
+          } else {
+            notifier.stepBot();
+          }
+        }
+        read().table!.players[3].stack = 0;
+        notifier.deal();
+        await settle();
+
+        expect(read().table!.players[3].sittingOut, isTrue);
+        expect(read().table!.players[3].hole, isNull);
+        expect(
+          read().rebought,
+          isNot(contains(3)),
+          reason: 'nobody bought back in, so there is no caption to show',
+        );
+        // The export must not relabel the table as it empties.
+        expect(
+          read().history.isEmpty ? 6 : read().history.last.tableSize ?? 6,
+          6,
+        );
+      },
+    );
+
+    test('the session ends when the hero takes the whole table', () async {
+      final container = makeContainer(seed: 5);
+      addTearDown(container.dispose);
+      final notifier = container.read(sessionProvider.notifier);
+      SessionState read() => container.read(sessionProvider);
+
+      notifier.newSession(const TableOptions(seats: 6, botRebuy: false));
+      await settle();
+      for (var i = 0; i < 200 && !read().handOver; i++) {
+        if (read().table!.toAct == 0) {
+          await notifier.heroAction(const Action.fold());
+        } else {
+          notifier.stepBot();
+        }
+      }
+      // Every bot is out of chips; only the hero is left to deal to.
+      for (final p in read().table!.players) {
+        if (!p.isHero) p.stack = 0;
+      }
+      notifier.deal();
+      await settle();
+
+      expect(read().sessionEnded, isTrue);
+      expect(read().tableCleared, isTrue);
+      expect(read().busted, isFalse, reason: 'the hero won, they did not bust');
+    });
   });
 
   group('session counters (§4.13)', () {

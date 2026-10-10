@@ -189,7 +189,9 @@ Lesson, coach and About text is ported verbatim. Every intentional wording chang
 there are no others, and adding one without a row here is a defect. Four rows exist because the
 desktop copy describes a mouse the phone does not have; one because it describes desktop/web
 platforms; three because it names a screen, a layer-3 label or a precision that does not exist on
-the phone; one is the hand log, which the desktop writes in the third person and in chips.
+the phone; one is the hand log, which the desktop writes in the third person and in chips; two cover
+the results card's account of a multi-pot hand; and two carry the **Busted bots** setting, which was
+added to both editions at once.
 
 | Where | Desktop | Mobile | Why |
 |---|---|---|---|
@@ -201,6 +203,10 @@ the phone; one is the hand log, which the desktop writes in the third person and
 | Read-accuracy leak line — `stats_copy.readAccuracyLeak`, and the same sentence as Home's coach note (`home_copy.coachReadLine`) | "…practise with Guess & Peek, or try the Range-Building exercise in Study." | "…tap the eye on a seat during a hand to practise, or open the Range-Building Drill in Study." | The desktop names two things no screen here is labelled: the flow is the eye on a seat ("Read {name}'s range"), and the lesson is the "Range-Building Drill" |
 | Drill feedback row 3 (§5.3, §15.2) | Row label "See the range it was graded against" | Row label "**Expert detail**"; the desktop string becomes the row's first body line, "The range it was graded against:" (`DrillCopy.rangeItWasGradedAgainst`) | Layer-3 labels are identical on every three-layer surface — that is what makes the structure learnable (Principle 3) |
 | `fmtNeed` / `fmtNeedTimes` (`lib/engine/format.dart`) | rounds to the nearest **half** — "you need to win about 1 time in 3.5" | rounds to the nearest **whole** — "about 1 time in 4" | TONE.md's layer-1 rule is "chances as counts", and there is no winning one time in three and a half. The half-step reads as a precision a Monte-Carlo estimate does not have and stops the sentence being a picture a beginner can hold; the whole number stays inside the word "about". `docs/port/*.md` still record the desktop's half-step form as the behaviour being ported, and the parity tests pin the mobile rule |
+| Lobby §4.1 + P2 Options — `PlayCopy.bustedBotsRow` / `bustedBotsLabels` | no such setting: busted bots always rebuy | "Busted bots [Buy back in ● ][Leave]", with a caption that follows the choice | New setting, added on both editions at the same time (the desktop's own label is "When a bot busts [They buy back in][They leave]"). The engine option is `GameConfig.botRebuy`, default `true`, so a table that does not set it plays exactly as before |
+| Seat plate — `SeatPlate.bustedOut` | — | "busted out" in place of the stack line | A seat that has left a play-down table keeps its place on the felt, so it needs to say why it has no chips |
+| Results card result sentence (§4.12) — `ResultsCopy.potSentence` | "{names} wins with {hand}." for the **first** pot only | the same sentence per pot, and when a hand has more than one, each says which: "Polk wins the main pot with a pair of kings. You win the side pot with two pair." | The desktop named only `potResults[0]`'s winner, so a side pot left "You won the pot" sitting above "Polk wins with a pair of kings" with nothing to say which pot was whose. The desktop card has the same fix |
+| Results card + hand log — `ResultsCopy.uncalledBack`, `HandLog` | engine: "{name} gets {n} back (uncalled bet)" | "{name} gets {n} bb back — nobody called it." | The engine string is the PokerStars term; the card and the log say what it means in the words the table just used, and in big blinds like every other number on the phone |
 | Hand log — ticker (§4.2), P2 Log (§4.11), the P11 replayer's frames (§7.7) and "copy hand log" | "You raises to 58" · "You folds" · "You wins 88 (uncontested)" · "Hand #3 · blinds 10/20" | "You raise to 2.9 bb" · "You fold" · "You win 4.4 bb (uncontested)" · "Hand #3 · blinds 0.5 / 1 bb" | Below |
 
 **The hand log deviation in full.** `lib/engine` still writes the desktop strings — they are pinned

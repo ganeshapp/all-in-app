@@ -287,7 +287,10 @@ void main() {
       expect(s.players[6].committed, 20);
     });
 
-    test('unsupported seat count falls back to BTN/SB/BB/MP', () {
+    // Four-handed is a real table now — a play-down game passes through it
+    // on the way to heads-up — so it gets the labels a four-handed table
+    // uses rather than filling the gap with "MP".
+    test('a four-handed table deals BTN/SB/BB/UTG', () {
       const cfg = GameConfig(
         seats: 4,
         startingStack: 2000,
@@ -298,7 +301,7 @@ void main() {
       s.button = 1;
       s = startHand(s, rng: Random(1));
       expect(s.players.map((p) => p.position.label).toList(), [
-        'MP',
+        'UTG',
         'BTN',
         'SB',
         'BB',
@@ -598,31 +601,18 @@ void main() {
         25,
         605,
       ]);
+      // Five betting levels, but only two sets of players could win them:
+      // Polk's all-in caps the main pot, everything above it is one side pot.
       expect(_pots(s), [
         [
           [3],
-          30,
+          430,
           'Main pot',
         ],
         [
-          [3],
-          100,
+          [5],
+          1115,
           'Side pot 1',
-        ],
-        [
-          [3],
-          300,
-          'Side pot 2',
-        ],
-        [
-          [5],
-          315,
-          'Side pot 3',
-        ],
-        [
-          [5],
-          800,
-          'Side pot 4',
         ],
       ]);
       expect(s.summary!.heroNetChips, -605);
@@ -660,11 +650,8 @@ void main() {
         'river|deal|River — 8d 9d Qd Th 3s',
         'river|action|Hellmuth bets 100',
         'river|action|You calls 100',
-        'showdown|result|Polk wins 30 (Main pot)',
-        'showdown|result|Polk wins 100 (Side pot 1)',
-        'showdown|result|Polk wins 300 (Side pot 2)',
-        'showdown|result|Hellmuth wins 315 (Side pot 3)',
-        'showdown|result|Hellmuth wins 800 (Side pot 4)',
+        'showdown|result|Polk wins 430 (Main pot)',
+        'showdown|result|Hellmuth wins 1115 (Side pot 1)',
       ]);
       expect(s.players.map((p) => p.lastAction?.label).toList(), [
         'Call',
@@ -761,22 +748,18 @@ void main() {
       ]);
       expect(s.pot, 160);
       expect(_stacks(s), [2004, 2003, 2003, 2000, 2000, 1990]);
+      // Nobody was all-in short, so the blinds level and the betting level
+      // are the same contest: one pot the three of them split.
       expect(_pots(s), [
         [
           [0, 1, 2],
-          40,
-          'Main pot',
-        ],
-        [
-          [0, 1, 2],
-          120,
-          'Side pot 1',
+          160,
+          'Pot',
         ],
       ]);
       expect(s.summary!.heroNetChips, 4);
-      expect(_logLines(s).sublist(_logLines(s).length - 2), [
-        'showdown|result|You, Ivey, Negreanu wins 40 (Main pot)',
-        'showdown|result|You, Ivey, Negreanu wins 120 (Side pot 1)',
+      expect(_logLines(s).sublist(_logLines(s).length - 1), [
+        'showdown|result|You, Ivey, Negreanu wins 160 (Pot)',
       ]);
     });
 
@@ -868,26 +851,25 @@ void main() {
       expect(s.pot, 2500);
       expect(s.board, ['8d', '9d', 'Qd', 'Th', '3s']);
       expect(_stacks(s), [500, 2000]);
+      // Ivey's 2000 was only ever called for 500: the 1500 on top was never
+      // contested, so it comes back rather than being a pot he "wins".
       expect(_pots(s), [
         [
           [0, 1],
           1000,
-          'Main pot',
-        ],
-        [
-          [1],
-          1500,
-          'Side pot 1',
+          'Pot',
         ],
       ]);
+      expect(s.summary!.uncalled?.playerId, 1);
+      expect(s.summary!.uncalled?.amount, 1500);
       expect(s.summary!.heroNetChips, 0);
       expect(_logLines(s).sublist(3), [
         'preflop|action|You calls 460 (all-in)',
         'flop|deal|Flop — 8d 9d Qd',
         'turn|deal|Turn — 8d 9d Qd Th',
         'river|deal|River — 8d 9d Qd Th 3s',
-        'showdown|result|You, Ivey wins 1000 (Main pot)',
-        'showdown|result|Ivey wins 1500 (Side pot 1)',
+        'showdown|result|Ivey gets 1500 back (uncalled bet)',
+        'showdown|result|You, Ivey wins 1000 (Pot)',
       ]);
     });
 
@@ -1030,69 +1012,181 @@ void main() {
     });
   });
 
+  group('busted bots: rebuy vs play down', () {
+    const base = GameConfig(
+      seats: 6,
+      startingStack: 2000,
+      smallBlind: 10,
+      bigBlind: 20,
+    );
+
+    test('rebuy on (the default) tops a busted bot back up', () {
+      var s = createTable(base, rng: Random(3));
+      s.players[3].stack = 0;
+      s = startHand(s, rng: Random(3));
+      // `+ committed` because the top-up happens before the blinds go in.
+      expect(s.players[3].stack + s.players[3].committed, 2000);
+      expect(s.players[3].sittingOut, isFalse);
+      expect(seatedIds(s).length, 6);
+    });
+
+    test('rebuy off sits the bot out and deals short-handed', () {
+      var s = createTable(base.copyWith(botRebuy: false), rng: Random(3));
+      s.players[3].stack = 0;
+      s = startHand(s, rng: Random(3));
+
+      expect(s.players[3].sittingOut, isTrue);
+      expect(
+        s.players[3].hole,
+        isNull,
+        reason: 'a seat that is out is not dealt in',
+      );
+      expect(s.players[3].committedTotal, 0, reason: 'and posts nothing');
+      expect(seatedIds(s).length, 5);
+      expect(s.players.where((p) => p.hole != null).length, 5);
+      expect(s.button, isNot(3), reason: 'the button skips an empty seat');
+
+      final live = [for (final id in seatedIds(s)) s.players[id].position];
+      expect(live.toSet().length, 5, reason: 'five distinct positions');
+      expect(
+        live,
+        containsAll(<Position>[Position.btn, Position.sb, Position.bb]),
+      );
+      // Exactly one small and one big blind are posted, by seated players.
+      expect(s.players.where((p) => p.lastAction?.label == 'SB').length, 1);
+      expect(s.players.where((p) => p.lastAction?.label == 'BB').length, 1);
+    });
+
+    test('the hero is never sat out by the engine', () {
+      var s = createTable(base.copyWith(botRebuy: false), rng: Random(3));
+      s.players[0].stack = 0;
+      s = startHand(s, rng: Random(3));
+      expect(s.players[0].sittingOut, isFalse);
+      expect(s.players[0].stack + s.players[0].committed, 2000);
+    });
+
+    test('played down to two, the heads-up blind rule takes over', () {
+      var s = createTable(base.copyWith(botRebuy: false), rng: Random(3));
+      for (final id in [1, 2, 3, 4]) {
+        s.players[id].stack = 0;
+      }
+      s = startHand(s, rng: Random(3));
+
+      expect(seatedIds(s).length, 2);
+      final seated = [for (final id in seatedIds(s)) s.players[id]];
+      expect(
+        seated.map((p) => p.position).toSet(),
+        {Position.btn, Position.bb},
+        reason: 'heads-up: the button is the small blind',
+      );
+      // The button posts the small blind heads-up.
+      final btn = seated.firstWhere((p) => p.position == Position.btn);
+      expect(btn.lastAction?.label, 'SB');
+      expect(s.toAct, btn.id, reason: 'and acts first pre-flop');
+    });
+
+    test('a seat that is out sees no hands and keeps its HUD honest', () {
+      var s = createTable(base.copyWith(botRebuy: false), rng: Random(3));
+      s.players[3].stack = 0;
+      s = startHand(s, rng: Random(3));
+      final seen = s.players[3].handsSeen;
+      s = startHand(s, rng: Random(4));
+      expect(s.players[3].handsSeen, seen);
+    });
+  });
+
   group('buildSidePots', () {
     test('dead money in a level with no live player rolls forward', () {
-      final pots = buildSidePots(const [
+      final b = buildSidePots(const [
         PotContribution(id: 0, amt: 30, folded: true),
         PotContribution(id: 1, amt: 20, folded: false),
         PotContribution(id: 2, amt: 100, folded: true),
         PotContribution(id: 3, amt: 200, folded: false),
         PotContribution(id: 4, amt: 0, folded: true),
       ]);
-      expect(pots.map((p) => [p.amount, p.eligible]).toList(), [
+      // Player 3 out-committed everyone still live by 100, so that much was
+      // never called and comes back; the rest is one pot they share with 1
+      // plus one only 3 can win.
+      expect(b.uncalled?.playerId, 3);
+      expect(b.uncalled?.amount, 100);
+      expect(b.pots.map((p) => [p.amount, p.eligible]).toList(), [
         [
           80,
           [1, 3],
         ],
         [
-          30,
-          [3],
-        ],
-        [
-          140,
-          [3],
-        ],
-        [
-          100,
+          170,
           [3],
         ],
       ]);
     });
 
-    test(
-      'trailing dead level with no eligible player is dropped (as desktop)',
-      () {
-        final pots = buildSidePots(const [
-          PotContribution(id: 0, amt: 100, folded: true),
-          PotContribution(id: 1, amt: 50, folded: false),
-          PotContribution(id: 2, amt: 50, folded: false),
-        ]);
-        expect(pots.map((p) => [p.amount, p.eligible]).toList(), [
-          [
-            150,
-            [1, 2],
-          ],
-        ]);
-      },
-    );
+    test('a folded overbet is dead money, not a refund', () {
+      final b = buildSidePots(const [
+        PotContribution(id: 0, amt: 100, folded: true),
+        PotContribution(id: 1, amt: 50, folded: false),
+        PotContribution(id: 2, amt: 50, folded: false),
+      ]);
+      // Nothing goes back to a player who folded: their 50 above the others
+      // stays on the table for whoever wins.
+      expect(b.uncalled, isNull);
+      expect(b.pots.map((p) => [p.amount, p.eligible]).toList(), [
+        [
+          200,
+          [1, 2],
+        ],
+      ]);
+    });
 
     test('folded short contribution is dead money in the main pot', () {
-      final pots = buildSidePots(const [
+      final b = buildSidePots(const [
         PotContribution(id: 0, amt: 20, folded: false),
         PotContribution(id: 1, amt: 20, folded: false),
         PotContribution(id: 2, amt: 5, folded: true),
         PotContribution(id: 3, amt: 0, folded: true),
       ]);
-      expect(pots.map((p) => [p.amount, p.eligible]).toList(), [
+      // Both levels are contested by the same two players, so they are one
+      // pot — the old split read as two separate contests.
+      expect(b.uncalled, isNull);
+      expect(b.pots.map((p) => [p.amount, p.eligible]).toList(), [
         [
-          15,
-          [0, 1],
-        ],
-        [
-          30,
+          45,
           [0, 1],
         ],
       ]);
+    });
+
+    test('levels with the same contenders merge; real all-ins still split', () {
+      final merged = buildSidePots(const [
+        PotContribution(id: 0, amt: 605, folded: false),
+        PotContribution(id: 1, amt: 5, folded: true),
+        PotContribution(id: 2, amt: 205, folded: true),
+        PotContribution(id: 3, amt: 100, folded: false),
+        PotContribution(id: 5, amt: 605, folded: false),
+      ]);
+      expect(merged.pots.map((p) => p.amount).toList(), [405, 1115]);
+      expect(merged.pots.map((p) => p.eligible).toList(), [
+        [0, 3, 5],
+        [0, 5],
+      ]);
+
+      final split = buildSidePots(const [
+        PotContribution(id: 1, amt: 300, folded: false),
+        PotContribution(id: 2, amt: 800, folded: false),
+        PotContribution(id: 3, amt: 1500, folded: false),
+        PotContribution(id: 5, amt: 1500, folded: false),
+      ]);
+      expect(split.pots.map((p) => p.amount).toList(), [1200, 1500, 1400]);
+    });
+
+    test('an unmatched bet goes back instead of becoming a side pot', () {
+      final b = buildSidePots(const [
+        PotContribution(id: 0, amt: 500, folded: false),
+        PotContribution(id: 1, amt: 2000, folded: false),
+      ]);
+      expect(b.pots.map((p) => p.amount).toList(), [1000]);
+      expect(b.uncalled?.playerId, 1);
+      expect(b.uncalled?.amount, 1500);
     });
   });
 
@@ -1167,7 +1261,12 @@ void main() {
         const deckLeft = {0: 40, 3: 36, 4: 34, 5: 32};
         expect(state.deck.length, deckLeft[state.board.length]);
         final summary = state.summary!;
-        final dist = summary.potResults.fold<num>(0, (a, b) => a + b.amount);
+        // Awarded pots plus any returned bet the pot results do not already
+        // carry (a fold-out reports the whole pot, `inPot: true`).
+        final u = summary.uncalled;
+        final dist =
+            summary.potResults.fold<num>(0, (a, b) => a + b.amount) +
+            (u != null && !u.inPot ? u.amount : 0);
         expect(dist, state.pot, reason: 'pot fully distributed');
         expect(summary.handNumber, state.handNumber);
         expect(
@@ -1294,10 +1393,10 @@ void main() {
           final totalAfter = state.players.fold(0, (a, p) => a + p.stack);
           expect(totalAfter, totalBefore, reason: '$name: chip conservation');
           expect(state.players.every((p) => p.stack >= 0), isTrue);
-          final dist = state.summary!.potResults.fold<num>(
-            0,
-            (a, b) => a + b.amount,
-          );
+          final u = state.summary!.uncalled;
+          final dist =
+              state.summary!.potResults.fold<num>(0, (a, b) => a + b.amount) +
+              (u != null && !u.inPot ? u.amount : 0);
           expect(dist, state.pot, reason: '$name: pot fully distributed');
         }
       });

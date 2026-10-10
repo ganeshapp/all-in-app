@@ -61,6 +61,11 @@ abstract final class HandLog {
   /// `You, Ivey wins 520 (Pot)` / `Polk wins 88 (uncontested)`.
   static final RegExp _result = RegExp(r'^(.+?) wins ([\d.]+) \(([^()]*)\)$');
 
+  /// `Ivey gets 155 back (uncalled bet)` — chips nobody matched, handed back.
+  static final RegExp _returned = RegExp(
+    r'^(.+?) gets ([\d.]+) back \(uncalled bet\)$',
+  );
+
   /// Second-person form of every verb the engine writes.
   static const Map<String, String> _secondPerson = {
     'folds': 'fold',
@@ -132,6 +137,20 @@ abstract final class HandLog {
         text:
             '${_join(names)} ${plural ? 'win' : 'wins'} $amount '
             '(${result.group(3)})',
+        isHero: hero,
+      );
+    }
+
+    final returned = _returned.firstMatch(raw);
+    if (returned != null) {
+      final name = returned.group(1)!;
+      final hero = name == heroName;
+      final amount = _bb(double.parse(returned.group(2)!), bigBlind);
+      return HandLogLine(
+        entry: entry,
+        // "nobody called it" says what an uncalled bet is, in the words the
+        // table just used, rather than making the reader know the term.
+        text: '$name ${hero ? 'get' : 'gets'} $amount back — nobody called it',
         isHero: hero,
       );
     }

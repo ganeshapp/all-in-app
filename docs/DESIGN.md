@@ -258,7 +258,7 @@ to that modal. Everything is offline; there are no loading screens, only computa
 | Replayer (P11) | Pops to where it came from. |
 | Reset dialog (X2) | Cancel. |
 
-**Blocked back** (P10-busted page 1, O0/D5 page 1): a 120 ms 4 pt horizontal shake of the page
+**Blocked back** (O0/D5 page 1): a 120 ms 4 pt horizontal shake of the page
 content + `selectionClick`. **Under reduced motion the shake is dropped entirely** — the haptic
 alone is the response, and if Settings → Haptics is also off nothing happens (the screen is
 already telling the user what the only exit is). Motion is never the sole channel for a refusal.
@@ -451,6 +451,10 @@ when due, "Review these spots ›".
 │ │      ╰──────────────────────╯        │ │
 │ │ Table   [ Heads-up ][ 6-max ● ][ 9-max ]│ │ segmented 44 (desktop labels)
 │ │ Antes   [ None ● ][ 0.25 bb ]        │ │ segmented 44
+│ │ Busted bots [ Buy back in ● ][ Leave ]│ │ segmented 44 *(mobile)*; §4.2's play-down table
+│ │ A busted bot gets a fresh 100 bb, so │ │ 12 pt faint, follows the choice:
+│ │ every hand is a full table.          │ │  "…leaves for good and the table plays down.
+│ │                                      │ │   Fewer players means you can play far more hands."
 │ │ ⓘ Coach charts assume 6-max —        │ │ 12 pt faint, only when seats ≠ 6 (desktop)
 │ │   verdicts at other table sizes use  │ │
 │ │   the nearest position as an         │ │
@@ -848,9 +852,18 @@ their amounts into the hero strip ("Call" + strip line "To call 2 bb").
   chips.
 - **Compact seat** (9-max): 84×50 — see §4.2.2. **Hero seat** has no plate on the felt: the hero
   strip carries it (§4.4).
-- Sitting out / busting bots do not exist (bots always play; a bot at 0 bb is rebuilt to 100 bb
-  at the next deal exactly as the desktop `deal()` does — the plate shows "100 bb" again with a
-  one-hand "rebought" caption *(new)* in place of the HUD line).
+- What happens to a bot at 0 bb is the table's **Busted bots** setting (§4.1), because both
+  answers teach something:
+  - **Buy back in** (default, and what the desktop `deal()` has always done): the bot is rebuilt
+    to 100 bb at the next deal, the plate shows "100 bb" again with a one-hand "rebought" caption
+    *(new)* in place of the HUD line. Every hand is a full-ring rep.
+  - **Leave**: the bot is out for good. Its plate keeps its place on the felt — the table must not
+    reshuffle itself every time somebody goes — and reads "busted out" in place of the stack; it
+    is dealt no cards, posts nothing, and its HUD stops counting hands. The table plays down
+    through every size to heads-up, with the blinds, the button and the position labels counting
+    only the players still in it (§4.2 `POS_BY_COUNT`). This is the point of the setting: a
+    four-handed table is a different game from a six-handed one, and practising the adjustment
+    needs the table to actually shrink. When the hero is the last player left the session ends.
 
 **P6 — Player sheet** (**sheet M**, 55 %). Its content below measures **≈ 380 pt** and the S
 detent is auto-height *capped at 40 % of the viewport* — 338 pt at 844, 312 pt at 780 — so P6
@@ -1099,7 +1112,8 @@ options.
   "Step through each player's action yourself." (the "→ key" clause is dropped) / "Bots act
   automatically at the chosen speed."; Speed `Slow` / `Normal` / `Fast` (1100 / 700 / 360 ms,
   Auto only); switches: EV Coach · Auto-deal next hand · Realistic reveals · Four-colour deck;
-  rows "Seats — 6-max" and "Antes — none" read "Ends this session first" *(new)* and are not
+  rows "Seats — 6-max", "Antes — none" and "Busted bots — buy back in" read "Ends this session
+  first" *(new)* and are not
   editable mid-session; "End session" (danger ghost 48) at the bottom.
 - Switching Step ↔ Auto mid-hand takes effect at the next tick (`setSettings`).
 - A hand in Step: a quiet table; the turn ring breathes on the seat that will act; the ticker
@@ -1671,7 +1685,9 @@ At `phase == hand-over` (all steps skippable by tapping Next hand):
   counts down in the context row; **touching the results card cancels the countdown** and the
   button becomes explicit. Under reduced motion the ring is a static "3 s" caption that counts.
 - Bust (hero stack 0 at deal): the bar reads "Session over" and P10 opens (title "Session over
-  — you busted", no ✕, only "New session").
+  — you busted", no ✕). "New session" rebuilds the table and "Done" leaves for the lobby; **back
+  does what Done does** rather than being refused. The page had neither, which left starting
+  another session as the only way off it — a refusal needs somewhere else to go.
 
 ### 4.13 Session stats, end session, summary (P10), share
 
@@ -1712,7 +1728,7 @@ P10; **closing P10 with ✕ returns to the table and the session continues** *(d
 │ ┌────────────┐ ┌───────────────────────┐ │
 │ │ ⇪ Share    │ │     New session       │ │ 56; Share = system share sheet
 │ └────────────┘ └───────────────────────┘ │
-│                  Done                    │ ghost 44 → lobby (hidden when busted)
+│                  Done                    │ ghost 44 → lobby (busted too: the way out)
 └──────────────────────────────────────────┘
 ```
 
@@ -2915,7 +2931,7 @@ that looks like a failed render. Each one is *replaced*:
 | Equity "Calculating…" button (§6.5) | busy spinner | the label reads **"Calculating…"** and the button is disabled; no spinner |
 | Lesson read-progress line (§6.2) | grows with scroll | unchanged — it is scroll position, not an animation |
 
-**A refusal is never motion-only.** The blocked-back shake (§2.5: P10-busted page 1, O0 page 1,
+**A refusal is never motion-only.** The blocked-back shake (§2.5: O0 page 1,
 D5 Q1) is dropped entirely under reduced motion and the `selectionClick` is the whole response;
 with Settings → Haptics also off, nothing happens and the screen's own copy carries it. Where
 §5.8 and §8.1 say "a subtle shake" they mean exactly this rule.
@@ -3071,7 +3087,7 @@ convention worth keeping for muscle memory across devices); no mirror setting in
 | Table | mid-hand snapshot unreadable | fresh hand + "that hand couldn't be restored" caption |
 | Table | snapshot write fails | P14 dialog on leave; a persistent 18 pt ticker "Can't save — free some space" *(new)* |
 | Table | bot at 0 bb | rebuilt to 100 bb at the next deal with the "rebought" caption |
-| Table | hero busted | P10 "Session over — you busted", no ✕ |
+| Table | hero busted | P10 "Session over — you busted", no ✕; Done and back → lobby |
 | Table | coach evaluating slowly (High sim quality, 9-max) | the chip zone shows a 3-dot shimmer for ≤ 1.5 s; the hand continues; a verdict arriving after the hand ended is recorded, not shown |
 | Table | coach off | no badge/chips; price line still on |
 | Table | Auto + any sheet / P7 / blocking note | loop paused (`paused || guess.open`) |
@@ -3228,7 +3244,7 @@ rows are places where this spec deliberately departs from `docs/port/*.md`.
 | Push notifications / streak reminders | Principle 4 |
 | Card sounds | Deferred; haptics carry the feedback |
 | Landscape / tablet layouts | Portrait-first; tablet is a centred phone column |
-| Sitting-out / rebuy UI | Bots auto-rebuild to 100 bb (engine); a one-hand caption suffices |
+| Mid-session seat management (sit out, add seat, rebuy prompt) | The table's **Busted bots** setting (§4.1) decides it once at set-up: rebuy with a one-hand caption, or leave and play down (§4.2) |
 
 ---
 

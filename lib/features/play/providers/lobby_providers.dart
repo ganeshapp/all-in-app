@@ -28,11 +28,11 @@ class LobbyDraftNotifier extends Notifier<TableOptions> {
   @override
   TableOptions build() => ref.read(tableOptionsStoreProvider).load();
 
-  void setSeats(int seats) =>
-      state = TableOptions(seats: seats, ante: state.ante);
+  void setSeats(int seats) => state = state.copyWith(seats: seats);
 
-  void setAnte(int ante) =>
-      state = TableOptions(seats: state.seats, ante: ante);
+  void setAnte(int ante) => state = state.copyWith(ante: ante);
+
+  void setBotRebuy(bool rebuy) => state = state.copyWith(botRebuy: rebuy);
 }
 
 final lobbyDraftProvider = NotifierProvider<LobbyDraftNotifier, TableOptions>(

@@ -105,27 +105,71 @@ int _seatAtOffset(TableState s, int offset) =>
     (s.button + offset) % s.config.seats;
 
 void _assignPositions(TableState s) {
-  final n = s.config.seats;
-  for (int seat = 0; seat < n; seat++) {
-    final off = (seat - s.button + n) % n;
-    if (n == 2) {
-      // Heads-up: the button IS the small blind.
-      s.players[seat].position = off == 0 ? Position.btn : Position.bb;
-    } else if (n == 9) {
-      s.players[seat].position = _pos9[off];
-    } else if (n == 6) {
-      s.players[seat].position = _pos6[off];
-    } else {
-      s.players[seat].position =
-          off == 0
-              ? Position.btn
-              : off == 1
-              ? Position.sb
-              : off == 2
-              ? Position.bb
-              : Position.mp;
-    }
+  final order = _orderFromButton(s);
+  final table =
+      order.length < _posByCount.length ? _posByCount[order.length] : _pos9;
+  for (int off = 0; off < order.length; off++) {
+    s.players[order[off]].position =
+        off < table.length ? table[off] : Position.mp;
   }
+}
+
+/// Seat labels by how many players are actually in the hand, indexed from the
+/// button. A table playing down (`botRebuy: false`) passes through every size
+/// on its way to heads-up, and the charts only know six names, so the short
+/// tables drop the middle ones in the order a real table does.
+const List<List<Position>> _posByCount = [
+  [],
+  [Position.btn],
+  [Position.btn, Position.bb], // heads-up: the button is the small blind
+  [Position.btn, Position.sb, Position.bb],
+  [Position.btn, Position.sb, Position.bb, Position.utg],
+  [Position.btn, Position.sb, Position.bb, Position.utg, Position.co],
+  _pos6,
+  [
+    Position.btn,
+    Position.sb,
+    Position.bb,
+    Position.utg,
+    Position.utg,
+    Position.mp,
+    Position.co,
+  ],
+  [
+    Position.btn,
+    Position.sb,
+    Position.bb,
+    Position.utg,
+    Position.utg,
+    Position.mp,
+    Position.mp,
+    Position.co,
+  ],
+  _pos9,
+];
+
+/// Seats still in the game, in seat order.
+List<int> seatedIds(TableState s) => [
+  for (final p in s.players)
+    if (!p.sittingOut) p.id,
+];
+
+/// Seats still in the game, ordered from the button round.
+List<int> _orderFromButton(TableState s) {
+  final seated = seatedIds(s);
+  final i = seated.indexOf(s.button);
+  final at = i < 0 ? 0 : i;
+  return [...seated.sublist(at), ...seated.sublist(0, at)];
+}
+
+/// The next seat after [from] that is still in the game.
+int _nextSeated(TableState s, int from) {
+  final n = s.config.seats;
+  for (int k = 1; k <= n; k++) {
+    final q = (from + k) % n;
+    if (!s.players[q].sittingOut) return q;
+  }
+  return from;
 }
 
 void _commit(TableState s, Player p, int amount) {
@@ -148,15 +192,35 @@ void _postBlind(TableState s, int seat, int amount, String label) {
 TableState startHand(TableState prev, {Random? rng}) {
   final s = prev.clone();
   s.handNumber += 1;
-  if (s.handNumber > 1) s.button = (s.button + 1) % s.config.seats;
+
+  // An empty stack is either topped back up (the default: the table keeps its
+  // shape so every hand is a full-ring rep) or it is the end of that bot's
+  // game, and the table plays on short-handed. The hero is never sat out
+  // here — the session layer ends the session on a busted hero.
+  final rebuy = s.config.botRebuy;
+  for (final p in s.players) {
+    if (p.stack > 0 || p.sittingOut) continue;
+    if (rebuy || p.isHero) {
+      p.stack = s.config.startingStack;
+    } else {
+      p.sittingOut = true;
+    }
+  }
+
+  // The button only ever sits on a player who is still in the game. The
+  // `handNumber` guard keeps hand #1 on the button `createTable` drew — but
+  // not when that seat is already out, which a restored play-down table can
+  // hand us.
+  if (s.handNumber > 1 || s.players[s.button].sittingOut) {
+    s.button = _nextSeated(s, s.button);
+  }
 
   for (final p in s.players) {
-    if (p.stack <= 0) {
-      p.stack = s.config.startingStack; // auto-rebuy for continuous training
-    }
     p.hole = null;
     p.revealed = false;
-    p.hasFolded = false;
+    // A seat that is out plays no part in the hand, and every "is this player
+    // still in?" test in the engine already asks `hasFolded`.
+    p.hasFolded = p.sittingOut;
     p.foldedStreet = null;
     p.vpipThisHand = false;
     p.pfrThisHand = false;
@@ -165,7 +229,7 @@ TableState startHand(TableState prev, {Random? rng}) {
     p.committedTotal = 0;
     p.acted = false;
     p.lastAction = null;
-    p.handsSeen += 1;
+    if (!p.sittingOut) p.handsSeen += 1;
   }
 
   s.board = <Card>[];
@@ -181,6 +245,7 @@ TableState startHand(TableState prev, {Random? rng}) {
 
   s.deck = shuffle(makeDeck(), rng: rng);
   for (final p in s.players) {
+    if (p.sittingOut) continue;
     final a = s.deck.removeLast();
     final b = s.deck.removeLast();
     p.hole = <Card>[a, b];
@@ -192,6 +257,7 @@ TableState startHand(TableState prev, {Random? rng}) {
   final ante = s.config.ante;
   if (ante > 0) {
     for (final p in s.players) {
+      if (p.sittingOut) continue;
       final a = min(ante, p.stack);
       p.stack -= a;
       p.committedTotal += a;
@@ -200,10 +266,12 @@ TableState startHand(TableState prev, {Random? rng}) {
     }
   }
 
-  // Heads-up: the button posts the SMALL blind and acts first preflop.
-  final headsUp = s.config.seats == 2;
-  final sbSeat = headsUp ? s.button : _seatAtOffset(s, 1);
-  final bbSeat = headsUp ? _seatAtOffset(s, 1) : _seatAtOffset(s, 2);
+  // Blinds and the first actor count round the players still in the game, so
+  // a table that has played down to three deals like a three-handed table.
+  final order = _orderFromButton(s);
+  final headsUp = order.length == 2;
+  final sbSeat = headsUp ? order[0] : order[1 % order.length];
+  final bbSeat = headsUp ? order[1] : order[2 % order.length];
   _postBlind(s, sbSeat, s.smallBlind, 'SB');
   _postBlind(s, bbSeat, s.bigBlind, 'BB');
   s.aggressor = bbSeat;
@@ -219,7 +287,7 @@ TableState startHand(TableState prev, {Random? rng}) {
   s.toAct =
       headsUp
           ? _nextLiveActor(s, sbSeat, true)
-          : _nextLiveActor(s, _seatAtOffset(s, 3), true);
+          : _nextLiveActor(s, order[3 % order.length], true);
   return s;
 }
 
@@ -476,11 +544,67 @@ class RawPot {
   String toString() => 'RawPot($amount, $eligible)';
 }
 
-/// Split total contributions into main + side pots. Folded players' chips are
-/// dead money in whichever level they reached; a level with no live player
-/// rolls forward into the next one.
-List<RawPot> buildSidePots(List<PotContribution> contribs) {
-  var rem = contribs.where((c) => c.amt > 0).toList();
+class PotBreakdown {
+  const PotBreakdown({required this.pots, this.uncalled});
+  final List<RawPot> pots;
+
+  /// Set when the last bet went uncalled and came back to its owner.
+  final UncalledBet? uncalled;
+}
+
+/// The top of the last bet, when only one player put it in, was never called:
+/// the dealer pushes it straight back, so it is not part of any pot. A folded
+/// top contributor is a different thing — those chips are dead money and stay
+/// in, which is why this only fires for a live player.
+({List<PotContribution> rest, UncalledBet? uncalled}) _takeUncalled(
+  List<PotContribution> contribs,
+) {
+  final live = contribs.where((c) => c.amt > 0).toList();
+  if (live.length < 2) return (rest: contribs, uncalled: null);
+  final byAmt = List<PotContribution>.of(live)..sort((a, b) => b.amt - a.amt);
+  final top = byAmt[0];
+  final second = byAmt[1];
+  if (top.folded || top.amt <= second.amt) {
+    return (rest: contribs, uncalled: null);
+  }
+  return (
+    rest: [
+      for (final c in contribs)
+        if (c.id == top.id)
+          PotContribution(id: c.id, amt: second.amt, folded: c.folded)
+        else
+          c,
+    ],
+    uncalled: UncalledBet(
+      playerId: top.id,
+      amount: top.amt - second.amt,
+      inPot: false,
+    ),
+  );
+}
+
+bool _sameEligible(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (int i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+/// Split total contributions into main + side pots.
+///
+/// A side pot exists to separate chips a short all-in player cannot win, so a
+/// new one starts only where the set of players eligible for it changes.
+/// Consecutive betting levels contested by exactly the same people are one
+/// pot — splitting on every level turned a single three-way all-in into
+/// "Main pot / Side pot 1 / Side pot 2 / Side pot 3", which reads like three
+/// separate contests that never happened.
+///
+/// Folded players' chips are dead money in whichever level they reached; a
+/// level with no live player rolls forward into the next one.
+PotBreakdown buildSidePots(List<PotContribution> contribs) {
+  final taken = _takeUncalled(contribs);
+  var rem = taken.rest.where((c) => c.amt > 0).toList();
   final pots = <RawPot>[];
   int carry = 0;
   while (rem.isNotEmpty) {
@@ -494,7 +618,14 @@ List<RawPot> buildSidePots(List<PotContribution> contribs) {
       carry = amount; // dead money rolls forward
     } else {
       carry = 0;
-      pots.add(RawPot(amount: amount, eligible: eligible));
+      if (pots.isNotEmpty && _sameEligible(pots.last.eligible, eligible)) {
+        pots[pots.length - 1] = RawPot(
+          amount: pots.last.amount + amount,
+          eligible: eligible,
+        );
+      } else {
+        pots.add(RawPot(amount: amount, eligible: eligible));
+      }
     }
     rem =
         rem
@@ -505,13 +636,33 @@ List<RawPot> buildSidePots(List<PotContribution> contribs) {
             .where((c) => c.amt > 0)
             .toList();
   }
-  return pots;
+  // Dead money with no level above it to join (only reachable when a folded
+  // player out-contributed everyone still live) belongs to the last real pot
+  // rather than vanishing off the table.
+  if (carry > 0 && pots.isNotEmpty) {
+    pots[pots.length - 1] = RawPot(
+      amount: pots.last.amount + carry,
+      eligible: pots.last.eligible,
+    );
+  }
+  return PotBreakdown(pots: pots, uncalled: taken.uncalled);
 }
 
 void _settleByFold(TableState s, int winnerId) {
   final w = s.players[winnerId];
   final amount = s.pot;
   w.stack += amount;
+  // Everyone folded, so the top of the winner's own bet was never called.
+  // The pot result still reports the whole pot — the number the table has
+  // been showing all hand — but the refund is recorded so the hand history
+  // can account for it exactly instead of re-deriving it.
+  int matched = 0;
+  for (final p in s.players) {
+    if (p.id != winnerId && p.committedTotal > matched) {
+      matched = p.committedTotal;
+    }
+  }
+  final excess = w.committedTotal - matched;
   s.summary = HandSummary(
     handNumber: s.handNumber,
     potResults: [
@@ -520,6 +671,10 @@ void _settleByFold(TableState s, int winnerId) {
     showdown: const [],
     board: List<Card>.of(s.board),
     heroNetChips: s.players[0].stack - s.stacksAtStart[0],
+    uncalled:
+        excess > 0
+            ? UncalledBet(playerId: winnerId, amount: excess, inPot: true)
+            : null,
   );
   _pushLog(s, s.street, '${w.name} wins $amount (uncontested)', LogKind.result);
   // Learning reveal: at hand end every dealt hand is shown, folds included.
@@ -554,8 +709,23 @@ void _settleShowdown(TableState s) {
             ),
           )
           .toList();
-  final pots = buildSidePots(contribs);
+  final breakdown = buildSidePots(contribs);
+  final pots = breakdown.pots;
+  final uncalled = breakdown.uncalled;
   final potResults = <PotResult>[];
+
+  // The uncalled chips go back before anything is awarded, exactly as a
+  // dealer returns them — they were never anybody's to win.
+  if (uncalled != null) {
+    s.players[uncalled.playerId].stack += uncalled.amount;
+    _pushLog(
+      s,
+      Street.showdown,
+      '${s.players[uncalled.playerId].name} gets ${uncalled.amount} back '
+      '(uncalled bet)',
+      LogKind.result,
+    );
+  }
 
   for (int idx = 0; idx < pots.length; idx++) {
     final pot = pots[idx];
@@ -612,6 +782,7 @@ void _settleShowdown(TableState s) {
     showdown: showdown,
     board: List<Card>.of(s.board),
     heroNetChips: s.players[0].stack - s.stacksAtStart[0],
+    uncalled: uncalled,
   );
   for (final pr in potResults) {
     _pushLog(

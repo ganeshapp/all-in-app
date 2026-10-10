@@ -163,6 +163,7 @@ class SessionState {
     this.surfacesOpen = 0,
     this.sessionEnded = false,
     this.busted = false,
+    this.tableCleared = false,
     this.reviewLog = const [],
     this.activeReviewId,
     this.pendingBlocking,
@@ -215,6 +216,11 @@ class SessionState {
 
   /// The hero busted: P10 has no ✕ and only "New session" continues.
   final bool busted;
+
+  /// Playing down, the other terminal ending: every bot is out of chips, so
+  /// there is nobody left to deal to. Same shape as [busted] — the table
+  /// cannot deal another hand, so P10 must not be closed back into it.
+  final bool tableCleared;
 
   /// The coach's notes for the **current** hand, oldest first.
   final List<CoachReview> reviewLog;
@@ -270,6 +276,7 @@ class SessionState {
     int? surfacesOpen,
     bool? sessionEnded,
     bool? busted,
+    bool? tableCleared,
     List<CoachReview>? reviewLog,
     int? activeReviewId,
     bool clearActiveReview = false,
@@ -302,6 +309,7 @@ class SessionState {
     surfacesOpen: surfacesOpen ?? this.surfacesOpen,
     sessionEnded: sessionEnded ?? this.sessionEnded,
     busted: busted ?? this.busted,
+    tableCleared: tableCleared ?? this.tableCleared,
     reviewLog: reviewLog ?? this.reviewLog,
     activeReviewId:
         clearActiveReview ? null : (activeReviewId ?? this.activeReviewId),
@@ -544,7 +552,15 @@ class SessionNotifier extends Notifier<SessionState> {
       p.name = saved.name;
       p.archetype = saved.archetype;
       p.dials = saved.dials;
-      p.stack = saved.stack > 0 ? saved.stack : table.config.startingStack;
+      // A seat that busted out of a play-down table stays out: topping it
+      // back up here would quietly undo the mode the user chose.
+      p.sittingOut = saved.sittingOut;
+      p.stack =
+          saved.stack > 0
+              ? saved.stack
+              : (table.config.botRebuy && !saved.sittingOut
+                  ? table.config.startingStack
+                  : 0);
       p.handsSeen = saved.handsSeen;
       p.vpipCount = saved.vpipCount;
       p.pfrCount = saved.pfrCount;
@@ -565,6 +581,7 @@ class SessionNotifier extends Notifier<SessionState> {
     smallBlind: kSmallBlind,
     bigBlind: kBigBlind,
     ante: o.ante,
+    botRebuy: o.botRebuy,
   );
 
   static double _jitter(
@@ -625,35 +642,60 @@ class SessionNotifier extends Notifier<SessionState> {
       return;
     }
 
-    final pre = current.clone();
-    final rebought = <int>{};
-    for (final p in pre.players) {
-      if (!p.isHero && p.stack <= 0) {
-        p.stack = pre.config.startingStack;
-        rebought.add(p.id);
-      }
+    // Playing down: once the last bot has gone there is nobody left to deal
+    // to, and the hero has taken the whole table.
+    if (!current.config.botRebuy &&
+        current.players.where((p) => !p.sittingOut && p.stack > 0).length < 2) {
+      state = state.copyWith(sessionEnded: true, tableCleared: true);
+      return;
     }
 
+    final pre = current.clone();
+    // `startHand` owns what happens to an empty stack — topping it up or
+    // sitting it out, depending on the table. The caption only needs to know
+    // which seats it topped up.
+    final rebought = <int>{
+      if (pre.config.botRebuy)
+        for (final p in pre.players)
+          if (!p.isHero && p.stack <= 0) p.id,
+    };
+
     final next = startHand(pre, rng: _rng);
-    final seats = next.config.seats;
     _currentHH = HHHand(
       id: next.handNumber,
       startedAt: _now,
       button: next.button,
       sb: next.smallBlind,
       bb: next.bigBlind,
-      sbSeat: seats == 2 ? next.button : (next.button + 1) % seats,
+      // The table size is a property of the table, not of how many seats are
+      // occupied this hand: a play-down session must not export itself as
+      // 6-max, then 5-max, then 4-max.
+      tableSize: next.config.seats,
+      // Who actually posted, so a short-handed table exports correctly.
+      sbSeat:
+          next.players
+              .firstWhere(
+                (p) => p.lastAction?.label == 'SB',
+                orElse: () => next.players[next.button],
+              )
+              .id,
       bbSeat:
-          seats == 2 ? (next.button + 1) % seats : (next.button + 2) % seats,
+          next.players
+              .firstWhere(
+                (p) => p.lastAction?.label == 'BB',
+                orElse: () => next.players[next.button],
+              )
+              .id,
       seats: [
         for (final p in next.players)
-          HHSeat(
-            seat: p.id,
-            name: p.name,
-            stack: next.stacksAtStart[p.id],
-            isHero: p.isHero,
-            position: p.position,
-          ),
+          if (!p.sittingOut)
+            HHSeat(
+              seat: p.id,
+              name: p.name,
+              stack: next.stacksAtStart[p.id],
+              isHero: p.isHero,
+              position: p.position,
+            ),
       ],
       holes: {0: next.players[0].hole},
     );
@@ -757,6 +799,7 @@ class SessionNotifier extends Notifier<SessionState> {
     if (hh != null) {
       hh.board = List<Card>.of(next.board);
       hh.potResults = List<PotResult>.of(summary?.potResults ?? const []);
+      hh.uncalled = summary?.uncalled;
       hh.heroNet = summary?.heroNetChips ?? 0;
       for (final p in next.players) {
         hh.holes[p.id] = p.hole;

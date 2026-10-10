@@ -25,6 +25,7 @@ Map<String, Object?> gameConfigToJson(GameConfig c) => {
   'smallBlind': c.smallBlind,
   'bigBlind': c.bigBlind,
   'ante': c.ante,
+  'botRebuy': c.botRebuy,
 };
 
 GameConfig gameConfigFromJson(Map<String, Object?> j) => GameConfig(
@@ -33,6 +34,8 @@ GameConfig gameConfigFromJson(Map<String, Object?> j) => GameConfig(
   smallBlind: (j['smallBlind'] as num).toInt(),
   bigBlind: (j['bigBlind'] as num).toInt(),
   ante: (j['ante'] as num?)?.toInt() ?? 0,
+  // A snapshot written before the setting existed was playing with rebuys.
+  botRebuy: j['botRebuy'] != false,
 );
 
 Map<String, Object?> dialsToJson(Dials d) => {
@@ -187,7 +190,20 @@ Map<String, Object?> handSummaryToJson(HandSummary s) => {
   'showdown': s.showdown.map(showdownEntryToJson).toList(),
   'board': s.board,
   'heroNetChips': s.heroNetChips,
+  if (s.uncalled != null) 'uncalled': uncalledBetToJson(s.uncalled!),
 };
+
+Map<String, Object?> uncalledBetToJson(UncalledBet u) => {
+  'playerId': u.playerId,
+  'amount': u.amount,
+  'inPot': u.inPot,
+};
+
+UncalledBet uncalledBetFromJson(Map<String, Object?> j) => UncalledBet(
+  playerId: (j['playerId'] as num).toInt(),
+  amount: (j['amount'] as num).toInt(),
+  inPot: j['inPot'] == true,
+);
 
 HandSummary handSummaryFromJson(Map<String, Object?> j) => HandSummary(
   handNumber: (j['handNumber'] as num).toInt(),
@@ -201,6 +217,14 @@ HandSummary handSummaryFromJson(Map<String, Object?> j) => HandSummary(
           .toList(),
   board: (j['board'] as List).cast<Card>(),
   heroNetChips: (j['heroNetChips'] as num).toInt(),
+  // `potResults` deliberately excludes chips that were handed back, so the
+  // resumed overlay needs this to explain the stacks it is showing.
+  uncalled:
+      j['uncalled'] == null
+          ? null
+          : uncalledBetFromJson(
+            (j['uncalled']! as Map).cast<String, Object?>(),
+          ),
 );
 
 /// The whole table, losslessly.

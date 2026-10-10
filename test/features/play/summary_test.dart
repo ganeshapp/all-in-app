@@ -408,7 +408,9 @@ void main() {
       expect(container.read(sessionProvider).active, isTrue);
     });
 
-    testWidgets('busted: no ✕, no Done, and back is refused', (tester) async {
+    testWidgets('busted: no ✕, but Done and back still lead out', (
+      tester,
+    ) async {
       final container = summaryContainer();
       playSession(container, hands: 1);
       // Bust the hero: an empty stack at the next deal ends the session.
@@ -426,13 +428,18 @@ void main() {
       await settleFrames(tester);
 
       expect(find.text(SummaryCopy.bustedTitle), findsOneWidget);
+      // ✕ is gone — there is no table left to return to — but the page is not
+      // a dead end: "New session" rebuilds it and "Done" leaves for the lobby.
       expect(find.bySemanticsLabel('Close'), findsNothing);
-      expect(find.text(SummaryCopy.done), findsNothing);
       expect(find.text(SummaryCopy.newSession), findsOneWidget);
+      expect(find.text(SummaryCopy.done), findsOneWidget);
 
+      // System back does what Done does rather than refusing: it ends the
+      // session and drops the user back at the lobby, where the tab bar is.
       await systemBack(tester);
       await settleFrames(tester);
-      expect(find.byType(SessionSummaryScreen), findsOneWidget);
+      expect(find.byType(SessionSummaryScreen), findsNothing);
+      expect(container.read(sessionProvider).active, isFalse);
     });
 
     testWidgets('the read-only copy has Done and the session stamp', (

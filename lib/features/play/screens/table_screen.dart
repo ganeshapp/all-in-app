@@ -490,6 +490,7 @@ class _TableScreenState extends ConsumerState<TableScreen>
                               ref
                                   .read(sessionProvider.notifier)
                                   .cancelAutoDeal(),
+                      onResultsExpand: _expandResults,
                     ),
                   ),
                 ),
@@ -823,6 +824,18 @@ class _TableScreenState extends ConsumerState<TableScreen>
     if (anyEye) marks.request(CoachMark.eye);
   }
 
+  /// Tapping the collapsed strip asks for the reveals back, so the heuristic
+  /// has to let go of them: without this the strip answered every tap with
+  /// nothing until two slow hands happened to reset the run.
+  void _expandResults() {
+    ref.read(sessionProvider.notifier).cancelAutoDeal();
+    if (!_collapseResults) return;
+    setState(() {
+      _collapseResults = false;
+      _fastNextRun = 0;
+    });
+  }
+
   /// §4.12's learn-by-reveal heuristic.
   void _recordRevealSpeed() {
     final at = _handOverAt;
@@ -957,6 +970,7 @@ class _FeltBand extends ConsumerWidget {
     required this.onDealMeIn,
     required this.onFeltTap,
     required this.onResultsTouch,
+    required this.onResultsExpand,
   });
 
   final SessionState session;
@@ -975,6 +989,9 @@ class _FeltBand extends ConsumerWidget {
   final VoidCallback onDealMeIn;
   final VoidCallback onFeltTap;
   final VoidCallback onResultsTouch;
+
+  /// Tapping the collapsed strip: bring the reveal rows back (§4.12).
+  final VoidCallback onResultsExpand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1125,7 +1142,7 @@ class _FeltBand extends ConsumerWidget {
                 )
                 : null,
         onCoachTap: onCoachRowTap,
-        onExpand: onResultsTouch,
+        onExpand: onResultsExpand,
         onRow: onSeatTap,
         onTouch: onResultsTouch,
       ),

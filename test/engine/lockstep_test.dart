@@ -71,6 +71,7 @@ List<String> transcript({
               )
               .toList(),
       holes: {0: nt.players[0].hole},
+      tableSize: nt.config.seats,
     );
     out.add(
       'H${state.handNumber} btn=${state.button} '
@@ -111,6 +112,7 @@ List<String> transcript({
     }
     hh.board = List.of(state.board);
     hh.potResults = state.summary?.potResults ?? [];
+    hh.uncalled = state.summary?.uncalled;
     hh.heroNet = state.summary?.heroNetChips ?? 0;
     for (final p in state.players) {
       hh.holes[p.id] = p.hole;

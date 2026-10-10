@@ -4,7 +4,7 @@ The phone edition of the desktop trainer at `../poker`. Flutter, Dart, offline, 
 
 ## State
 
-Feature-complete against `docs/DESIGN.md`. **1424 tests in 80 `*_test.dart` files pass**,
+Feature-complete against `docs/DESIGN.md`. **1593 tests in 83 `*_test.dart` files pass**,
 `flutter analyze --no-fatal-infos` is clean, `dart format lib test` is clean, and the app runs on a
 booted Android emulator. Five tabs (Home · Play · Drills · Study · Stats), 18 screens, 26 routes;
 31 lessons, 6 study tools, 4 drill modes, 25 glossary terms, 35 quiz questions.

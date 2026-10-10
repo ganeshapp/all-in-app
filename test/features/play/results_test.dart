@@ -305,6 +305,51 @@ void main() {
       expect(header.sentence, isNot(contains('You, ')));
     });
 
+    // A hand with a side pot has two winners. The card used to name only the
+    // first, so "You won the pot" could sit above "Polk wins with a pair of
+    // kings" — a contradiction with no way to tell which pot was whose.
+    test('a side pot names the winner of every pot', () {
+      final table = _tableWhereHeroWins();
+      final base = table.summary!;
+      final twoPots = HandSummary(
+        handNumber: base.handNumber,
+        potResults: [
+          const PotResult(winners: [1], amount: 300, potLabel: 'Main pot'),
+          const PotResult(winners: [0], amount: 120, potLabel: 'Side pot 1'),
+        ],
+        showdown: base.showdown,
+        board: base.board,
+        heroNetChips: base.heroNetChips,
+      );
+      final header = resultsSummary(table, twoPots);
+
+      expect(header.sentence, contains('the main pot'));
+      expect(header.sentence, contains('the side pot'));
+      // Winning one of two pots is not "You won the pot".
+      expect(header.caption, ResultsCopy.handOver);
+    });
+
+    test('an uncalled bet is reported as returned, not won', () {
+      final table = _tableWhereHeroWins();
+      final base = table.summary!;
+      final withReturn = HandSummary(
+        handNumber: base.handNumber,
+        potResults: base.potResults,
+        showdown: base.showdown,
+        board: base.board,
+        heroNetChips: base.heroNetChips,
+        uncalled: UncalledBet(
+          playerId: 1,
+          amount: table.bigBlind * 3,
+          inPot: false,
+        ),
+      );
+      final header = resultsSummary(table, withReturn);
+
+      expect(header.sentence, contains('3 bb back'));
+      expect(header.sentence, contains('nobody called it'));
+    });
+
     test('a single bot winner keeps the third person', () {
       final container = makeContainer();
       addTearDown(container.dispose);

@@ -43,6 +43,13 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
   int _limit = kAllHandsPage;
   ImportFlowController? _import;
 
+  /// The last page we actually rendered. `allHandsProvider` is a family keyed
+  /// by the limit, so "Load more" asks for a *different* provider, which
+  /// starts out loading: swapping the list for a spinner collapsed the scroll
+  /// view and threw the reader back to the top of the list every time. Hold
+  /// the rows we already have and let the longer page replace them in place.
+  List<StoredHand>? _rows;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +75,8 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
     final tags = ref.watch(allTagsProvider);
     final hands = ref.watch(allHandsProvider(_limit));
     final settings = ref.watch(settingsProvider);
+    final loaded = hands.valueOrNull;
+    if (loaded != null) _rows = loaded;
 
     ref.listen(importProvider, (previous, next) {
       _flow.handle(context, previous, next);
@@ -122,15 +131,15 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
             ),
           ],
           const SizedBox(height: AllInSpace.sm),
-          hands.when(
-            loading: () => const _Loading(),
-            error:
-                (_, _) => Text(
-                  StatsCopy.storageProblem,
-                  style: AllInText.body(14, color: c.textMuted),
-                ),
-            data: (all) => _list(all, notes, settings.reducedMotion),
-          ),
+          if (hands.hasError && _rows == null)
+            Text(
+              StatsCopy.storageProblem,
+              style: AllInText.body(14, color: c.textMuted),
+            )
+          else if (_rows == null)
+            const _Loading()
+          else
+            _list(_rows!, notes, settings.reducedMotion),
         ],
       ),
     );

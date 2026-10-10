@@ -39,6 +39,9 @@ enum SeatPlateVariant { standard, compact, hu }
 enum SeatPlateState { idle, toAct, folded, allIn, winner }
 
 class SeatPlate extends StatelessWidget {
+  /// A seat whose player has lost their stack at a play-down table *(mobile)*.
+  static const String bustedOut = 'busted out';
+
   const SeatPlate({
     super.key,
     required this.player,
@@ -360,8 +363,11 @@ class SeatPlate extends StatelessWidget {
   String _semanticLabel() {
     final parts = <String>[
       player.name,
-      positionLabel(player.position, seats),
-      '${fmtBb(player.stack, bigBlind)} big blinds',
+      if (!player.sittingOut) positionLabel(player.position, seats),
+      if (player.sittingOut)
+        SeatPlate.bustedOut
+      else
+        '${fmtBb(player.stack, bigBlind)} big blinds',
     ];
     if (player.handsSeen >= minSample) {
       final n = player.handsSeen;
@@ -416,6 +422,14 @@ class _PlateBody extends StatelessWidget {
     final stackLine =
         state == SeatPlateState.allIn
             ? _AllInPill(compact: compact)
+            : player.sittingOut
+            // A seat that busted out of a play-down table keeps its place so
+            // the table does not reshuffle itself every time someone goes.
+            ? Text(
+              SeatPlate.bustedOut,
+              maxLines: 1,
+              style: AllInText.body(compact ? 11 : 12, color: c.textFaint),
+            )
             : Text(
               '${fmtBb(player.stack, bigBlind)} bb',
               maxLines: 1,
@@ -494,10 +508,14 @@ class _PlateBody extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    PositionPill(
-                      label: positionLabel(player.position, seats),
-                      fontSize: 10,
-                    ),
+                    // A seat that is out holds no position any more — a live
+                    // player has taken it, and showing both reads as two
+                    // seats claiming the same one.
+                    if (!player.sittingOut)
+                      PositionPill(
+                        label: positionLabel(player.position, seats),
+                        fontSize: 10,
+                      ),
                   ],
                 ),
               ),

@@ -123,6 +123,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
             neverPlayed: neverPlayed,
             onSeats: ref.read(lobbyDraftProvider.notifier).setSeats,
             onAnte: ref.read(lobbyDraftProvider.notifier).setAnte,
+            onBotRebuy: ref.read(lobbyDraftProvider.notifier).setBotRebuy,
             onPace:
                 (mode) =>
                     ref.read(settingsProvider.notifier).update(paceMode: mode),
@@ -399,6 +400,7 @@ class _SetupCard extends StatelessWidget {
     required this.neverPlayed,
     required this.onSeats,
     required this.onAnte,
+    required this.onBotRebuy,
     required this.onPace,
     required this.onSpeed,
     required this.onCoach,
@@ -413,6 +415,7 @@ class _SetupCard extends StatelessWidget {
   final ValueChanged<PaceMode> onPace;
   final ValueChanged<int> onSpeed;
   final ValueChanged<bool> onCoach;
+  final ValueChanged<bool> onBotRebuy;
   final VoidCallback onDeal;
 
   @override
@@ -449,6 +452,23 @@ class _SetupCard extends StatelessWidget {
               semanticLabel: PlayCopy.antesRow,
               onChanged: (i) => onAnte(kAnteChoices[i]),
             ),
+          ),
+          const SizedBox(height: AllInSpace.sm),
+          _Row(
+            label: PlayCopy.bustedBotsRow,
+            child: AllInSegmented(
+              labels: PlayCopy.bustedBotsLabels,
+              value: draft.botRebuy ? 0 : 1,
+              semanticLabel: PlayCopy.bustedBotsRow,
+              onChanged: (i) => onBotRebuy(i == 0),
+            ),
+          ),
+          const SizedBox(height: AllInSpace.xs),
+          Text(
+            draft.botRebuy
+                ? PlayCopy.bustedBotsRebuy
+                : PlayCopy.bustedBotsLeave,
+            style: AllInText.body(12, color: c.textFaint),
           ),
           if (draft.seats != 6) ...[
             const SizedBox(height: AllInSpace.sm),

@@ -26,6 +26,12 @@ abstract final class SummaryCopy {
   /// §4.13 titles.
   static const String title = 'Session summary';
   static const String bustedTitle = 'Session over — you busted';
+
+  /// Playing down: the hero knocked every bot out *(mobile)*.
+  static const String tableClearedTitle =
+      'Session over — you took the whole table';
+  static const String tableClearedBody =
+      'Every bot is out of chips, so there is nobody left to deal to.';
   static const String readOnlyTitle = 'Session';
 
   static String handsPlayed(int hands) =>
@@ -234,6 +240,7 @@ class SessionSummaryData {
   const SessionSummaryData({
     required this.live,
     required this.busted,
+    this.tableCleared = false,
     required this.startedAt,
     required this.endedAt,
     required this.seats,
@@ -254,8 +261,12 @@ class SessionSummaryData {
   /// The summary of the session that is still on the felt (`/table/summary`).
   final bool live;
 
-  /// The hero busted: no ✕, no "Done", back is blocked (§2.5).
+  /// The hero busted: no ✕; "Done" and back end the session (§2.5).
   final bool busted;
+
+  /// The hero knocked every bot out of a play-down table: same ending shape
+  /// as [busted], different reason.
+  final bool tableCleared;
 
   final int startedAt;
   final int endedAt;
@@ -314,6 +325,7 @@ class SessionSummaryData {
 SessionSummaryData assembleSummary({
   required bool live,
   required bool busted,
+  bool tableCleared = false,
   required int startedAt,
   required int endedAt,
   required int seats,
@@ -336,6 +348,7 @@ SessionSummaryData assembleSummary({
   return SessionSummaryData(
     live: live,
     busted: busted,
+    tableCleared: tableCleared,
     startedAt: startedAt,
     endedAt: endedAt,
     seats: seats,
@@ -398,6 +411,7 @@ final sessionSummaryProvider =
         return assembleSummary(
           live: true,
           busted: session.busted,
+          tableCleared: session.tableCleared,
           startedAt: session.startedAt,
           endedAt: 0,
           seats: session.options.seats,

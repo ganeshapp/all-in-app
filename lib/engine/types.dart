@@ -320,6 +320,24 @@ class PotResult {
   final String potLabel; // "Pot" / "Main pot" / "Side pot 1"
 }
 
+/// Chips one player bet that nobody matched: pushed back, never won.
+class UncalledBet {
+  const UncalledBet({
+    required this.playerId,
+    required this.amount,
+    required this.inPot,
+  });
+  final int playerId;
+  final int amount;
+
+  /// True when [HandSummary.potResults] still carries these chips (a hand
+  /// that folded out reports the whole pot), false when the engine already
+  /// took them out (a showdown returns them before it awards anything). The
+  /// exporter must not have to guess which, because the "did this seat fold?"
+  /// heuristic it would guess from misreads an all-in blind as a fold.
+  final bool inPot;
+}
+
 class ShowdownEntry {
   const ShowdownEntry({
     required this.playerId,
@@ -340,12 +358,16 @@ class HandSummary {
     required this.showdown,
     required this.board,
     required this.heroNetChips,
+    this.uncalled,
   });
   final int handNumber;
   final List<PotResult> potResults;
   final List<ShowdownEntry> showdown;
   final List<Card> board;
   final int heroNetChips;
+
+  /// Set when the last bet went uncalled and came back to its owner.
+  final UncalledBet? uncalled;
 }
 
 enum LogKind { action, deal, result, info }
@@ -370,6 +392,7 @@ class GameConfig {
     required this.smallBlind,
     required this.bigBlind,
     this.ante = 0,
+    this.botRebuy = true,
   });
 
   /// 2, 6, or 9.
@@ -381,18 +404,26 @@ class GameConfig {
   /// Optional ante posted by every player each hand (chips).
   final int ante;
 
+  /// What happens to a bot that runs out of chips. `true` (the default) tops
+  /// it back up so the table always has the same number of players; `false`
+  /// plays the table down, so busted bots leave and the game becomes
+  /// short-handed — which is the dynamic you are practising for.
+  final bool botRebuy;
+
   GameConfig copyWith({
     int? seats,
     int? startingStack,
     int? smallBlind,
     int? bigBlind,
     int? ante,
+    bool? botRebuy,
   }) => GameConfig(
     seats: seats ?? this.seats,
     startingStack: startingStack ?? this.startingStack,
     smallBlind: smallBlind ?? this.smallBlind,
     bigBlind: bigBlind ?? this.bigBlind,
     ante: ante ?? this.ante,
+    botRebuy: botRebuy ?? this.botRebuy,
   );
 }
 

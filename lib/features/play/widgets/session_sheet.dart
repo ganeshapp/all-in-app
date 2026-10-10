@@ -200,11 +200,14 @@ class _LogTab extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      // `showModalBottomSheet(useSafeArea: true)` only insets the top, so the
+      // sheet's own last row — "End session" on two of these tabs — sat under
+      // Android's navigation bar with no way to scroll it clear.
+      padding: EdgeInsets.fromLTRB(
         AllInSpace.lg,
         0,
         AllInSpace.lg,
-        AllInSpace.xl,
+        AllInSpace.xl + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -442,11 +445,14 @@ class _SessionTab extends ConsumerWidget {
     final notes = ref.watch(playNotesProvider);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      // `showModalBottomSheet(useSafeArea: true)` only insets the top, so the
+      // sheet's own last row — "End session" on two of these tabs — sat under
+      // Android's navigation bar with no way to scroll it clear.
+      padding: EdgeInsets.fromLTRB(
         AllInSpace.lg,
         0,
         AllInSpace.lg,
-        AllInSpace.xl,
+        AllInSpace.xl + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -689,11 +695,14 @@ class _OptionsTab extends ConsumerWidget {
     final auto = settings.paceMode == PaceMode.auto;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      // `showModalBottomSheet(useSafeArea: true)` only insets the top, so the
+      // sheet's own last row — "End session" on two of these tabs — sat under
+      // Android's navigation bar with no way to scroll it clear.
+      padding: EdgeInsets.fromLTRB(
         AllInSpace.lg,
         0,
         AllInSpace.lg,
-        AllInSpace.xl,
+        AllInSpace.xl + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -759,6 +768,14 @@ class _OptionsTab extends ConsumerWidget {
           _ReadOnlyRow(
             label: 'Antes',
             value: session.options.ante > 0 ? '0.25 bb' : 'none',
+            caption: PlayCopy.endsThisSessionFirst,
+          ),
+          _ReadOnlyRow(
+            label: PlayCopy.bustedBotsRow,
+            value:
+                session.options.botRebuy
+                    ? PlayCopy.bustedBotsLabels[0].toLowerCase()
+                    : PlayCopy.bustedBotsLabels[1].toLowerCase(),
             caption: PlayCopy.endsThisSessionFirst,
           ),
           const SizedBox(height: AllInSpace.lg),
