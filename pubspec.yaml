@@ -1,7 +1,7 @@
 name: allin
 description: "All-In · Poker Dojo — an offline Texas Hold'em coach for your phone."
 publish_to: 'none'
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ^3.7.2
