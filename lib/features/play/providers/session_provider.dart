@@ -390,6 +390,9 @@ class SessionState {
 /* ========================================================================== */
 
 class SessionNotifier extends Notifier<SessionState> {
+  /// The last bot action, captured as they made it (see `snapshotMove`).
+  (int, BotMoveSnapshot)? _lastBotMove;
+
   int _reviewSeq = 1;
   int _loopToken = 0;
   Timer? _loopTimer;
@@ -723,6 +726,9 @@ class SessionNotifier extends Notifier<SessionState> {
   TableState _applyStep(int seat, Action action, [List<HandLabel>? range]) {
     final t = state.table!;
     _recordAction(t, seat, action);
+    // Snapshot BEFORE the action lands: `applyAction` deals the next street
+    // when the round closes, so the board afterwards is not the one they saw.
+    if (seat != 0) _lastBotMove = (seat, snapshotMove(t, seat, action, range));
     final next = applyAction(t, seat, action);
     if (range != null) next.botRanges[seat] = range;
 
@@ -1145,8 +1151,13 @@ class SessionNotifier extends Notifier<SessionState> {
     if (state.lastActorLabel != null) {
       player.lastAction = PlayerLastAction(state.lastActorLabel!, t.street);
     }
-    final review = botMoveReview(t, player, _reviewSeq++);
-    if (review == null) return;
+    final snap = _lastBotMove;
+    final review = botMoveReview(
+      t,
+      player,
+      _reviewSeq++,
+      snapshot: snap != null && snap.$1 == seat ? snap.$2 : null,
+    );
     state = state.copyWith(
       reviewLog: [...state.reviewLog, review],
       activeReviewId: review.id,

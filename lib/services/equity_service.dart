@@ -50,6 +50,10 @@ enum EquityJobKind {
 
   /// Hero range vs villain range (the §6.5 equity calculator).
   rangeVsRange,
+
+  /// Hero combo vs several opponents, each from their own range — the
+  /// multiway answer the coach grades with.
+  vsRanges,
 }
 
 /// One unit of equity work: plain strings and ints, so it crosses an isolate
@@ -65,6 +69,7 @@ class EquityJob {
     required this.opponents,
     required this.iters,
     required this.seed,
+    this.oppRanges = const [],
   });
 
   /// Hero's two cards vs [range] (label list, e.g. `['AKs', 'QQ']`).
@@ -140,8 +145,35 @@ class EquityJob {
 
   /// The coach's own request shape (`engine/coach.dart`), so [evaluateHero]
   /// can route it through this service unchanged.
+  /// Hero's two cards vs one range per opponent.
+  factory EquityJob.vsRanges({
+    required List<Card> hero,
+    required List<Card> board,
+    required List<List<HandLabel>> oppRanges,
+    int iters = 3000,
+    int? seed,
+  }) => EquityJob._(
+    kind: EquityJobKind.vsRanges,
+    hero: hero,
+    heroRange: const [],
+    board: board,
+    range: const [],
+    oppRanges: oppRanges,
+    opponents: oppRanges.length,
+    iters: iters,
+    seed: seed,
+  );
+
   factory EquityJob.fromRequest(coach.EquityRequest request) {
     switch (request.mode) {
+      case coach.EquityMode.ranges:
+        return EquityJob.vsRanges(
+          hero: request.hero,
+          board: request.board,
+          oppRanges: request.oppRanges,
+          iters: request.iters,
+          seed: request.seed,
+        );
       case coach.EquityMode.range:
         return EquityJob.vsRange(
           hero: request.hero,
@@ -182,6 +214,9 @@ class EquityJob {
 
   /// Live opponents — only [EquityJobKind.vsField].
   final int opponents;
+
+  /// One range per opponent — only [EquityJobKind.vsRanges].
+  final List<List<HandLabel>> oppRanges;
   final int iters;
 
   /// Deterministic when set; `null` means "let the engine use `Random()`",
@@ -192,6 +227,17 @@ class EquityJob {
   /// call it directly only from a test or a benchmark.
   EquityResult run() {
     switch (kind) {
+      case EquityJobKind.vsRanges:
+        return equityVsRanges(
+          comboToInts((hero[0], hero[1])),
+          [for (final c in board) cardToInt(c)],
+          [
+            for (final r in oppRanges)
+              expandRange(r, (hero[0], hero[1]), board),
+          ],
+          iters: iters,
+          seed: seed,
+        );
       case EquityJobKind.vsRange:
         return equityVsRangeCards(
           (hero[0], hero[1]),

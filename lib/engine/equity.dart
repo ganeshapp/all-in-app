@@ -415,6 +415,134 @@ EquityResult equityVsField(
   return _mcResult(win, tie, lose, equitySum);
 }
 
+/// Hero equity vs several opponents, each holding a hand from their OWN
+/// narrowed range — the multiway answer to [equityVsRange].
+///
+/// [equityVsField] deals opponents uniformly random cards, which flatters a
+/// weak hand badly: queen-high on a board of connected low cards looks like a
+/// close call against random hands and is drawing nearly dead against hands
+/// that actually keep betting. Grading against the ranges the bots are really
+/// holding is the difference between "thin spot" and "fold".
+///
+/// Each trial samples one combo per opponent, re-drawing on a card clash. A
+/// trial that cannot be filled is skipped rather than forced, so a range that
+/// is almost entirely blocked loses sample size instead of gaining a bias
+/// toward whichever combos happen to survive. Ties at the top split the pot.
+EquityResult equityVsRanges(
+  IntCombo hero,
+  List<int> board,
+  List<List<IntCombo>> ranges, {
+  int iters = 3000,
+  int? seed,
+  Random? rng,
+}) {
+  if (ranges.isEmpty) return EquityResult.empty;
+  final rand = _rngFor(seed, rng);
+  final blocked = Uint8List(52);
+  for (int i = 0; i < board.length; i++) {
+    blocked[board[i]] = 1;
+  }
+  blocked[hero[0]] = 1;
+  blocked[hero[1]] = 1;
+
+  final valid = <List<IntCombo>>[];
+  for (final r in ranges) {
+    final keep = <IntCombo>[];
+    for (int i = 0; i < r.length; i++) {
+      final c = r[i];
+      if (blocked[c[0]] == 0 && blocked[c[1]] == 0) keep.add(c);
+    }
+    if (keep.isEmpty) return EquityResult.empty;
+    valid.add(keep);
+  }
+
+  final n = valid.length;
+  final bl = board.length;
+  final need = 5 - bl;
+  final total = 2 + bl + need;
+  for (int i = 0; i < bl; i++) {
+    _heroBuf[2 + i] = board[i];
+    _villBuf[2 + i] = board[i];
+  }
+  final used = _used;
+  final avail = _avail;
+  final hands = List<IntCombo>.filled(n, const [0, 0]);
+  final oppScores = List<int>.filled(n, 0);
+  const maxRetry = 40;
+
+  int win = 0;
+  int tie = 0;
+  int lose = 0;
+  double equitySum = 0;
+
+  for (int it = 0; it < iters; it++) {
+    used.setRange(0, 52, blocked);
+    bool ok = true;
+    for (int o = 0; o < n; o++) {
+      final r = valid[o];
+      IntCombo? got;
+      for (int attempt = 0; attempt < maxRetry; attempt++) {
+        final c = r[_pick(rand, r.length)];
+        if (used[c[0]] == 0 && used[c[1]] == 0) {
+          got = c;
+          break;
+        }
+      }
+      if (got == null) {
+        ok = false;
+        break;
+      }
+      used[got[0]] = 1;
+      used[got[1]] = 1;
+      hands[o] = got;
+    }
+    if (!ok) continue;
+
+    int len = 0;
+    for (int i = 0; i < 52; i++) {
+      if (used[i] == 0) avail[len++] = i;
+    }
+    for (int k = 0; k < need; k++) {
+      final j = _pick(rand, len);
+      len--;
+      final tmp = avail[j];
+      avail[j] = avail[len];
+      avail[len] = tmp;
+      _heroBuf[2 + bl + k] = tmp;
+      _villBuf[2 + bl + k] = tmp;
+    }
+
+    _heroBuf[0] = hero[0];
+    _heroBuf[1] = hero[1];
+    final heroScore = evaluateScore(_heroBuf, total);
+
+    int best = -1;
+    for (int o = 0; o < n; o++) {
+      _villBuf[0] = hands[o][0];
+      _villBuf[1] = hands[o][1];
+      final s = evaluateScore(_villBuf, total);
+      oppScores[o] = s;
+      if (s > best) best = s;
+    }
+
+    if (heroScore > best) {
+      win++;
+      equitySum += 1;
+    } else if (heroScore < best) {
+      lose++;
+    } else {
+      int tied = 0;
+      for (int o = 0; o < n; o++) {
+        if (oppScores[o] == heroScore) tied++;
+      }
+      tie++;
+      equitySum += 1 / (tied + 1);
+    }
+  }
+
+  return _mcResult(win, tie, lose, equitySum);
+}
+
 /// Equity of a hero range vs a villain range on a (partial) board.
 /// Each trial samples one combo from each range (rejecting card clashes with
 /// up to 8 re-draws, then skipping the trial — so `samples` may be below

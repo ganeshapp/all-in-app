@@ -170,6 +170,16 @@ abstract final class AboutCopy {
           'treat close verdicts as guidance, not gospel.',
     ),
     AboutBullet(
+      lead: 'Verdicts grade against the player in front of you',
+      body:
+          ', not against a perfect opponent — so the answer can differ from '
+          '"correct play", most sharply against the extremes: a Calling '
+          'Station you should value-bet wider and never bluff, a Nit whose '
+          'raises you should believe. The coach also counts your outs the way '
+          'you would at a table, and says when a draw is to the losing end of '
+          'a hand.',
+    ),
+    AboutBullet(
       lead: 'Push/fold drills',
       good: true,
       body:

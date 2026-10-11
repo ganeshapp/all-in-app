@@ -421,21 +421,34 @@ void main() {
       notifier.explainLastBotMove();
 
       final log = container.read(sessionProvider).reviewLog;
-      expect(log, isNotEmpty, reason: 'interpretBot produced a note');
+      expect(log, isNotEmpty, reason: 'the read produced a note');
       final read = log.last;
       expect(read.kind, ReviewKind.bot);
 
       await pumpSheet(tester, container: container, req: request(read));
-
       expect(find.textContaining('Bot read · '), findsOneWidget);
-      expect(find.text(read.text), findsOneWidget);
+
+      // A read is three layers now, like every other coach surface: what
+      // happened, the numbers behind it, then the reasoning. It used to be
+      // one archetype sentence with an empty layer 2 and the blurb at 3.
+      expect(read.plain, isNotNull);
+      expect(read.steps, isNotEmpty);
+      expect(read.expert, isNotEmpty);
 
       await tapIn(tester, find.text(CoachCopy.showMath));
-      expect(find.text(CoachCopy.noMathRead), findsOneWidget);
+      expect(
+        find.text(CoachCopy.noMathRead),
+        findsNothing,
+        reason: 'a read now shows its own numbers',
+      );
 
       await tapIn(tester, find.text(CoachCopy.expertDetail));
-      final blurb = kArchetypes[read.villainArchetype]!.blurb;
-      expect(find.text(blurb), findsOneWidget);
+      // The read is about what happened, not about a label on the player.
+      for (final tag in ['(TAG)', '(LAG)', '(Nit)', '(Station)']) {
+        expect(read.plain, isNot(contains(tag)));
+      }
+      // Layer 3 always closes by saying where the read came from.
+      expect(read.expert!.last, contains('no simulation'));
     });
   });
 

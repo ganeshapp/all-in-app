@@ -6,6 +6,7 @@ library;
 
 export 'archetypes.dart';
 export 'bot_brain.dart';
+export 'bot_read.dart';
 export 'cards.dart';
 export 'coach.dart';
 export 'equity.dart';
@@ -17,6 +18,7 @@ export 'hh_import.dart';
 export 'icm.dart';
 export 'leaks.dart';
 export 'notation.dart';
+export 'outs.dart';
 export 'prng.dart';
 export 'puzzles.dart';
 export 'ranges.dart';

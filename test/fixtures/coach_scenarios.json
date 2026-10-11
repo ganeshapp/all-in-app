@@ -1,0 +1,1187 @@
+{
+  "foldSpill": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "fold",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "badCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.25,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.25,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.25,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "thinCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.35,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.35,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.35,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "greatCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "okCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.45,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.45,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.45,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      }
+    ]
+  },
+  "noiseCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.03,
+        "exact": false
+      },
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.03,
+        "exact": false
+      },
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.03,
+        "exact": false
+      }
+    ]
+  },
+  "missedValueRiver": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "river",
+      "board": [
+        "Kh",
+        "7d",
+        "2c",
+        "9s",
+        "3h"
+      ],
+      "pot": 300,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "check",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.9,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.9,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.9,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      }
+    ]
+  },
+  "missedValueRiverThin": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "river",
+      "board": [
+        "Kh",
+        "7d",
+        "2c",
+        "9s",
+        "3h"
+      ],
+      "pot": 300,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "check",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.7,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.7,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.7,
+        "samples": 990,
+        "se": 0.0,
+        "exact": true
+      }
+    ]
+  },
+  "expensiveBluff": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "5h",
+        "4h"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 100,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "bet",
+      "amount": 100
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.15,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.15,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.15,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "valueBet": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "turn",
+      "board": [
+        "Kh",
+        "7d",
+        "2c",
+        "9s"
+      ],
+      "pot": 200,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "bet",
+      "amount": 130
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.75,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.75,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.75,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      }
+    ]
+  },
+  "bluffRaise": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "5h",
+        "4h"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 150,
+      "currentBet": 50,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 50
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "raise",
+      "amount": 200
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.02,
+        "exact": false
+      },
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.02,
+        "exact": false
+      },
+      {
+        "equity": 0.3,
+        "samples": 1600,
+        "se": 0.02,
+        "exact": false
+      }
+    ]
+  },
+  "solidBet": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "Qs",
+        "Js"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 100,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "bet",
+      "amount": 40
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.5,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.5,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.5,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      }
+    ]
+  },
+  "preflopFieldCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": null,
+      "board": [],
+      "pot": 0,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.55,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.55,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.55,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      }
+    ]
+  },
+  "escalation": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.34,
+        "samples": 1600,
+        "se": 0.012,
+        "exact": false
+      },
+      {
+        "equity": 0.36,
+        "samples": 6400,
+        "se": 0.006,
+        "exact": false
+      },
+      {
+        "equity": 0.36,
+        "samples": 6400,
+        "se": 0.006,
+        "exact": false
+      }
+    ]
+  },
+  "storedRange": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {
+        "1": [
+          "AA",
+          "KK",
+          "AKs",
+          "AKo",
+          "QQ"
+        ]
+      }
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.8,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.8,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      },
+      {
+        "equity": 0.8,
+        "samples": 44000,
+        "se": 0.0,
+        "exact": true
+      }
+    ]
+  },
+  "runnerThrows": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      null,
+      null,
+      null
+    ]
+  },
+  "relaxedBadCall": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "call",
+      "amount": null
+    },
+    "settings": {
+      "mistakeBb": -0.6,
+      "foldFlagBb": 2.5,
+      "baseIters": 4000
+    },
+    "stub": [
+      {
+        "equity": 0.29,
+        "samples": 4000,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.29,
+        "samples": 4000,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.29,
+        "samples": 4000,
+        "se": 0.005,
+        "exact": false
+      }
+    ]
+  },
+  "strictFold": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "fold",
+      "amount": null
+    },
+    "settings": {
+      "mistakeBb": -0.15,
+      "foldFlagBb": 1.0,
+      "baseIters": 1600
+    },
+    "stub": [
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      }
+    ]
+  },
+  "standardFoldNoNote": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 100,
+      "aggressor": 1,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {
+        "1": 100
+      },
+      "botRanges": {}
+    },
+    "action": {
+      "type": "fold",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      },
+      {
+        "equity": 0.42,
+        "samples": 1600,
+        "se": 0.005,
+        "exact": false
+      }
+    ]
+  },
+  "foldFree": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 200,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "fold",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.8,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "checkPreflop": {
+    "spec": {
+      "button": 0,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": null,
+      "board": [],
+      "pot": 0,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "check",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "checkFlopMedium": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 100,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "check",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.7,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.7,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.7,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  },
+  "checkFlopStrong": {
+    "spec": {
+      "button": 3,
+      "hole": [
+        "As",
+        "Ks"
+      ],
+      "street": "flop",
+      "board": [
+        "Kh",
+        "7d",
+        "2c"
+      ],
+      "pot": 100,
+      "currentBet": 0,
+      "aggressor": null,
+      "folded": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "committed": {},
+      "botRanges": {}
+    },
+    "action": {
+      "type": "check",
+      "amount": null
+    },
+    "settings": null,
+    "stub": [
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      },
+      {
+        "equity": 0.9,
+        "samples": 1600,
+        "se": 0.01,
+        "exact": false
+      }
+    ]
+  }
+}

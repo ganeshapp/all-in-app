@@ -2,8 +2,11 @@
 // by running the desktop `evaluateHero` (src/store/gameStore.ts) under Node 23
 // with the equity facade stubbed to fixed results — the same stubs are used
 // here, so every review must match the TypeScript byte for byte.
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:allin/engine/bot_read.dart';
 import 'package:allin/engine/coach.dart';
 import 'package:allin/engine/equity.dart';
 import 'package:allin/engine/hand_engine.dart';
@@ -306,6 +309,7 @@ Map<String, Object?> callJson(EquityRequest c) => {
   'board': c.board,
   if (c.mode == EquityMode.range) 'rangeLen': c.range.length,
   if (c.mode == EquityMode.field) 'opponents': c.opponents,
+  if (c.mode == EquityMode.ranges) 'oppRanges': c.oppRanges.length,
   'iters': c.iters,
   'seed': c.seed,
 };
@@ -325,7 +329,85 @@ Future<(CoachReview?, List<EquityRequest>)> runScenario(Scenario sc) async {
   return (review, calls);
 }
 
+/// Writes the scenario inputs for the desktop generator
+/// (`../poker/scripts/coach_ref_gen.ts`), which produces `coach_ref.dart`.
+/// There is one definition of these scenarios — this one — so the two
+/// languages can never be compared on different inputs.
+///
+///   COACH_DUMP=1 flutter test test/engine/coach_test.dart
+void _maybeDumpScenarios() {
+  if (Platform.environment['COACH_DUMP'] != '1') return;
+  final out = <String, Object?>{};
+  scenarios.forEach((name, sc) {
+    final sp = sc.spec;
+    // Replay the stub the way `evaluateHero` would, so the generator can
+    // answer the same calls in the same order.
+    final stubbed = <Map<String, Object?>?>[];
+    for (int n = 1; n <= 3; n++) {
+      // One scenario's stub throws on purpose; the generator has to be told
+      // to throw at the same call.
+      EquityResult r;
+      try {
+        r = sc.stub(
+          EquityRequest(
+            hero: const [],
+            board: const [],
+            mode: EquityMode.random,
+            range: const [],
+            opponents: 1,
+            iters: 0,
+            seed: 0,
+          ),
+          n,
+        );
+      } catch (_) {
+        stubbed.add(null);
+        continue;
+      }
+      stubbed.add({
+        'equity': r.equity,
+        'samples': r.samples,
+        'se': r.se,
+        'exact': r.exact,
+      });
+    }
+    out[name] = {
+      'spec': {
+        'button': sp.button,
+        'hole': sp.hole,
+        'street': sp.street?.label,
+        'board': sp.board,
+        'pot': sp.pot,
+        'currentBet': sp.currentBet,
+        'aggressor': sp.aggressor,
+        'folded': sp.folded,
+        'committed': {
+          for (final e in sp.committed.entries) '${e.key}': e.value,
+        },
+        'botRanges': {
+          for (final e in sp.botRanges.entries) '${e.key}': e.value,
+        },
+      },
+      'action': {'type': sc.action.type.label, 'amount': sc.action.amount},
+      'settings':
+          sc.settings == null
+              ? null
+              : {
+                'mistakeBb': sc.settings!.thresholds.mistakeBb,
+                'foldFlagBb': sc.settings!.thresholds.foldFlagBb,
+                'baseIters': sc.settings!.baseIters,
+              },
+      'stub': stubbed,
+    };
+  });
+  File(
+    'test/fixtures/coach_scenarios.json',
+  ).writeAsStringSync(const JsonEncoder.withIndent('  ').convert(out));
+}
+
 void main() {
+  _maybeDumpScenarios();
+
   final refScenarios = kCoachRef['scenarios'] as Map<String, Object?>;
 
   test('reference covers every scenario and vice versa', () {
@@ -394,12 +476,13 @@ void main() {
         v.plain,
         'You folded a moneymaker. Calling 5 bb to win a 15 bb pot only needs a win about 1 time in 3 — and your hand wins about 8 times in 10. That call was worth about +7.0 bb.',
       );
+      // Layer 3 is the reasoning now; the provenance it used to repeat sits
+      // with the arithmetic in layer 2, where a number belongs.
+      expect(v.expert!.first, startsWith('Their hands, your hand —'));
+      expect(v.expert!.last, startsWith('How this was graded —'));
+      expect(v.expert!.last, contains('Ivey (TAG) range ≈ 204 combos'));
       expect(
-        v.expert![0],
-        'Ivey (TAG) range ≈ 204 combos (position + action).',
-      );
-      expect(
-        v.expert![1],
+        v.steps!.last,
         'Simulation precision: ±2.0% on the equity (1,600 trials).',
       );
     });
@@ -467,12 +550,9 @@ void main() {
         v.text,
         '90% equity checked on the river — a value bet (~198 chips) was available.',
       );
+      expect(v.expert!.last, startsWith('How this was graded —'));
       expect(
-        v.expert!.last,
-        'Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel.',
-      );
-      expect(
-        v.expert![1],
+        v.steps!.last,
         "Exact count — every possible holding and runout was enumerated, so there's no simulation noise.",
       );
       final thin = (await run('missedValueRiverThin'))!;
@@ -517,10 +597,9 @@ void main() {
         v.steps![3],
         'EV ≈ 20% × 100 + 80% × (15% × 300 − 100) ≈ -25 chips.',
       );
-      expect(
-        v.expert![0],
-        'Equity is run against 3 opponents as random hands (1600-trial sim) — more players, lower equity.',
-      );
+      // Multiway is graded against the hands they would actually hold, not
+      // against random cards — that flip is the point of this change.
+      expect(v.expert!.last, contains("opponents' likely hands"));
     });
 
     test('value bet', () async {
@@ -570,7 +649,7 @@ void main() {
       expect(v.equity, 0.5);
       expect(v.verdict, Verdict.ok);
       expect(
-        v.expert![1],
+        v.steps!.last,
         'Simulation precision: ±0.0% on the equity (0 trials).',
       );
     });
@@ -579,13 +658,15 @@ void main() {
       final (v, calls) = await runScenario(scenarios['storedRange']!);
       expect(v!.villainRange, ['AA', 'KK', 'AKs', 'AKo', 'QQ']);
       expect(calls.single.range, ['AA', 'KK', 'AKs', 'AKo', 'QQ']);
-      expect(v.expert![0], 'Ivey (TAG) range ≈ 34 combos (position + action).');
+      expect(v.expert!.last, contains('Ivey (TAG) range ≈ 34 combos'));
     });
 
     test('preflop multiway grades vs the field', () async {
       final (v, calls) = await runScenario(scenarios['preflopFieldCall']!);
-      expect(calls.single.mode, EquityMode.field);
-      expect(calls.single.opponents, 5);
+      // Multiway now grades against each opponent's own likely hands rather
+      // than against five random holdings.
+      expect(calls.single.mode, EquityMode.ranges);
+      expect(calls.single.oppRanges.length, 5);
       expect(v!.villainName, 'Hellmuth'); // the BB is the preflop aggressor
       expect(
         v.steps![0],
@@ -622,7 +703,7 @@ void main() {
       expect(a, isNotNull);
       expect(a!.equity, b!.equity);
       expect(a.verdict, Verdict.mistake); // AK top-pair on a dry river vs TAG
-      expect(a.expert![1], startsWith('Exact count'));
+      expect(a.steps!.last, startsWith('Exact count'));
       final req = EquityRequest(
         hero: const ['As', 'Ks'],
         board: const ['Kh', '7d', '2c'],
@@ -691,33 +772,117 @@ void main() {
     expect(g.accuracy, closeTo(0.5454545454545454, 1e-15));
   });
 
-  test('interpretBot pins (all archetypes × labels)', () {
-    final ref = kCoachRef['bots'] as Map<String, Object?>;
-    final s = makeState(const Spec(button: 3, hole: ['As', 'Ks']));
-    for (final seat in [1, 2, 3, 4, 5]) {
-      final p = s.players[seat];
-      for (final label in [
-        'Fold',
-        'Check',
-        'Call',
-        'All-In',
-        'Bet',
-        'Raise',
-        'SB',
-        null,
-      ]) {
-        p.lastAction =
-            label == null ? null : PlayerLastAction(label, Street.preflop);
-        final key = '$seat:${p.archetype!.label}:${label ?? 'null'}';
-        expect(interpretBot(p), ref[key], reason: key);
-      }
-    }
-    expect(interpretBot(s.players[0]), '');
+  // `interpretBot` is gone. A read is built from the board, the action and
+  // the size — an archetype label alone cannot say anything about a hand, so
+  // there is nothing left to pin per archetype. What is pinned instead is
+  // that the read actually reflects the hand in front of it.
+  test('a read is built from the board and the action, not a label', () {
+    const snap = BotMoveSnapshot(
+      name: 'Rafa',
+      archetype: Archetype.tag,
+      street: Street.flop,
+      board: ['6h', '5s', '4h'],
+      action: ActionType.bet,
+      amount: 60,
+      pot: 200,
+      playersIn: 3,
+      wasPreflopRaiser: false,
+      checkedThisStreet: false,
+      betLastStreet: false,
+      handsSeen: 40,
+      rangeCombos: 517,
+    );
+    final bet = readBotAction(snap);
+    expect(bet.plain, contains('three low cards in a row'));
+    expect(bet.plain, isNot(contains('(TAG)')));
     expect(
-      interpretBot(
-        s.players[4]..lastAction = const PlayerLastAction('Raise', Street.flop),
+      bet.expert.any((e) => e.startsWith('One adjustment:')),
+      isTrue,
+      reason: 'style is an adjustment at the end, never the headline',
+    );
+
+    // The same action on a different board must read differently.
+    final big = readBotAction(
+      const BotMoveSnapshot(
+        name: 'Rafa',
+        archetype: Archetype.tag,
+        street: Street.flop,
+        board: ['Kh', 'Qs', 'Jd'],
+        action: ActionType.bet,
+        amount: 60,
+        pot: 200,
+        playersIn: 3,
+        wasPreflopRaiser: false,
+        checkedThisStreet: false,
+        betLastStreet: false,
+        handsSeen: 40,
+        rangeCombos: 517,
       ),
-      'A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.',
+    );
+    expect(big.plain, isNot(bet.plain));
+
+    // Lines that only exist because the sequence is known.
+    final xr = readBotAction(
+      const BotMoveSnapshot(
+        name: 'Rafa',
+        archetype: Archetype.tag,
+        street: Street.flop,
+        board: ['6h', '5s', '4h'],
+        action: ActionType.raise,
+        amount: 60,
+        pot: 200,
+        playersIn: 3,
+        wasPreflopRaiser: false,
+        checkedThisStreet: true,
+        betLastStreet: false,
+        handsSeen: 40,
+        rangeCombos: 517,
+      ),
+    );
+    expect(xr.title, contains('check-raise'));
+
+    final gaveUp = readBotAction(
+      const BotMoveSnapshot(
+        name: 'Rafa',
+        archetype: Archetype.tag,
+        street: Street.turn,
+        board: ['6h', '5s', '4h', 'Kd'],
+        action: ActionType.check,
+        amount: 0,
+        pot: 200,
+        playersIn: 2,
+        wasPreflopRaiser: false,
+        checkedThisStreet: false,
+        betLastStreet: true,
+        handsSeen: 40,
+        rangeCombos: 517,
+      ),
+    );
+    expect(gaveUp.plain, contains('given up'));
+
+    // Four hands is not a read, and the app says so instead of guessing.
+    final newbie = readBotAction(
+      const BotMoveSnapshot(
+        name: 'Rafa',
+        archetype: Archetype.tag,
+        street: Street.flop,
+        board: ['6h', '5s', '4h'],
+        action: ActionType.bet,
+        amount: 60,
+        pot: 200,
+        playersIn: 3,
+        wasPreflopRaiser: false,
+        checkedThisStreet: false,
+        betLastStreet: false,
+        handsSeen: 4,
+        rangeCombos: 517,
+      ),
+    );
+    expect(
+      newbie.expert.any(
+        (e) => e.contains('not enough to call them anything yet'),
+      ),
+      isTrue,
     );
   });
 
@@ -750,7 +915,8 @@ void main() {
     final s = makeState(flopVs1);
     final p =
         s.players[1]..lastAction = const PlayerLastAction('Bet', Street.flop);
-    final rv = botMoveReview(s, p, 3)!;
+    final snap = snapshotMove(s, 1, const Action.bet(60), null);
+    final rv = botMoveReview(s, p, 3, snapshot: snap);
     expect(rv.kind, ReviewKind.bot);
     expect(rv.verdict, Verdict.info);
     expect(rv.blocking, isFalse);
@@ -758,18 +924,23 @@ void main() {
     expect(rv.villainArchetype, Archetype.tag);
     expect(rv.villainRange, villainRangeFor(s, p));
     expect(rv.board, ['Kh', '7d', '2c']);
-    expect(rv.text, interpretBot(p));
-    p.lastAction = null;
-    expect(botMoveReview(s, p, 4)!.title, "Ivey's move");
-    expect(botMoveReview(s, s.players[0], 5), isNull);
+    expect(rv.plain, isNotNull);
+    expect(rv.expert, isNotEmpty, reason: 'the read has a layer 3');
+    // With no snapshot the app says so rather than inventing a read.
+    final stale = botMoveReview(s, p, 4);
+    expect(stale.title, 'Last move');
+    expect(stale.text, contains("can't be rebuilt"));
   });
 
   test('CoachReview JSON round-trip', () async {
     final (v, _) = await runScenario(scenarios['badCall']!);
     final json = v!.toJson();
     expect(CoachReview.fromJson(json).toJson(), json);
-    final bot =
-        botMoveReview(makeState(flopVs1), makeState(flopVs1).players[1], 9)!;
+    final bot = botMoveReview(
+      makeState(flopVs1),
+      makeState(flopVs1).players[1],
+      9,
+    );
     expect(CoachReview.fromJson(bot.toJson()).toJson(), bot.toJson());
     expect(Verdict.fromLabel('great'), Verdict.great);
     expect(ReviewKind.fromLabel('bot'), ReviewKind.bot);

@@ -15,11 +15,15 @@ library;
 import 'dart:async';
 import 'dart:math' as math;
 
+import '../data/preflop_charts.g.dart';
 import 'archetypes.dart';
+import 'bot_read.dart';
+import 'cards.dart';
 import 'equity.dart';
 import 'format.dart';
 import 'hand_engine.dart';
 import 'notation.dart';
+import 'outs.dart';
 import 'prng.dart';
 import 'ranges.dart';
 import 'types.dart';
@@ -286,58 +290,97 @@ int firstOpponentInHand(TableState state) {
   return 1;
 }
 
-/// Desktop `interpretBot` — verbatim bot-move interpretations.
-String interpretBot(Player p) {
-  final a = p.archetype;
-  if (a == null) return '';
-  final label = p.lastAction?.label ?? 'acts';
-  if (label == 'Fold') {
-    return '${p.name} folds — their range no longer matters this hand.';
-  }
-  if (label == 'Check') {
-    return 'A check from ${p.name} usually means a weak hand — or keeping the pot small. Consider betting to take the pot now.';
-  }
-  if (label == 'Call' || label == 'All-In') {
-    if (a == Archetype.station) {
-      return '${p.name} (Station) calls with almost anything — their possible hands stay very wide and weak. Bet your good hands relentlessly; never bluff.';
-    }
-    if (a == Archetype.nit) {
-      return "Even a Nit's call means a fairly strong hand — though they'd raise their very best. Slow down with so-so hands.";
-    }
-    if (a == Archetype.lag) {
-      return '${p.name} (LAG) calls with lots of hands, often planning to steal the pot later — keep betting your good hands; expect them to call you down with medium ones.';
-    }
-    return "A call keeps ${p.name}'s possible hands wide — their strongest hands included — proceed with caution.";
-  }
-  // Bet / Raise
-  if (a == Archetype.nit) {
-    return 'A raise from a Nit is a red flag — expect a premium. Fold your marginal hands.';
-  }
-  if (a == Archetype.station) {
-    return "${p.name} (Station) almost never raises — when they do, it's usually close to the best possible hand.";
-  }
-  if (a == Archetype.lag) {
-    return "${p.name} (LAG) raises very wide; this is often a bluff or a bet with only a slim edge. Don't fold too often.";
-  }
-  return '${p.name} (TAG) raises mostly genuinely strong hands, few bluffs. Take it seriously unless you have a strong hand too.';
+/// Is this hand one you open from this seat? Pre-flop that question settles
+/// almost every decision on its own, which is the whole point: no percentage
+/// needed, and it is the lookup a real player has memorised.
+bool _inOpeningRange(HandLabel label, Position pos) {
+  final chart = kRfi100[pos.label];
+  return (chart?[label] ?? 0) > 0;
 }
 
-/// The "Bot read" note built by the desktop `explainLastBotMove` for a bot
-/// seat (`null` when the seat has no archetype, e.g. the hero).
-CoachReview? botMoveReview(TableState state, Player p, int id) {
-  final arche = p.archetype;
-  if (arche == null) return null;
+/// Capture the instant a bot acts, so the read sees the board they saw —
+/// `applyAction` deals the next street when the betting round closes, so
+/// reading the table afterwards shows a board the player never looked at.
+BotMoveSnapshot snapshotMove(
+  TableState t,
+  int seat,
+  Action action,
+  List<HandLabel>? range,
+) {
+  final p = t.players[seat];
+  final la = legalActions(t);
+  final amount = switch (action.type) {
+    ActionType.call => la.callAmount,
+    ActionType.bet ||
+    ActionType.raise => math.max(0, (action.amount ?? 0) - p.committed),
+    _ => 0,
+  };
+  final labels = range ?? t.botRanges[seat] ?? const <HandLabel>[];
+  return BotMoveSnapshot(
+    name: p.name,
+    archetype: p.archetype,
+    street: t.street,
+    board: List<Card>.of(t.board),
+    action: action.type == ActionType.post ? ActionType.call : action.type,
+    amount: amount,
+    pot: t.pot,
+    playersIn: t.players.where((q) => !q.hasFolded && !q.sittingOut).length,
+    wasPreflopRaiser: p.pfrThisHand,
+    // A raise after their own check on this street is a check-raise.
+    checkedThisStreet:
+        p.acted &&
+        p.lastAction?.label == 'Check' &&
+        p.lastAction?.street == t.street,
+    betLastStreet: t.aggressor == seat && t.street != Street.preflop,
+    handsSeen: p.handsSeen,
+    rangeCombos: labels.isNotEmpty ? combosInSet(labels.toSet()) : 0,
+  );
+}
+
+/// The "Bot read" note — built from what they did and the board they did it
+/// on, not from a label stuck on the player.
+CoachReview botMoveReview(
+  TableState state,
+  Player p,
+  int id, {
+  BotMoveSnapshot? snapshot,
+}) {
+  if (snapshot == null) {
+    // Honest rather than boilerplate: the read needs the pot, board and price
+    // from the moment they acted, and that moment is gone.
+    return CoachReview(
+      id: id,
+      kind: ReviewKind.bot,
+      blocking: false,
+      verdict: Verdict.info,
+      title: 'Last move',
+      villainName: p.name,
+      villainArchetype: p.archetype,
+      board: List<Card>.of(state.board),
+      text:
+          "That read can't be rebuilt — it needs the pot, the board and the "
+          'price from the moment ${p.name} acted. Ask again after their next '
+          'action.',
+    );
+  }
+  final read = readBotAction(snapshot);
   return CoachReview(
     id: id,
     kind: ReviewKind.bot,
     blocking: false,
     verdict: Verdict.info,
-    title: "${p.name}'s ${(p.lastAction?.label ?? 'move').toLowerCase()}",
+    title: read.title,
     villainName: p.name,
-    villainArchetype: arche,
-    villainRange: villainRangeFor(state, p),
-    board: List<Card>.of(state.board),
-    text: interpretBot(p),
+    villainArchetype: p.archetype,
+    villainRange:
+        read.confidence == ReadConfidence.none
+            ? null
+            : villainRangeFor(state, p),
+    board: List<Card>.of(snapshot.board),
+    plain: read.plain,
+    text: read.steps.isNotEmpty ? read.steps.first : read.plain,
+    steps: read.steps,
+    expert: read.expert,
   );
 }
 
@@ -386,6 +429,9 @@ GuessScore scoreGuess(List<HandLabel> painted, List<HandLabel> actual) {
 enum EquityMode {
   field('field'),
   range('range'),
+
+  /// Several opponents, each from their own narrowed range.
+  ranges('ranges'),
   random('random');
 
   const EquityMode(this.label);
@@ -402,6 +448,7 @@ class EquityRequest {
     required this.hero,
     required this.board,
     required this.mode,
+    this.oppRanges = const [],
     required this.range,
     required this.opponents,
     required this.iters,
@@ -412,6 +459,9 @@ class EquityRequest {
   final List<Card> hero;
   final List<Card> board;
   final EquityMode mode;
+
+  /// One range per opponent (only used by [EquityMode.ranges]).
+  final List<List<HandLabel>> oppRanges;
 
   /// Villain range labels (only used by [EquityMode.range]).
   final List<HandLabel> range;
@@ -434,6 +484,14 @@ class EquityRequest {
           iters: iters,
           seed: seed,
         );
+      case EquityMode.ranges:
+        return equityVsRanges(
+          comboToInts(h),
+          [for (final c in board) cardToInt(c)],
+          [for (final r in oppRanges) expandRange(r, h, board)],
+          iters: iters,
+          seed: seed,
+        );
       case EquityMode.range:
         return equityVsRangeCards(h, board, range, iters: iters, seed: seed);
       case EquityMode.random:
@@ -445,6 +503,7 @@ class EquityRequest {
     'hero': hero,
     'board': board,
     'mode': mode.label,
+    if (oppRanges.isNotEmpty) 'oppRanges': [for (final r in oppRanges) r],
     'range': range,
     'opponents': opponents,
     'iters': iters,
@@ -455,6 +514,10 @@ class EquityRequest {
     hero: (j['hero'] as List).cast<String>(),
     board: (j['board'] as List).cast<String>(),
     mode: EquityMode.fromLabel(j['mode'] as String),
+    oppRanges: [
+      for (final r in (j['oppRanges'] as List?) ?? const [])
+        (r as List).cast<HandLabel>(),
+    ],
     range: (j['range'] as List).cast<String>(),
     opponents: (j['opponents'] as num).toInt(),
     iters: (j['iters'] as num).toInt(),
@@ -532,9 +595,21 @@ Future<CoachReview?> evaluateHero(
   final seedBase = hashSeed(
     '${state.handNumber}|${state.street.label}|${action.type.label}|${hole.join()}|${state.board.join()}',
   );
+  // Every opponent still in the hand, each with the range they have actually
+  // shown. Grading multiway against RANDOM hands was flattering weak holdings
+  // badly — queen-high on a board of connected low cards scored as a "thin
+  // spot" when it is drawing nearly dead against hands that keep betting.
+  final liveOpponents = [
+    for (final p in state.players)
+      if (!p.isHero && !p.hasFolded && !p.sittingOut) p,
+  ];
+  final oppRanges = [for (final p in liveOpponents) villainRangeFor(state, p)];
+  final haveAllRanges =
+      oppRanges.isNotEmpty && oppRanges.every((r) => r.isNotEmpty);
+
   final mode =
       fieldMode
-          ? EquityMode.field
+          ? (haveAllRanges ? EquityMode.ranges : EquityMode.field)
           : range.isNotEmpty
           ? EquityMode.range
           : EquityMode.random;
@@ -544,6 +619,7 @@ Future<CoachReview?> evaluateHero(
       board: List<Card>.of(state.board),
       mode: mode,
       range: range,
+      oppRanges: oppRanges,
       opponents: opponents,
       iters: iters,
       seed: seed,
@@ -573,16 +649,84 @@ Future<CoachReview?> evaluateHero(
   }
   final margin = 2 * se; // ~95% confidence half-width
   final pct = _round(equity * 100);
-  const baselineNote =
-      "Baseline: verdicts grade vs THIS opponent's likely hands (exploitative). Vs a balanced player the answer can differ — most sharply against extreme types like Stations (value-bet wider, never bluff) and Nits (respect their raises).";
   final marginNote =
       exact
           ? "Exact count — every possible holding and runout was enumerated, so there's no simulation noise."
           : 'Simulation precision: ±${_fixed(margin * 100, 1)}% on the equity (${fmtChips(trials)} trials).';
   final sourceLine =
       fieldMode
-          ? 'Equity is run against $opponents opponents as random hands ($trials-trial sim) — more players, lower equity.'
+          ? (haveAllRanges
+              ? "Measured against all $opponents opponents' likely hands, given how they have played this hand ($trials-trial sim)."
+              : 'Measured against $opponents opponents holding random cards ($trials-trial sim) — their ranges were not known here, so treat this as a floor.')
           : '${vill.name}${cfg != null ? ' (${cfg.archetype.label})' : ''} range ≈ $combos combos (position + action).';
+
+  // Outs — the human version of the equity figure, and the one a player can
+  // actually run at the table. Only meaningful with a flop or turn out.
+  final outs =
+      haveAllRanges && state.board.length >= 3 && state.board.length <= 4
+          ? countOuts(
+            comboToInts((hole[0], hole[1])),
+            [for (final c in state.board) cardToInt(c)],
+            [
+              for (final r in oppRanges)
+                expandRange(r, (hole[0], hole[1]), state.board),
+            ],
+          )
+          : null;
+  final drawing = outs != null && !outs.ahead && outs.count > 0;
+  final outsLine = drawing ? describeOuts(outs) : '';
+  final outsPlain =
+      drawing
+          ? ' You were behind, and only ${outs.count == 1 ? 'one card saves' : '${outs.count} cards save'} you — '
+              '${outs.groups.first.cardsLabel} '
+              '${outs.groups.first.makes == 'a pair' ? 'give you a pair' : 'make ${outs.groups.first.makes}'}. '
+              'That lands about ${fmtTimes(ruleOfTwoFour(outs.count, 1))}.'
+              '${outs.holdUp != null && outs.holdUp! < 0.9 ? ' And even when it does, you still lose about ${fmtTimes(1 - outs.holdUp!)} — ${outs.groups.first.caution ?? 'someone can hold a better version of it'}.' : ''}'
+          : '';
+
+  // Provenance belongs with the arithmetic, not with the reasoning.
+  final mathTail = <String>[
+    if (drawing) 'Cards that put you in front: $outsLine.',
+    if (drawing)
+      'The 2/4 rule from the Counting Outs lesson: ${outs.count} outs × 2 = '
+          '${(ruleOfTwoFour(outs.count, 1) * 100).round()}% on the next card, '
+          '× 4 = ${(ruleOfTwoFour(outs.count, 2) * 100).round()}% by the river.',
+    marginNote,
+  ];
+
+  // Layer 3 — the reasoning, not the arithmetic. Nothing here needs a screen.
+  final shape = boardShape(state.board);
+  final theirAction = vill.lastAction?.label ?? 'acted';
+  final expertNotes = <String>[
+    if (state.board.isEmpty)
+      'Where this hand sits — before the flop almost every decision is "is '
+          'this hand in the range I play from this seat?". $heroLabel from '
+          '${hero.position.label} '
+          '${_inOpeningRange(heroLabel, hero.position) ? 'is a hand you play here' : 'is not a hand you play here, at any price'}. '
+          'Position decides the rest: acting last is worth more than most '
+          'hands are.'
+    else
+      'Their hands, your hand — the board is ${shape.phrase}. '
+          '${shape.lowConnected
+              ? 'That suits the hands that call a raise far better than the hands that raise one: small pairs and connected cards. Big cards have nothing here.'
+              : shape.broadway
+              ? 'That suits the hands that raised before the flop, so a bet here is routine and means less than it looks.'
+              : shape.paired
+              ? 'A pair on the board means fewer hands improved — both of you missed more often than usual.'
+              : 'There is not much to draw to, so hands here are made or they are nothing.'}'
+          '${outsLine.isNotEmpty ? ' You have $outsLine.' : ''}',
+    if (state.board.isNotEmpty)
+      'What their action said — ${vill.name} ${theirAction.toLowerCase()}'
+          '${theirAction == 'Check' ? 'ed' : ''}. '
+          '${theirAction == 'Check' ? 'A check keeps the pot small, which is what the weaker half of their hands wants — this is a pot you can often take by betting.' : 'Money going in narrows what they hold from both ends: the hands too weak to continue are gone, and the very best would often raise instead.'}',
+    'The plan from here — name the next card you want and what you do when it '
+        'misses. '
+        '${drawing ? 'You are paying to see one card with ${outs.count} card${outs.count == 1 ? '' : 's'} that help, and when it misses you are facing another bet with the same hand.' : 'If you cannot say what you beat that keeps putting money in, that is the answer.'}',
+    'What would change the answer — '
+        '${opponents > 1 ? 'one opponent instead of several. Hands that are fine against one player are folds against three, because somebody connects far more often.' : 'a weaker opponent, a cheaper price, or a draw with more ways to win. Any of the three can turn this from a fold into a call.'}',
+    'How this was graded — $sourceLine The numbers are under "Show me the '
+        'math".',
+  ];
 
   final board = List<Card>.of(state.board);
 
@@ -619,8 +763,9 @@ Future<CoachReview?> evaluateHero(
         '$heroLabel vs $oppDesc on $boardStr → $pct% equity.',
         'Pot ${state.pot} + call $cost = $finalPot; pot odds = ${_round(potOdds * 100)}%.',
         'EV(call) = $pct% × $finalPot − $cost ≈ +${_fixed(evCall, 0)} chips (${_fixed(evCall / bb, 1)} bb) > EV(fold)=0.',
+        ...mathTail,
       ],
-      expert: [sourceLine, marginNote, baselineNote],
+      expert: expertNotes,
     );
   }
 
@@ -646,7 +791,7 @@ Future<CoachReview?> evaluateHero(
       verdict = Verdict.mistake;
       blocking = true;
       plain =
-          '$priceLine Your hand wins ${fmtTimes(equity)} — not enough. Over time this call loses money; folding is better.';
+          '$priceLine Your hand wins ${fmtTimes(equity)} — not enough.$outsPlain Over time this call loses money; folding is better.';
       text =
           'Against $oppDesc your $heroLabel has only $pct% equity, but calling needs ${_round(potOdds * 100)}%. This call costs about ${_fixed(evAction / bb, 1)} bb — folding is better.';
     } else if (evAction < mistakeBb * bb) {
@@ -658,7 +803,7 @@ Future<CoachReview?> evaluateHero(
     } else if (equity < potOdds + 0.04) {
       verdict = Verdict.thin;
       plain =
-          '$priceLine Your hand wins ${fmtTimes(equity)} — just barely enough. A close call, not a mistake.';
+          '$priceLine Your hand wins ${fmtTimes(equity)} — just barely enough.$outsPlain A close call, not a mistake.';
       text =
           '$pct% equity vs ~${_round(potOdds * 100)}% needed — a marginal, close call against $oppDesc.';
     } else {
@@ -692,8 +837,9 @@ Future<CoachReview?> evaluateHero(
         evAction < 0
             ? 'Because EV < 0, folding is the higher-EV play.'
             : 'Because EV > 0, calling beats folding.',
+        ...mathTail,
       ],
-      expert: [sourceLine, marginNote, baselineNote],
+      expert: expertNotes,
     );
   }
 
@@ -728,13 +874,9 @@ Future<CoachReview?> evaluateHero(
         '$heroLabel vs $oppDesc on $boardStr → $pct% equity.',
         'A ~66% pot bet ($betTo) gets called by enough worse hands to profit when you win this often.',
         'Checking wins the same pot but never builds it — EV left behind grows with your win chance.',
+        ...mathTail,
       ],
-      expert: [
-        sourceLine,
-        marginNote,
-        baselineNote,
-        'Post-flop aggression verdicts are heuristic (no solver) — treat as guidance, not gospel.',
-      ],
+      expert: expertNotes,
     );
   }
 
@@ -776,13 +918,9 @@ Future<CoachReview?> evaluateHero(
         'Break-even fold rate = bet / (pot + bet) = ${_round(foldsNeeded * 100)}%.',
         'Assuming each opponent continues ~${_round(continueFrac * 100)}% vs this size, everyone folds only ${_round(pAllFold * 100)}% of the time.',
         'EV ≈ ${_round(pAllFold * 100)}% × ${state.pot} + ${_round((1 - pAllFold) * 100)}% × ($pct% × ${state.pot + 2 * costNow} − $costNow) ≈ ${_fixed(evBluff, 0)} chips.',
+        ...mathTail,
       ],
-      expert: [
-        sourceLine,
-        marginNote,
-        baselineNote,
-        'The fold-equity model is heuristic (fixed continue rates by bet size, no ranges) — aggression verdicts are approximate by design.',
-      ],
+      expert: expertNotes,
     );
   }
   if (equity > 0.6) {
@@ -822,7 +960,8 @@ Future<CoachReview?> evaluateHero(
     steps: [
       '$heroLabel vs $oppDesc on $boardStr → $pct% equity when called.',
       'A bet also wins when opponents fold — fold equity isn\'t shown here, so treat this as the "called" floor.',
+      ...mathTail,
     ],
-    expert: [sourceLine, marginNote, baselineNote],
+    expert: expertNotes,
   );
 }
