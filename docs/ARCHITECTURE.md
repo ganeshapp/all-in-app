@@ -30,7 +30,13 @@ mobile UX specification. This file is the technical contract every contributor f
   full-screen flows, bottom sheets for transient UI. Route names live in `lib/app/routes.dart`.
 - **Heavy simulations run off the UI thread** via `compute()` (Dart isolates). The engine stays
   synchronous and pure; `lib/services/equity_service.dart` is the only place that spawns isolates.
-  Bot decisions use the small synchronous sims the desktop uses (≤ 320 trials).
+  Bot decisions use the small synchronous sims the desktop uses: ≤ 320 trials heads-up, 400
+  multiway, plus 80-trial seeded sims per label when an opponent's range has to be narrowed
+  against the board. That last one is the expensive path — a bot asks it about every live
+  opponent on every decision — so `bot_brain.dart` memoises the narrowed range per
+  (seat, board, action, hands-seen) for the duration of a hand. Both worst cases are pinned by
+  the `performance` group in `test/engine/bot_brain_test.dart`: five decisions under 400 ms with
+  stored ranges, under 600 ms multiway with none.
 - **Bundled fonts** (Inter, Bricolage Grotesque, JetBrains Mono under `assets/fonts`) — the app
   must look right with no network on first launch.
 - **Coach voice follows `docs/TONE.md`** everywhere: plain English first, then "show me the
@@ -110,7 +116,9 @@ docs/
 | `table_state.dart` | `types/poker.ts` | immutable `TableState`, `Player`, `LegalActions`, `HandSummary` … with `copyWith` |
 | `hand_engine.dart` | `game/engine.ts` | `createTable`, `startHand`, `legalActions`, `applyAction` — pure functions returning new state |
 | `archetypes.dart` | `game/archetypes.ts` | four archetypes + bot names |
-| `bot_brain.dart` | `game/botBrain.ts` | preflop chart policy + postflop heuristics + range narrowing |
+| `bot_brain.dart` | `game/botBrain.ts` | per-archetype preflop ranges (advertised VPIP/PFR, shaped by the chart) + postflop heuristics measured against the opponent's inferred range + range narrowing |
+| `profile.dart` | `game/profile.ts` | the session-scoped opponent model: what one seat reads off another from public facts only, the range that implies, and how each archetype leans on it — plus the explore rate that makes a bot occasionally ignore its own read |
+| `bot_read.dart` | `game/botRead.ts` | "Explain last move": a narrative read built from the action, its size, the board and the sequence — distinct from `profile.dart`, which is the statistical model the bots themselves act on |
 | `coach.dart` | `store/gameStore.ts` (`evaluateHero`, `interpretBot`, `scoreGuess`) | verdicts + 3-layer text; injectable equity runner so it can be tested synchronously and run in an isolate in the app |
 | `puzzles.dart` | `engine/puzzles.ts` | drill generation + grading for every mode |
 | `srs.dart`, `leaks.dart`, `icm.dart` | `lib/srs.ts`, `lib/leaks.ts`, `lib/icm.ts` | scheduler, leak rules, Malmuth-Harville |

@@ -26,6 +26,7 @@ Map<String, Object?> gameConfigToJson(GameConfig c) => {
   'bigBlind': c.bigBlind,
   'ante': c.ante,
   'botRebuy': c.botRebuy,
+  'difficulty': c.difficulty.name,
 };
 
 GameConfig gameConfigFromJson(Map<String, Object?> j) => GameConfig(
@@ -36,6 +37,10 @@ GameConfig gameConfigFromJson(Map<String, Object?> j) => GameConfig(
   ante: (j['ante'] as num?)?.toInt() ?? 0,
   // A snapshot written before the setting existed was playing with rebuys.
   botRebuy: j['botRebuy'] != false,
+  difficulty: TableDifficulty.values.firstWhere(
+    (d) => d.name == j['difficulty'],
+    orElse: () => TableDifficulty.regular,
+  ),
 );
 
 Map<String, Object?> dialsToJson(Dials d) => {
@@ -81,8 +86,25 @@ Map<String, Object?> playerToJson(Player p) => {
   'handsSeen': p.handsSeen,
   'vpipCount': p.vpipCount,
   'pfrCount': p.pfrCount,
+  'threeBetCount': p.threeBetCount,
+  'threeBetOpp': p.threeBetOpp,
+  'foldToRaiseCount': p.foldToRaiseCount,
+  'faceRaiseCount': p.faceRaiseCount,
+  'foldTo3BetCount': p.foldTo3BetCount,
+  'face3BetCount': p.face3BetCount,
+  'cbetCount': p.cbetCount,
+  'cbetOpp': p.cbetOpp,
+  'foldToCbetCount': p.foldToCbetCount,
+  'faceCbetCount': p.faceCbetCount,
+  'postAggroCount': p.postAggroCount,
+  'postActionCount': p.postActionCount,
+  'sawFlopCount': p.sawFlopCount,
+  'showdownCount': p.showdownCount,
+  'shownHands': p.shownHands,
   'vpipThisHand': p.vpipThisHand,
   'pfrThisHand': p.pfrThisHand,
+  'sawFlopThisHand': p.sawFlopThisHand,
+  'cbetChanceThisHand': p.cbetChanceThisHand,
   'dials': p.dials == null ? null : dialsToJson(p.dials!),
   'sittingOut': p.sittingOut,
 };
@@ -114,8 +136,25 @@ Player playerFromJson(Map<String, Object?> j) => Player(
   handsSeen: (j['handsSeen'] as num?)?.toInt() ?? 0,
   vpipCount: (j['vpipCount'] as num?)?.toInt() ?? 0,
   pfrCount: (j['pfrCount'] as num?)?.toInt() ?? 0,
+  threeBetCount: (j['threeBetCount'] as num?)?.toInt() ?? 0,
+  threeBetOpp: (j['threeBetOpp'] as num?)?.toInt() ?? 0,
+  foldToRaiseCount: (j['foldToRaiseCount'] as num?)?.toInt() ?? 0,
+  faceRaiseCount: (j['faceRaiseCount'] as num?)?.toInt() ?? 0,
+  foldTo3BetCount: (j['foldTo3BetCount'] as num?)?.toInt() ?? 0,
+  face3BetCount: (j['face3BetCount'] as num?)?.toInt() ?? 0,
+  cbetCount: (j['cbetCount'] as num?)?.toInt() ?? 0,
+  cbetOpp: (j['cbetOpp'] as num?)?.toInt() ?? 0,
+  foldToCbetCount: (j['foldToCbetCount'] as num?)?.toInt() ?? 0,
+  faceCbetCount: (j['faceCbetCount'] as num?)?.toInt() ?? 0,
+  postAggroCount: (j['postAggroCount'] as num?)?.toInt() ?? 0,
+  postActionCount: (j['postActionCount'] as num?)?.toInt() ?? 0,
+  sawFlopCount: (j['sawFlopCount'] as num?)?.toInt() ?? 0,
+  showdownCount: (j['showdownCount'] as num?)?.toInt() ?? 0,
+  shownHands: (j['shownHands'] as List?)?.cast<HandLabel>(),
   vpipThisHand: j['vpipThisHand'] == true,
   pfrThisHand: j['pfrThisHand'] == true,
+  sawFlopThisHand: j['sawFlopThisHand'] == true,
+  cbetChanceThisHand: j['cbetChanceThisHand'] == true,
   dials:
       j['dials'] == null
           ? null

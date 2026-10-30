@@ -57,6 +57,9 @@ void main() {
     });
   });
 
+  // The fake clock never advances, so every hand here shares one `startedAt`.
+  // That is the regression guard: verdicts must be keyed by hand number, or
+  // hand #2 wears hand #1's mistake.
   test('a finished hand keeps its worst verdict after the next deal', () async {
     final container = makeContainer(seed: 7, coachEnabled: true);
     addTearDown(container.dispose);
@@ -111,7 +114,7 @@ void main() {
     );
     for (final hand in state.history) {
       expect(
-        state.handVerdicts[hand.startedAt],
+        state.handVerdicts[hand.id],
         worstVerdict(seen[hand.id] ?? const []),
         reason: 'hand #${hand.id}',
       );

@@ -20,6 +20,7 @@ export 'leaks.dart';
 export 'notation.dart';
 export 'outs.dart';
 export 'prng.dart';
+export 'profile.dart';
 export 'puzzles.dart';
 export 'ranges.dart';
 export 'srs.dart';

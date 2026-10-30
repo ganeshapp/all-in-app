@@ -340,7 +340,7 @@ void main() {
     });
 
     test('RFI: premiums always open, 2.5bb sizing', () {
-      _pinPre(_setup({3: Archetype.tag}), 3, 0.99, 'P1_tag_utg_AA_099');
+      _pinPre(_setup({3: Archetype.tag}), 3, 0.99, 'P1_tag_utg_44_099');
       _pinPre(
         _setup(
           {3: Archetype.tag},
@@ -733,6 +733,56 @@ void main() {
         reason: '5 decisions in ${sw.elapsedMilliseconds} ms',
       );
     });
+
+    test('a multiway flop decision with NO stored ranges is fast', () {
+      // The real worst case since bots started reading people: nobody has a
+      // stored range, so every live opponent's range has to be inferred from
+      // their session stats and then narrowed against the board — a seeded
+      // sim per label, per opponent. The test above pre-seeds `botRanges`
+      // and so never touches this path.
+      var s = _setup({
+        1: Archetype.tag,
+        2: Archetype.lag,
+        3: Archetype.station,
+      });
+      // Give everyone a session history so the reads are live rather than
+      // short-circuiting on zero confidence.
+      for (final p in s.players) {
+        p.handsSeen = 60;
+        p.vpipCount = 40;
+        p.pfrCount = 22;
+        p.postActionCount = 40;
+        p.postAggroCount = 18;
+        p.faceCbetCount = 20;
+        p.foldToCbetCount = 9;
+      }
+      // Button is seat 0, so UTG is seat 3 and acts first. Everybody limps
+      // in behind so the flop is genuinely multiway.
+      s = applyAction(s, 3, const Action.call(amount: 20));
+      s = _fold(s, [4, 5]);
+      s = applyAction(s, 0, const Action.call(amount: 20));
+      s = applyAction(s, 1, const Action.call(amount: 10));
+      s = applyAction(s, 2, const Action.check());
+      expect(s.street, Street.flop, reason: 'the flop should be out');
+      expect(
+        s.players.where((p) => !p.hasFolded).length,
+        4,
+        reason: 'four ways to the flop',
+      );
+      expect(s.botRanges, isEmpty, reason: 'nothing may be pre-seeded here');
+
+      decideBot(s, 2, rng: Random(1)); // warm-up (and fills the range memo)
+      final sw = Stopwatch()..start();
+      for (int i = 0; i < 5; i++) {
+        decideBot(s, 2, rng: Random(i));
+      }
+      sw.stop();
+      expect(
+        sw.elapsedMilliseconds,
+        lessThan(600),
+        reason: '5 multiway decisions in ${sw.elapsedMilliseconds} ms',
+      );
+    });
   });
 
   group('bot_test.ts properties (all-bot tables)', () {
@@ -771,7 +821,12 @@ void main() {
       int checkRaises = 0;
       int hands = 0;
       final sizings = <String>{};
-      for (int h = 0; h < 400; h++) {
+      // 1200 hands, not 400: a check-raise happens in well under 1% of hands
+      // now that most pots are multiway (bots bluff-raise less into a field),
+      // so 400 hands put the `checkRaises > 0` assertion at roughly a 1-in-20
+      // chance of a spurious zero. It duly failed. Rare-event properties need
+      // a sample big enough that zero means "broken", not "unlucky".
+      for (int h = 0; h < 1200; h++) {
         state = startHand(state, rng: rng);
         final checkedThisStreet = <Street, Set<int>>{};
         int guard = 0;
@@ -830,10 +885,10 @@ void main() {
         expect(state.phase, GamePhase.handOver, reason: 'hand completes');
         hands++;
       }
-      expect(hands, 400);
+      expect(hands, 1200);
       expect(
         decisions,
-        greaterThan(1600),
+        greaterThan(4800),
         reason: 'saw plenty of preflop decisions',
       );
       expect(premiumFolds, 0, reason: 'AA/KK never fold preflop');

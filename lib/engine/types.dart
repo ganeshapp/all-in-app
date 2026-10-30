@@ -232,11 +232,28 @@ class Player {
     this.handsSeen = 0,
     this.vpipCount = 0,
     this.pfrCount = 0,
+    this.threeBetCount = 0,
+    this.threeBetOpp = 0,
+    this.foldToRaiseCount = 0,
+    this.faceRaiseCount = 0,
+    this.foldTo3BetCount = 0,
+    this.face3BetCount = 0,
+    this.cbetCount = 0,
+    this.cbetOpp = 0,
+    this.foldToCbetCount = 0,
+    this.faceCbetCount = 0,
+    this.postAggroCount = 0,
+    this.postActionCount = 0,
+    this.sawFlopCount = 0,
+    this.showdownCount = 0,
+    List<HandLabel>? shownHands,
     this.vpipThisHand = false,
     this.pfrThisHand = false,
+    this.sawFlopThisHand = false,
+    this.cbetChanceThisHand = false,
     this.dials,
     this.sittingOut = false,
-  });
+  }) : shownHands = shownHands ?? <HandLabel>[];
 
   /// Seat index 0..n-1; 0 is hero.
   final int id;
@@ -267,14 +284,50 @@ class Player {
   Position position;
   PlayerLastAction? lastAction;
 
-  /// Observed live stats (for the HUD).
+  /// Observed live stats — what anyone at the table could have watched.
+  /// Session-scoped: a new table knows nothing about you, the same way five
+  /// strangers would not. Tracked for EVERY seat, the hero included, because
+  /// the opponents have to be able to read you too.
   int handsSeen;
   int vpipCount;
   int pfrCount;
 
+  /// Pre-flop re-raises, and the chances they had to make one.
+  int threeBetCount;
+  int threeBetOpp;
+
+  /// Folds to an open raise, and the times they faced one.
+  int foldToRaiseCount;
+  int faceRaiseCount;
+
+  /// Folds to a re-raise, and the times they faced one.
+  int foldTo3BetCount;
+  int face3BetCount;
+
+  /// Continuation bets as the pre-flop raiser.
+  int cbetCount;
+  int cbetOpp;
+
+  /// Folds to a flop continuation bet.
+  int foldToCbetCount;
+  int faceCbetCount;
+
+  /// Post-flop bets and raises, over all post-flop actions.
+  int postAggroCount;
+  int postActionCount;
+
+  /// Flops seen, and showdowns reached.
+  int sawFlopCount;
+  int showdownCount;
+
+  /// Hands they actually turned over — the strongest read there is.
+  List<HandLabel> shownHands;
+
   /// Transient per-hand flags backing the observed counters.
   bool vpipThisHand;
   bool pfrThisHand;
+  bool sawFlopThisHand;
+  bool cbetChanceThisHand;
   Dials? dials;
   bool sittingOut;
 
@@ -297,8 +350,25 @@ class Player {
     handsSeen: handsSeen,
     vpipCount: vpipCount,
     pfrCount: pfrCount,
+    threeBetCount: threeBetCount,
+    threeBetOpp: threeBetOpp,
+    foldToRaiseCount: foldToRaiseCount,
+    faceRaiseCount: faceRaiseCount,
+    foldTo3BetCount: foldTo3BetCount,
+    face3BetCount: face3BetCount,
+    cbetCount: cbetCount,
+    cbetOpp: cbetOpp,
+    foldToCbetCount: foldToCbetCount,
+    faceCbetCount: faceCbetCount,
+    postAggroCount: postAggroCount,
+    postActionCount: postActionCount,
+    sawFlopCount: sawFlopCount,
+    showdownCount: showdownCount,
+    shownHands: List<HandLabel>.of(shownHands),
     vpipThisHand: vpipThisHand,
     pfrThisHand: pfrThisHand,
+    sawFlopThisHand: sawFlopThisHand,
+    cbetChanceThisHand: cbetChanceThisHand,
     dials: dials,
     sittingOut: sittingOut,
   );
@@ -385,6 +455,11 @@ class LogEntry {
   final LogKind kind;
 }
 
+/// How hard the table reads and plays back at you.
+///
+/// Names match the desktop string union exactly, so `.name` is the wire value.
+enum TableDifficulty { casual, regular, tough }
+
 class GameConfig {
   const GameConfig({
     required this.seats,
@@ -393,6 +468,7 @@ class GameConfig {
     required this.bigBlind,
     this.ante = 0,
     this.botRebuy = true,
+    this.difficulty = TableDifficulty.regular,
   });
 
   /// 2, 6, or 9.
@@ -410,6 +486,9 @@ class GameConfig {
   /// short-handed — which is the dynamic you are practising for.
   final bool botRebuy;
 
+  /// How hard the table reads and plays back at you.
+  final TableDifficulty difficulty;
+
   GameConfig copyWith({
     int? seats,
     int? startingStack,
@@ -417,6 +496,7 @@ class GameConfig {
     int? bigBlind,
     int? ante,
     bool? botRebuy,
+    TableDifficulty? difficulty,
   }) => GameConfig(
     seats: seats ?? this.seats,
     startingStack: startingStack ?? this.startingStack,
@@ -424,6 +504,7 @@ class GameConfig {
     bigBlind: bigBlind ?? this.bigBlind,
     ante: ante ?? this.ante,
     botRebuy: botRebuy ?? this.botRebuy,
+    difficulty: difficulty ?? this.difficulty,
   );
 }
 
@@ -472,6 +553,7 @@ class TableState {
     this.currentBet = 0,
     required this.lastRaiseSize,
     this.aggressor,
+    this.aggressorPreflop,
     this.toAct,
     this.handNumber = 0,
     required this.smallBlind,
@@ -502,6 +584,9 @@ class TableState {
   /// Size of the last full bet/raise (for min-raise math).
   int lastRaiseSize;
   int? aggressor;
+
+  /// Who raised last pre-flop — the seat a continuation bet belongs to.
+  int? aggressorPreflop;
   int? toAct;
   int handNumber;
   int smallBlind;
@@ -529,6 +614,7 @@ class TableState {
     currentBet: currentBet,
     lastRaiseSize: lastRaiseSize,
     aggressor: aggressor,
+    aggressorPreflop: aggressorPreflop,
     toAct: toAct,
     handNumber: handNumber,
     smallBlind: smallBlind,

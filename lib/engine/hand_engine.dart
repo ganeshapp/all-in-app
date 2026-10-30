@@ -13,6 +13,7 @@ import 'dart:math';
 import 'archetypes.dart';
 import 'cards.dart';
 import 'evaluator.dart';
+import 'notation.dart';
 import 'types.dart';
 
 const List<Position> _pos6 = [
@@ -224,6 +225,8 @@ TableState startHand(TableState prev, {Random? rng}) {
     p.foldedStreet = null;
     p.vpipThisHand = false;
     p.pfrThisHand = false;
+    p.sawFlopThisHand = false;
+    p.cbetChanceThisHand = false;
     p.isAllIn = false;
     p.committed = 0;
     p.committedTotal = 0;
@@ -237,6 +240,7 @@ TableState startHand(TableState prev, {Random? rng}) {
   s.currentBet = s.bigBlind;
   s.lastRaiseSize = s.bigBlind;
   s.aggressor = null;
+  s.aggressorPreflop = null;
   s.summary = null;
   s.street = Street.preflop;
   s.phase = GamePhase.betting;
@@ -359,6 +363,54 @@ LegalActions legalActions(TableState s) {
   );
 }
 
+/// Record what this seat did about the price it faced, BEFORE the action
+/// lands and changes the state it was responding to.
+///
+/// Everything here is public knowledge: the price, the response, and who had
+/// raised. No hole cards.
+void _observeBefore(TableState s, Player p, Action action, int toCall) {
+  final facing = toCall > 0;
+  if (s.street == Street.preflop) {
+    // Facing a raise, or a re-raise?
+    if (facing && s.currentBet > s.bigBlind) {
+      final isReraise = s.currentBet > s.bigBlind * 4.5;
+      if (isReraise) {
+        p.face3BetCount += 1;
+        if (action.type == ActionType.fold) p.foldTo3BetCount += 1;
+      } else {
+        p.faceRaiseCount += 1;
+        if (action.type == ActionType.fold) p.foldToRaiseCount += 1;
+      }
+      p.threeBetOpp += 1;
+      if (action.type == ActionType.raise || action.type == ActionType.bet) {
+        p.threeBetCount += 1;
+      }
+    }
+    return;
+  }
+
+  p.postActionCount += 1;
+  if (action.type == ActionType.bet || action.type == ActionType.raise) {
+    p.postAggroCount += 1;
+  }
+
+  if (s.street == Street.flop) {
+    // Did the pre-flop raiser follow up? And did anyone fold to it?
+    if (!facing && s.aggressorPreflop == p.id && !p.cbetChanceThisHand) {
+      p.cbetChanceThisHand = true;
+      p.cbetOpp += 1;
+      if (action.type == ActionType.bet) p.cbetCount += 1;
+    }
+    if (facing &&
+        s.aggressorPreflop != null &&
+        s.aggressorPreflop != p.id &&
+        s.aggressor == s.aggressorPreflop) {
+      p.faceCbetCount += 1;
+      if (action.type == ActionType.fold) p.foldToCbetCount += 1;
+    }
+  }
+}
+
 /// Apply `action` for `seat` and advance the hand. Returns an unchanged copy
 /// when it is not `seat`'s turn or the table is not in the betting phase.
 /// Legality is NOT validated here — callers must obey [legalActions].
@@ -368,6 +420,8 @@ TableState applyAction(TableState prev, int seat, Action action) {
   final p = s.players[seat];
   final toCall = s.currentBet - p.committed;
   final maxTotal = p.committed + p.stack;
+
+  _observeBefore(s, p, action, toCall);
 
   switch (action.type) {
     case ActionType.fold:
@@ -412,6 +466,7 @@ TableState applyAction(TableState prev, int seat, Action action) {
       s.currentBet = to;
       s.lastRaiseSize = to;
       s.aggressor = seat;
+      if (s.street == Street.preflop) s.aggressorPreflop = seat;
       _resetActedExcept(s, seat);
       p.acted = true;
       p.lastAction = PlayerLastAction(p.isAllIn ? 'All-In' : 'Bet', s.street);
@@ -443,6 +498,7 @@ TableState applyAction(TableState prev, int seat, Action action) {
         _resetActedExcept(s, seat);
       }
       s.aggressor = seat;
+      if (s.street == Street.preflop) s.aggressorPreflop = seat;
       p.acted = true;
       p.lastAction = PlayerLastAction(p.isAllIn ? 'All-In' : 'Raise', s.street);
       _pushLog(
@@ -488,6 +544,14 @@ void _closeStreet(TableState s) {
   if (s.street == Street.preflop) {
     _burnDeal(s, 3);
     s.street = Street.flop;
+    // Everyone still in has now seen a flop — the denominator for how often
+    // a player goes on to show a hand down.
+    for (final p in s.players) {
+      if (!p.hasFolded && !p.sittingOut && !p.sawFlopThisHand) {
+        p.sawFlopThisHand = true;
+        p.sawFlopCount += 1;
+      }
+    }
   } else if (s.street == Street.flop) {
     _burnDeal(s, 1);
     s.street = Street.turn;
@@ -762,6 +826,18 @@ void _settleShowdown(TableState s) {
             pots.length > 1 ? (idx == 0 ? 'Main pot' : 'Side pot $idx') : 'Pot',
       ),
     );
+  }
+
+  // Cards shown at showdown are public knowledge, and the strongest read
+  // anyone gets. Every seat remembers them for the rest of the session.
+  for (final id in liveIds) {
+    final q = s.players[id];
+    q.showdownCount += 1;
+    final qHole = q.hole;
+    if (qHole != null) {
+      q.shownHands.add(cardsToLabel(qHole[0], qHole[1]));
+      if (q.shownHands.length > 40) q.shownHands.removeAt(0);
+    }
   }
 
   final showdown =

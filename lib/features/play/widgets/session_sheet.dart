@@ -538,7 +538,7 @@ class _SessionTab extends ConsumerWidget {
               netBb: hand.heroNet / session.bigBlind,
               // The coach's own verdict for the hand, so the list you scan
               // after a session shows where the mistakes were (§4.13).
-              verdict: session.handVerdicts[hand.startedAt],
+              verdict: session.handVerdicts[hand.id],
               hasNote: (notes.noteFor(hand.startedAt)?.note ?? '').isNotEmpty,
               onReplay:
                   onReplay == null ? null : () => onReplay!(hand.startedAt),

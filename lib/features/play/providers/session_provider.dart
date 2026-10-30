@@ -194,7 +194,7 @@ class SessionState {
   /// This session's finished hands, oldest first (P2's Log and P10's rows).
   final List<HHHand> history;
 
-  /// `hand.startedAt` → the worst verdict the coach gave in that hand, for the
+  /// `hand.id` → the worst verdict the coach gave in that hand, for the
   /// hand list's verdict dot (§4.13). `reviewLog` is cleared at every deal and
   /// `HHHand` carries no notes, so the sheet has nowhere else to read it from.
   /// Session-scoped and deliberately not in the snapshot: the dots are a
@@ -564,9 +564,27 @@ class SessionNotifier extends Notifier<SessionState> {
               : (table.config.botRebuy && !saved.sittingOut
                   ? table.config.startingStack
                   : 0);
+      // Everything the table has worked out about everyone, the hero
+      // included. Dropping these on resume would hand the player a fresh
+      // set of opponents who had forgotten an hour of evidence.
       p.handsSeen = saved.handsSeen;
       p.vpipCount = saved.vpipCount;
       p.pfrCount = saved.pfrCount;
+      p.threeBetCount = saved.threeBetCount;
+      p.threeBetOpp = saved.threeBetOpp;
+      p.foldToRaiseCount = saved.foldToRaiseCount;
+      p.faceRaiseCount = saved.faceRaiseCount;
+      p.foldTo3BetCount = saved.foldTo3BetCount;
+      p.face3BetCount = saved.face3BetCount;
+      p.cbetCount = saved.cbetCount;
+      p.cbetOpp = saved.cbetOpp;
+      p.foldToCbetCount = saved.foldToCbetCount;
+      p.faceCbetCount = saved.faceCbetCount;
+      p.postAggroCount = saved.postAggroCount;
+      p.postActionCount = saved.postActionCount;
+      p.sawFlopCount = saved.sawFlopCount;
+      p.showdownCount = saved.showdownCount;
+      p.shownHands = List<HandLabel>.of(saved.shownHands);
     }
     table.handNumber = state.counters.hands;
     state = state.copyWith(table: table, active: true);
@@ -823,9 +841,14 @@ class SessionNotifier extends Notifier<SessionState> {
 
       // The hand's own notes are cleared by the next deal, so the worst one
       // is folded into the map the hand list reads (§4.13).
+      //
+      // Keyed by hand NUMBER, not by `startedAt`: two hands can begin in the
+      // same millisecond when both fold out fast, and keying by the timestamp
+      // made them share one verdict dot — the second hand would wear the
+      // first hand's mistake.
       final worst = worstVerdict(state.reviewLog);
       if (worst != null) {
-        handVerdicts = {...handVerdicts, hh.startedAt: worst};
+        handVerdicts = {...handVerdicts, hh.id: worst};
       }
     }
 
