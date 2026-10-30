@@ -14,6 +14,7 @@ import 'package:allin/features/home/providers/home_providers.dart';
 import 'package:allin/features/play/providers/lobby_providers.dart';
 import 'package:allin/features/play/providers/play_providers.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
+import 'package:allin/features/stats/providers/stats_providers.dart';
 import 'package:allin/services/clock.dart';
 import 'package:allin/services/equity_service.dart';
 import 'package:allin/services/haptics.dart';
@@ -50,6 +51,7 @@ ProviderContainer homeContainer({
       homeClockProvider.overrideWithValue(fixed),
       drillClockProvider.overrideWithValue(fixed),
       playClockProvider.overrideWithValue(fixed),
+      statsClockProvider.overrideWithValue(fixed),
       playRandomProvider.overrideWithValue(Random(7)),
       hapticDriverProvider.overrideWithValue(RecordingHapticDriver()),
       equityServiceProvider.overrideWith(

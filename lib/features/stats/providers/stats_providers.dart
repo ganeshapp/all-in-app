@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_providers.dart';
 import '../../../engine/engine.dart' show LeakSpot;
+import '../../../services/clock.dart';
 import '../../../services/persistence.dart';
 import 'stats_metrics.dart';
 
@@ -214,9 +215,18 @@ final handNeighboursProvider = Provider.family<HandNeighbours, int>((
 /* ------------------------------------------------------------- practice */
 
 /// 16 weeks × 7 cells, oldest first (§7.11).
+/// The clock the heatmap window is measured back from, following the
+/// per-feature convention (`homeClockProvider`, `playClockProvider`,
+/// `drillClockProvider`). Without it `heatmapCells()` fell back to
+/// `DateTime.now()`, so the window ignored an injected clock entirely and a
+/// widget test's pinned practice day silently drifted out of view as real
+/// time passed.
+final statsClockProvider = Provider<Clock>((ref) => Clock.system);
+
 final heatmapProvider = Provider<List<HeatmapCell>>((ref) {
   ref.watch(statsRevisionProvider);
-  return ref.watch(goalsStoreProvider).heatmapCells();
+  final nowMs = ref.watch(statsClockProvider).nowMs;
+  return ref.watch(goalsStoreProvider).heatmapCells(nowMs: nowMs);
 });
 
 /* ---------------------------------------------------------------- leaks */
