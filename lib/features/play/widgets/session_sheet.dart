@@ -431,16 +431,40 @@ class _SessionTab extends ConsumerWidget {
   final ValueChanged<int>? onReplay;
   final VoidCallback onEnd;
 
+  /// The engine's style names are terse because the bots use them; these are
+  /// the words shown to the player. Shortened to fit a tile.
+  /// Tight and TAG are not the same thing: a player who sees few flops and
+  /// never raises is tight and *passive*. Shortened to fit a tile.
+  static String _styleWord(PlayerStyle s, double vpip, double pfr) {
+    final aggressive = vpip > 0 && pfr / vpip >= 0.6;
+    return switch (s) {
+      PlayerStyle.unknown => '—',
+      PlayerStyle.rock => 'Rock',
+      PlayerStyle.nit => 'Nit',
+      PlayerStyle.tight => aggressive ? 'TAG' : 'Tight-passive',
+      PlayerStyle.solid => aggressive ? 'TAG-ish' : 'Solid',
+      PlayerStyle.loose => aggressive ? 'LAG' : 'Loose-passive',
+      PlayerStyle.maniac => 'Maniac',
+      PlayerStyle.station => 'Station',
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final hero = session.table?.players[0];
     final seen = hero?.handsSeen ?? 0;
     final enoughStyle = hero != null && seen >= SeatPlate.minSample;
+    // The LABEL, not just the two numbers — and the same label the bots at
+    // this table have worked out about the hero, from the same classifier, so
+    // the app cannot call you a TAG while the table plays you as a station.
+    // `readPlayer` is recency-weighted, so this is what they think of you
+    // now rather than an average of the whole session.
     final style =
         enoughStyle
-            ? '${(hero.vpipCount / seen * 100).round()}/'
-                '${(hero.pfrCount / seen * 100).round()} · ${seen}h'
+            ? '${_styleWord(readPlayer(hero).style, hero.vpipCount / seen, hero.pfrCount / seen)} · '
+                '${(hero.vpipCount / seen * 100).round()}/'
+                '${(hero.pfrCount / seen * 100).round()}'
             : '—';
     final notes = ref.watch(playNotesProvider);
 
@@ -505,7 +529,7 @@ class _SessionTab extends ConsumerWidget {
                   // yet", not a reading — it says so in the colour too, like
                   // the P6 VPIP/PFR tiles it mirrors.
                   tone: enoughStyle ? StatTone.neutral : StatTone.muted,
-                  infoSemanticLabel: 'What VPIP and PFR mean',
+                  infoSemanticLabel: 'What your style label means',
                   onInfo:
                       () => _explain(
                         context,

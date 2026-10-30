@@ -585,6 +585,10 @@ class SessionNotifier extends Notifier<SessionState> {
       p.sawFlopCount = saved.sawFlopCount;
       p.showdownCount = saved.showdownCount;
       p.shownHands = List<HandLabel>.of(saved.shownHands);
+      p.recent = saved.recent.clone();
+      p.bluffAttempts = saved.bluffAttempts;
+      p.bluffWins = saved.bluffWins;
+      p.bluffNetBb = saved.bluffNetBb;
     }
     table.handNumber = state.counters.hands;
     state = state.copyWith(table: table, active: true);
@@ -878,6 +882,10 @@ class SessionNotifier extends Notifier<SessionState> {
                 ],
                 position: next.players[0].position,
                 sawFlop: next.players[0].foldedStreet != Street.preflop,
+                // Captured per hand so Stats can report VPIP/PFR per session
+                // and lifetime, and classify how the hero was playing.
+                vpip: next.players[0].vpipThisHand,
+                pfr: next.players[0].pfrThisHand,
                 handJson: hh == null ? null : _handJson(hh),
                 ts: _now,
               ),

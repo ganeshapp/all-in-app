@@ -101,6 +101,10 @@ Map<String, Object?> playerToJson(Player p) => {
   'sawFlopCount': p.sawFlopCount,
   'showdownCount': p.showdownCount,
   'shownHands': p.shownHands,
+  'recent': recentStatsToJson(p.recent),
+  'bluffAttempts': p.bluffAttempts,
+  'bluffWins': p.bluffWins,
+  'bluffNetBb': p.bluffNetBb,
   'vpipThisHand': p.vpipThisHand,
   'pfrThisHand': p.pfrThisHand,
   'sawFlopThisHand': p.sawFlopThisHand,
@@ -108,6 +112,51 @@ Map<String, Object?> playerToJson(Player p) => {
   'dials': p.dials == null ? null : dialsToJson(p.dials!),
   'sittingOut': p.sittingOut,
 };
+
+/// The recency window. Serialised so a resumed session keeps not just what
+/// the table has seen, but how recently — otherwise the bots come back
+/// believing the oldest hands as strongly as the newest.
+Map<String, Object?> recentStatsToJson(RecentStats r) => {
+  'hands': r.hands,
+  'vpip': r.vpip,
+  'pfr': r.pfr,
+  'threeBet': r.threeBet,
+  'threeBetOpp': r.threeBetOpp,
+  'foldToRaise': r.foldToRaise,
+  'faceRaise': r.faceRaise,
+  'foldTo3Bet': r.foldTo3Bet,
+  'face3Bet': r.face3Bet,
+  'foldToCbet': r.foldToCbet,
+  'faceCbet': r.faceCbet,
+  'cbet': r.cbet,
+  'cbetOpp': r.cbetOpp,
+  'postAggro': r.postAggro,
+  'postAction': r.postAction,
+  'showdown': r.showdown,
+  'sawFlop': r.sawFlop,
+};
+
+double _d(Object? v) => (v as num?)?.toDouble() ?? 0;
+
+RecentStats recentStatsFromJson(Map<String, Object?> j) => RecentStats(
+  hands: _d(j['hands']),
+  vpip: _d(j['vpip']),
+  pfr: _d(j['pfr']),
+  threeBet: _d(j['threeBet']),
+  threeBetOpp: _d(j['threeBetOpp']),
+  foldToRaise: _d(j['foldToRaise']),
+  faceRaise: _d(j['faceRaise']),
+  foldTo3Bet: _d(j['foldTo3Bet']),
+  face3Bet: _d(j['face3Bet']),
+  foldToCbet: _d(j['foldToCbet']),
+  faceCbet: _d(j['faceCbet']),
+  cbet: _d(j['cbet']),
+  cbetOpp: _d(j['cbetOpp']),
+  postAggro: _d(j['postAggro']),
+  postAction: _d(j['postAction']),
+  showdown: _d(j['showdown']),
+  sawFlop: _d(j['sawFlop']),
+);
 
 Player playerFromJson(Map<String, Object?> j) => Player(
   id: (j['id'] as num).toInt(),
@@ -151,6 +200,13 @@ Player playerFromJson(Map<String, Object?> j) => Player(
   sawFlopCount: (j['sawFlopCount'] as num?)?.toInt() ?? 0,
   showdownCount: (j['showdownCount'] as num?)?.toInt() ?? 0,
   shownHands: (j['shownHands'] as List?)?.cast<HandLabel>(),
+  recent:
+      j['recent'] == null
+          ? null
+          : recentStatsFromJson((j['recent'] as Map).cast<String, Object?>()),
+  bluffAttempts: (j['bluffAttempts'] as num?)?.toInt() ?? 0,
+  bluffWins: (j['bluffWins'] as num?)?.toInt() ?? 0,
+  bluffNetBb: (j['bluffNetBb'] as num?)?.toDouble() ?? 0,
   vpipThisHand: j['vpipThisHand'] == true,
   pfrThisHand: j['pfrThisHand'] == true,
   sawFlopThisHand: j['sawFlopThisHand'] == true,

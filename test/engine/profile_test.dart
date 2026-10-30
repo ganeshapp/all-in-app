@@ -6,6 +6,8 @@
 /// fixture, which replays every bot decision in both languages.
 library;
 
+import 'dart:math' as math;
+
 import 'package:allin/engine/engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,6 +29,10 @@ Player seat({
   int postActionCount = 0,
   int sawFlopCount = 0,
   int showdownCount = 0,
+  int bluffAttempts = 0,
+  int bluffWins = 0,
+  double bluffNetBb = 0,
+  RecentStats? recent,
 }) => Player(
   id: 1,
   name: name,
@@ -47,6 +53,30 @@ Player seat({
   postActionCount: postActionCount,
   sawFlopCount: sawFlopCount,
   showdownCount: showdownCount,
+  bluffAttempts: bluffAttempts,
+  bluffWins: bluffWins,
+  bluffNetBb: bluffNetBb,
+  // The bots read the recency window, not the lifetime counters, so a seat
+  // described by counters has to have the window to match: "everything you
+  // passed happened recently". Tests that care about the two diverging pass
+  // `recent` explicitly.
+  recent:
+      recent ??
+      RecentStats(
+        hands: handsSeen.toDouble(),
+        vpip: vpipCount.toDouble(),
+        pfr: pfrCount.toDouble(),
+        threeBet: threeBetCount.toDouble(),
+        threeBetOpp: threeBetOpp.toDouble(),
+        foldToRaise: foldToRaiseCount.toDouble(),
+        faceRaise: faceRaiseCount.toDouble(),
+        foldToCbet: foldToCbetCount.toDouble(),
+        faceCbet: faceCbetCount.toDouble(),
+        postAggro: postAggroCount.toDouble(),
+        postAction: postActionCount.toDouble(),
+        showdown: showdownCount.toDouble(),
+        sawFlop: sawFlopCount.toDouble(),
+      ),
 );
 
 void main() {
@@ -326,6 +356,238 @@ void main() {
       final tough = adjustmentFor(Archetype.nit, maniac, TableDifficulty.tough);
       expect(regular.defend, 1.9);
       expect(tough.defend, 1.9);
+    });
+  });
+
+  group('recency weighting', () {
+    test('a player who has loosened up reads loose NOW', () {
+      // The whole point: not the average of the two stretches.
+      final changedGear = seat(
+        handsSeen: 60,
+        vpipCount: 12, // tight over the session as a whole
+        pfrCount: 6,
+        recent: RecentStats(
+          hands: 20,
+          vpip: 17, // but wide over the last stretch
+          pfr: 12,
+          postAction: 10,
+          postAggro: 7,
+        ),
+      );
+      final read = readPlayer(changedGear);
+      expect(read.vpip, greaterThan(0.7));
+      expect(read.style, PlayerStyle.maniac);
+      // Lifetime counters are untouched — Stats asks a different question.
+      expect(changedGear.vpipCount, 12);
+    });
+
+    test('a maniac who has tightened up reads tight', () {
+      final settled = seat(
+        handsSeen: 60,
+        vpipCount: 55,
+        pfrCount: 40,
+        recent: RecentStats(hands: 20, vpip: 3, pfr: 2),
+      );
+      expect(readPlayer(settled).vpip, lessThan(0.2));
+    });
+  });
+
+  group('archetypeBelief', () {
+    test('no hands watched means no opinion', () {
+      final b = archetypeBelief(seat());
+      for (final v in b.values) {
+        expect(v, closeTo(0.25, 1e-9));
+      }
+      expect(b.values.reduce((a, x) => a + x), closeTo(1, 1e-9));
+    });
+
+    test('loose and passive reads mostly Station', () {
+      final b = archetypeBelief(
+        seat(
+          handsSeen: 60,
+          vpipCount: 28,
+          pfrCount: 4,
+          postAggroCount: 4,
+          postActionCount: 40,
+        ),
+      );
+      expect(b[Archetype.station]!, greaterThan(0.5));
+      expect(b[Archetype.station]!, greaterThan(b[Archetype.lag]!));
+      expect(b.values.reduce((a, x) => a + x), closeTo(1, 1e-9));
+    });
+
+    test('very tight reads as a Nit', () {
+      final b = archetypeBelief(
+        seat(
+          handsSeen: 60,
+          vpipCount: 7,
+          pfrCount: 5,
+          postAggroCount: 12,
+          postActionCount: 30,
+        ),
+      );
+      expect(b[Archetype.nit]!, greaterThan(b[Archetype.station]!));
+      expect(b[Archetype.nit]!, greaterThan(b[Archetype.lag]!));
+    });
+
+    test('loose-aggressive is not mistaken for a station', () {
+      final b = archetypeBelief(
+        seat(
+          handsSeen: 60,
+          vpipCount: 21,
+          pfrCount: 17,
+          postAggroCount: 27,
+          postActionCount: 40,
+        ),
+      );
+      expect(b[Archetype.lag]! + b[Archetype.tag]!, greaterThan(0.6));
+      expect(b[Archetype.station]!, lessThan(0.2));
+    });
+
+    test('a bigger sample gives a sharper opinion', () {
+      double spread(StyleBelief b) => b.values.reduce(math.max);
+      final thin = archetypeBelief(
+        seat(handsSeen: 6, vpipCount: 3, postActionCount: 4),
+      );
+      final thick = archetypeBelief(
+        seat(handsSeen: 120, vpipCount: 60, pfrCount: 2, postActionCount: 80),
+      );
+      expect(spread(thin), lessThan(spread(thick)));
+    });
+  });
+
+  group('bluffViability', () {
+    final folder = seat(
+      handsSeen: 40,
+      faceCbetCount: 20,
+      foldToCbetCount: 17,
+      vpipCount: 10,
+      pfrCount: 7,
+    );
+    final station = seat(
+      handsSeen: 40,
+      faceCbetCount: 20,
+      foldToCbetCount: 2,
+      vpipCount: 20,
+      pfrCount: 2,
+      postActionCount: 30,
+      postAggroCount: 3,
+    );
+
+    test('bluffing a folder beats bluffing a station', () {
+      expect(
+        bluffViability([folder]),
+        greaterThan(bluffViability([station]) * 2),
+      );
+    });
+
+    test('nobody left to bluff means no bluff', () {
+      expect(bluffViability([]), 0);
+    });
+
+    test('one station in the field kills it for everyone', () {
+      final twoFolders = bluffViability([folder, folder]);
+      expect(bluffViability([folder, station]), lessThan(twoFolders));
+      // And a crowd is harder than a heads-up pot, all else equal.
+      expect(twoFolders, lessThan(bluffViability([folder])));
+    });
+  });
+
+  group('bluffPolicy', () {
+    final fresh = bluffPolicy(seat());
+
+    test('a fresh seat demands little of a bluffing hand', () {
+      expect(fresh.attempts, 0);
+      expect(fresh.minEquity, inInclusiveRange(0, 0.32));
+    });
+
+    test('getting caught lowers the rate and tightens the range', () {
+      final caught = bluffPolicy(
+        seat(bluffAttempts: 30, bluffWins: 2, bluffNetBb: -90),
+      );
+      expect(caught.frequency, lessThan(fresh.frequency));
+      expect(caught.minEquity, greaterThan(fresh.minEquity));
+    });
+
+    test('getting through raises the rate and widens to any two cards', () {
+      final winning = bluffPolicy(
+        seat(bluffAttempts: 30, bluffWins: 26, bluffNetBb: 90),
+      );
+      expect(winning.frequency, greaterThan(fresh.frequency));
+      expect(winning.minEquity, 0);
+      final caught = bluffPolicy(
+        seat(bluffAttempts: 30, bluffWins: 2, bluffNetBb: -90),
+      );
+      expect(winning.frequency, greaterThan(caught.frequency * 2));
+    });
+
+    test('chips decide it, not the success rate', () {
+      // The asymmetry a success rate cannot see: getting through more than
+      // half the time and still losing money doing it.
+      final throughButLosing = bluffPolicy(
+        seat(bluffAttempts: 40, bluffWins: 22, bluffNetBb: -70),
+      );
+      expect(throughButLosing.frequency, lessThan(1));
+      final rarelyThroughButPaying = bluffPolicy(
+        seat(bluffAttempts: 40, bluffWins: 9, bluffNetBb: 60),
+      );
+      expect(rarelyThroughButPaying.frequency, greaterThan(1));
+    });
+
+    test('one unlucky hand does not rewrite the policy', () {
+      final unlucky = bluffPolicy(
+        seat(bluffAttempts: 1, bluffWins: 0, bluffNetBb: -4),
+      );
+      expect((unlucky.frequency - fresh.frequency).abs(), lessThan(0.25));
+    });
+
+    test('stays in range for any history', () {
+      for (final a in [0, 1, 5, 50, 500]) {
+        for (final w in [0, 1, a]) {
+          for (final net in [-500.0, -5.0, 0.0, 5.0, 500.0]) {
+            final pol = bluffPolicy(
+              seat(
+                bluffAttempts: a,
+                bluffWins: math.min(w, a),
+                bluffNetBb: net,
+              ),
+            );
+            expect(pol.frequency, inInclusiveRange(0.3, 1.9));
+            expect(pol.minEquity, inInclusiveRange(0, 0.32));
+          }
+        }
+      }
+    });
+  });
+
+  group('bluffsThisHand', () {
+    test('is stable within a hand, which is what makes a barrel', () {
+      final a = bluffsThisHand(42, 3, 0.5);
+      for (var i = 0; i < 20; i++) {
+        expect(bluffsThisHand(42, 3, 0.5), a);
+      }
+    });
+
+    test('honours the extremes', () {
+      expect(bluffsThisHand(42, 3, 0), isFalse);
+      expect(bluffsThisHand(42, 3, 1), isTrue);
+    });
+
+    test('honours the rate over many hands', () {
+      var hits = 0;
+      const n = 4000;
+      for (var h = 0; h < n; h++) {
+        if (bluffsThisHand(h, 2, 0.3)) hits++;
+      }
+      expect(hits / n, closeTo(0.3, 0.04));
+    });
+
+    test('two seats in the same hand decide independently', () {
+      var differ = 0;
+      for (var h = 0; h < 200; h++) {
+        if (bluffsThisHand(h, 1, 0.5) != bluffsThisHand(h, 2, 0.5)) differ++;
+      }
+      expect(differ, greaterThan(40));
     });
   });
 

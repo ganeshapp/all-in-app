@@ -286,6 +286,55 @@ abstract final class StatsCopy {
       "ironically mean you only call when it's obvious — you might be "
       'folding too many winners.';
 
+  static const String vpipLabel = 'Hands played (VPIP)';
+  static const String vpipBand = '20–28%';
+  static const String vpipBlurb =
+      'How often you put money in before the flop by choice. Posting a blind '
+      'does not count. Much above 30% and you are paying to see flops with '
+      'hands that cannot stand a raise; much below 18% and you are folding '
+      'your way out of the pots you could have won.';
+
+  static const String pfrLabel = 'Raised first in (PFR)';
+  static const String pfrBand = '16–22%';
+  static const String pfrBlurb =
+      'How often you raised before the flop. The gap between this and VPIP '
+      'is the tell: a small gap is a player who raises or folds, a large gap '
+      'is a player who limps and calls. Limping is where most money leaks.';
+
+  static const String styleLabel = 'Your style';
+  static const String styleBlurb =
+      'The label these numbers add up to — the same one the bots at your '
+      'table work out about you from watching, and play back against.';
+
+  /// What each style label means, in one line.
+  static String styleMeaning(String style) => switch (style) {
+    'rock' => 'Very tight. You fold almost everything and wait for the top.',
+    'nit' => 'Tight. Few hands, and rarely without a strong one.',
+    'tight' => 'Tight and selective — the base a TAG is built on.',
+    'solid' => 'A reasonable number of hands, played with some aggression.',
+    'loose' => 'You play a lot of hands. Fine if you keep raising with them.',
+    'maniac' => 'Very loose and very aggressive. Hard to read, easy to bleed.',
+    'station' => 'You play a lot and rarely raise — you are paying people off.',
+    _ => 'Not enough hands yet to say.',
+  };
+
+  /// The heading above the "which gear wins" breakdown.
+  static const String byStyleTitle = 'Win rate by how you were playing';
+  static const String byStyleBlurb =
+      'Each session is labelled by how you played it, then the results are '
+      'pooled. This is the number that tells you which of your own gears '
+      'actually makes money.';
+  static const String byStyleEmpty =
+      'Not enough sessions yet. Play a few more and this will show which '
+      'style wins for you.';
+
+  /// "47 of 212 hands = 22%" — the arithmetic behind a simple rate.
+  static String rateMath({required int hits, required int of}) =>
+      of == 0
+          ? 'No hands recorded yet.'
+          : '$hits of $of hands '
+              '= ${(hits / of * 100).round()}%';
+
   static const String afLabel = 'Aggression factor (AF)';
   static const String afBand = '2.0–4.0';
   static const String afBlurb =

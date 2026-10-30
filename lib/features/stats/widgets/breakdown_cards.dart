@@ -11,7 +11,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../engine/engine.dart' show fmtPct, fmtSigned, kArchetypes;
+import '../../../engine/engine.dart'
+    show PlayerStyle, fmtPct, fmtSigned, kArchetypes;
 import '../../../theme/tokens.dart';
 import '../../../theme/typography.dart';
 import '../../../widgets/widgets.dart';
@@ -221,6 +222,109 @@ class _PositionRow extends StatelessWidget {
 
 /// §7.8 — WTSD · W$SD · AF, each a dotted label that opens T1, and the
 /// verbatim footnote.
+/// Which of the player's own gears actually makes money: each session is
+/// labelled by how they played it, then the results are pooled.
+class StyleWinRateCard extends StatelessWidget {
+  const StyleWinRateCard({super.key, required this.metrics});
+
+  final StatsMetrics metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final spells = metrics.styleSpells;
+
+    if (spells.isEmpty) {
+      return StatsSection(
+        title: StatsCopy.byStyleTitle,
+        child: Text(
+          StatsCopy.byStyleEmpty,
+          style: AllInText.body(14, color: c.textMuted, height: 1.5),
+        ),
+      );
+    }
+
+    var maxAbs = 0.0;
+    for (final s in spells) {
+      final v = s.bb100.abs();
+      if (v > maxAbs) maxAbs = v;
+    }
+    if (maxAbs == 0) maxAbs = 1;
+
+    return StatsSection(
+      title: StatsCopy.byStyleTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final s in spells) _StyleSpellRow(spell: s, maxAbs: maxAbs),
+          const SizedBox(height: AllInSpace.sm),
+          Text(
+            StatsCopy.byStyleBlurb,
+            style: AllInText.body(12, color: c.textFaint, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StyleSpellRow extends StatelessWidget {
+  const _StyleSpellRow({required this.spell, required this.maxAbs});
+
+  final StyleSpell spell;
+  final double maxAbs;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final rate = '${fmtSigned(spell.bb100, 0)}/100';
+    final name = StyleNumbersCard.styleName(spell.style);
+
+    return Semantics(
+      label: '$name, $rate, ${spell.hands} hands',
+      child: ExcludeSemantics(
+        child: SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 96,
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AllInText.body(
+                    13,
+                    weight: FontWeight.w600,
+                    color: c.text,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: DivergingBar(value: spell.bb100, max: maxAbs, height: 8),
+              ),
+              const SizedBox(width: AllInSpace.sm),
+              SizedBox(
+                width: 68,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    rate,
+                    maxLines: 1,
+                    style: AllInText.mono(13, color: c.text),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class StyleNumbersCard extends ConsumerWidget {
   const StyleNumbersCard({super.key, required this.metrics});
 
@@ -269,6 +373,63 @@ class StyleNumbersCard extends ConsumerWidget {
                 ),
           ),
           DottedStatRow(
+            label: StatsCopy.vpipLabel,
+            value:
+                metrics.lifetimeStyle.vpip == null
+                    ? '—'
+                    : fmtPct(metrics.lifetimeStyle.vpip!),
+            onExplain:
+                () => _explain(
+                  context,
+                  ref,
+                  label: StatsCopy.vpipLabel,
+                  blurb: StatsCopy.vpipBlurb,
+                  band: StatsCopy.vpipBand,
+                  math: StatsCopy.rateMath(
+                    hits: metrics.lifetimeStyle.vpipHands,
+                    of: metrics.lifetimeStyle.hands,
+                  ),
+                ),
+          ),
+          DottedStatRow(
+            label: StatsCopy.pfrLabel,
+            value:
+                metrics.lifetimeStyle.pfr == null
+                    ? '—'
+                    : fmtPct(metrics.lifetimeStyle.pfr!),
+            onExplain:
+                () => _explain(
+                  context,
+                  ref,
+                  label: StatsCopy.pfrLabel,
+                  blurb: StatsCopy.pfrBlurb,
+                  band: StatsCopy.pfrBand,
+                  math: StatsCopy.rateMath(
+                    hits: metrics.lifetimeStyle.pfrHands,
+                    of: metrics.lifetimeStyle.hands,
+                  ),
+                ),
+          ),
+          DottedStatRow(
+            label: StatsCopy.styleLabel,
+            value: styleWord(
+              metrics.lifetimeStyle.style,
+              metrics.lifetimeStyle.vpip,
+              metrics.lifetimeStyle.pfr,
+            ),
+            onExplain:
+                () => _explain(
+                  context,
+                  ref,
+                  label: StatsCopy.styleLabel,
+                  blurb: StatsCopy.styleBlurb,
+                  band: null,
+                  math: StatsCopy.styleMeaning(
+                    metrics.lifetimeStyle.style?.name ?? 'unknown',
+                  ),
+                ),
+          ),
+          DottedStatRow(
             label: StatsCopy.afLabel,
             value: metrics.af == null ? '—' : metrics.af!.toStringAsFixed(1),
             onExplain:
@@ -302,7 +463,8 @@ class StyleNumbersCard extends ConsumerWidget {
     WidgetRef ref, {
     required String label,
     required String blurb,
-    required String band,
+    // A label has no "healthy range" — there is no number to be inside one.
+    required String? band,
     required String math,
   }) => showStatsExplainer(
     context,
@@ -310,9 +472,42 @@ class StyleNumbersCard extends ConsumerWidget {
     title: label,
     body: blurb,
     math: math,
-    mathExtra: _HealthyRange(band: band),
+    mathExtra: band == null ? null : _HealthyRange(band: band),
     expert: StatsCopy.styleFootnote,
   );
+
+  /// The style label as the player sees it. The engine's names are terse
+  /// because the bots use them; these are the words on the card.
+  /// The label in the vocabulary players actually use.
+  ///
+  /// "Tight" and "TAG" are not the same thing — a player who sees 20% of
+  /// flops and never raises is tight and *passive*, which is a different leak
+  /// and deserves a different word. So the aggressive names are only used
+  /// when the raising actually backs them up.
+  static String styleWord(PlayerStyle? s, double? vpip, double? pfr) {
+    final raises = (vpip ?? 0) > 0 ? (pfr ?? 0) / vpip! : 0.0;
+    final aggressive = raises >= 0.6;
+    return switch (s) {
+      PlayerStyle.tight =>
+        aggressive ? 'TAG (tight-aggressive)' : 'Tight but passive',
+      PlayerStyle.loose =>
+        aggressive ? 'LAG (loose-aggressive)' : 'Loose but passive',
+      PlayerStyle.solid => aggressive ? 'TAG-ish (solid)' : 'Solid but passive',
+      _ => styleName(s),
+    };
+  }
+
+  static String styleName(PlayerStyle? s) => switch (s) {
+    null => '—',
+    PlayerStyle.unknown => '—',
+    PlayerStyle.rock => 'Rock',
+    PlayerStyle.nit => 'Nit',
+    PlayerStyle.tight => 'Tight',
+    PlayerStyle.solid => 'Solid',
+    PlayerStyle.loose => 'Loose',
+    PlayerStyle.maniac => 'Maniac',
+    PlayerStyle.station => 'Calling station',
+  };
 }
 
 class _HealthyRange extends StatelessWidget {

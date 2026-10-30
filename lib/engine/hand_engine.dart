@@ -227,6 +227,13 @@ TableState startHand(TableState prev, {Random? rng}) {
     p.pfrThisHand = false;
     p.sawFlopThisHand = false;
     p.cbetChanceThisHand = false;
+    p.bluffedThisHand = false;
+    // Fade the recency window by one hand. Everything recorded during this
+    // hand then lands at full weight, so the last ten hands dominate.
+    if (!p.sittingOut) {
+      p.recent.decay(kRecentDecay);
+      p.recent.hands += 1;
+    }
     p.isAllIn = false;
     p.committed = 0;
     p.committedTotal = 0;
@@ -376,22 +383,34 @@ void _observeBefore(TableState s, Player p, Action action, int toCall) {
       final isReraise = s.currentBet > s.bigBlind * 4.5;
       if (isReraise) {
         p.face3BetCount += 1;
-        if (action.type == ActionType.fold) p.foldTo3BetCount += 1;
+        p.recent.face3Bet += 1;
+        if (action.type == ActionType.fold) {
+          p.foldTo3BetCount += 1;
+          p.recent.foldTo3Bet += 1;
+        }
       } else {
         p.faceRaiseCount += 1;
-        if (action.type == ActionType.fold) p.foldToRaiseCount += 1;
+        p.recent.faceRaise += 1;
+        if (action.type == ActionType.fold) {
+          p.foldToRaiseCount += 1;
+          p.recent.foldToRaise += 1;
+        }
       }
       p.threeBetOpp += 1;
+      p.recent.threeBetOpp += 1;
       if (action.type == ActionType.raise || action.type == ActionType.bet) {
         p.threeBetCount += 1;
+        p.recent.threeBet += 1;
       }
     }
     return;
   }
 
   p.postActionCount += 1;
+  p.recent.postAction += 1;
   if (action.type == ActionType.bet || action.type == ActionType.raise) {
     p.postAggroCount += 1;
+    p.recent.postAggro += 1;
   }
 
   if (s.street == Street.flop) {
@@ -399,14 +418,22 @@ void _observeBefore(TableState s, Player p, Action action, int toCall) {
     if (!facing && s.aggressorPreflop == p.id && !p.cbetChanceThisHand) {
       p.cbetChanceThisHand = true;
       p.cbetOpp += 1;
-      if (action.type == ActionType.bet) p.cbetCount += 1;
+      p.recent.cbetOpp += 1;
+      if (action.type == ActionType.bet) {
+        p.cbetCount += 1;
+        p.recent.cbet += 1;
+      }
     }
     if (facing &&
         s.aggressorPreflop != null &&
         s.aggressorPreflop != p.id &&
         s.aggressor == s.aggressorPreflop) {
       p.faceCbetCount += 1;
-      if (action.type == ActionType.fold) p.foldToCbetCount += 1;
+      p.recent.faceCbet += 1;
+      if (action.type == ActionType.fold) {
+        p.foldToCbetCount += 1;
+        p.recent.foldToCbet += 1;
+      }
     }
   }
 }
@@ -438,6 +465,7 @@ TableState applyAction(TableState prev, int seat, Action action) {
       if (s.street == Street.preflop && !p.vpipThisHand) {
         p.vpipThisHand = true;
         p.vpipCount += 1;
+        p.recent.vpip += 1;
       }
       final amt = min(toCall, p.stack);
       _commit(s, p, amt);
@@ -454,10 +482,12 @@ TableState applyAction(TableState prev, int seat, Action action) {
         if (!p.vpipThisHand) {
           p.vpipThisHand = true;
           p.vpipCount += 1;
+          p.recent.vpip += 1;
         }
         if (!p.pfrThisHand) {
           p.pfrThisHand = true;
           p.pfrCount += 1;
+          p.recent.pfr += 1;
         }
       }
       int to = max(action.amount ?? 0, min(s.bigBlind, maxTotal));
@@ -481,10 +511,12 @@ TableState applyAction(TableState prev, int seat, Action action) {
         if (!p.vpipThisHand) {
           p.vpipThisHand = true;
           p.vpipCount += 1;
+          p.recent.vpip += 1;
         }
         if (!p.pfrThisHand) {
           p.pfrThisHand = true;
           p.pfrCount += 1;
+          p.recent.pfr += 1;
         }
       }
       int to = action.amount ?? (s.currentBet + s.lastRaiseSize);
@@ -550,6 +582,7 @@ void _closeStreet(TableState s) {
       if (!p.hasFolded && !p.sittingOut && !p.sawFlopThisHand) {
         p.sawFlopThisHand = true;
         p.sawFlopCount += 1;
+        p.recent.sawFlop += 1;
       }
     }
   } else if (s.street == Street.flop) {
@@ -740,6 +773,7 @@ void _settleByFold(TableState s, int winnerId) {
             ? UncalledBet(playerId: winnerId, amount: excess, inPot: true)
             : null,
   );
+  _scoreBluffs(s, winnerId);
   _pushLog(s, s.street, '${w.name} wins $amount (uncontested)', LogKind.result);
   // Learning reveal: at hand end every dealt hand is shown, folds included.
   for (final p in s.players) {
@@ -747,6 +781,24 @@ void _settleByFold(TableState s, int winnerId) {
   }
   s.toAct = null;
   s.phase = GamePhase.handOver;
+}
+
+/// Score every bluff that was run this hand — the reward signal the bluffing
+/// bandit learns from.
+///
+/// A bluff "got through" if the bluffer took the pot without anybody seeing a
+/// showdown. Anything else counts against it: called down, raised off it, or
+/// shown up at the end. Crude, in the sense that a bluff can get through and
+/// still have been a bad idea, but it is the same evidence a human has.
+void _scoreBluffs(TableState s, int? wonUncontestedBy) {
+  for (final p in s.players) {
+    if (!p.bluffedThisHand) continue;
+    p.bluffAttempts += 1;
+    if (p.id == wonUncontestedBy) p.bluffWins += 1;
+    // What it actually cost or made, which is the signal the policy uses.
+    p.bluffNetBb += (p.stack - s.stacksAtStart[p.id]) / s.bigBlind;
+    p.bluffedThisHand = false;
+  }
 }
 
 void _settleShowdown(TableState s) {
@@ -828,11 +880,16 @@ void _settleShowdown(TableState s) {
     );
   }
 
+  // A hand that reaches showdown is, by definition, a bluff that did not get
+  // through: somebody paid to see it.
+  _scoreBluffs(s, null);
+
   // Cards shown at showdown are public knowledge, and the strongest read
   // anyone gets. Every seat remembers them for the rest of the session.
   for (final id in liveIds) {
     final q = s.players[id];
     q.showdownCount += 1;
+    q.recent.showdown += 1;
     final qHole = q.hole;
     if (qHole != null) {
       q.shownHands.add(cardsToLabel(qHole[0], qHole[1]));

@@ -79,6 +79,18 @@ const Map<Archetype, PreflopDials> kDials = {
   ),
 };
 
+/// The share of hands each archetype designates as bluffing hands.
+///
+/// Scaled at the table by how foldable the field actually is, so these are the
+/// rate against an ordinary opponent, not a floor. The spread is the point: if
+/// a Nit bets, you should believe it, and if a LAG bets you should not.
+const Map<Archetype, double> kBluffHands = {
+  Archetype.tag: 0.3,
+  Archetype.lag: 0.45,
+  Archetype.nit: 0.12,
+  Archetype.station: 0.06,
+};
+
 /// Hands that never fold preflop, whatever the price.
 const Set<HandLabel> kPremium = {'AA', 'KK', 'QQ', 'AKs', 'AKo'};
 const List<HandLabel> kPremiumList = ['AA', 'KK', 'QQ', 'AKs', 'AKo'];
@@ -704,17 +716,73 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
           range: narrowed(NarrowKind.aggro),
         );
       }
-      // Bluffs need a reason: a real draw, or a scare-card barrel.
+      // Bluffs.
+      //
+      // A draw is the best reason to bet without a hand, but it cannot be the
+      // only one: a bot that bets air exactly never is a bot you can read off
+      // a single street. So some share of hands are bluffing hands outright,
+      // picked once per hand and held for the whole hand — which is what
+      // turns a one-off stab into a barrel, and what stops "bet, check, bet"
+      // from being a tell.
+      //
+      // How often is a read, not a constant. Firing at somebody who folds to
+      // most c-bets is free money; firing at a station is setting money on
+      // fire. The field decides it, not one nominated villain, because the
+      // bluff has to get through all of them.
+      final viable = bluffViability(liveOpps, difficulty);
+      // How often, and how wide, is learned — see `bluffPolicy`. The
+      // archetype only supplies the prior.
+      final policy = bluffPolicy(p);
+      // Three factors, each applied exactly once: who the bot is, what it has
+      // learned, and how foldable the people still in the hand are.
+      final rate = kBluffHands[archetype]! * policy.frequency * viable;
+      final committed = bluffsThisHand(s.handNumber, seat, rate);
+      // The range it is willing to bluff with. Getting caught raises this, so
+      // the bot stops firing with pure air and goes back to hands that have
+      // something behind them.
+      final inRange = e >= policy.minEquity;
+      // A bluff gets cheaper to start than to finish. Firing every street of
+      // a hand marked for bluffing turns a small loss into a big one against
+      // anybody who only continues with a real hand — the showdown column
+      // went to 114 bb/100 against a player who folds nothing good. So the
+      // barrel fades. Still a barrel, because the turn rate is high enough
+      // that giving up is not a reliable read either, but one that stops
+      // piling in on the river.
+      final barrel =
+          s.street == Street.flop
+              ? 1.0
+              : s.street == Street.turn
+              ? 0.55
+              : 0.28;
       final bluffP =
           draw == 2
               ? aggression * 0.55
               : draw == 1
               ? aggression * 0.28
+              : committed && inRange
+              // Air, but this is one of its bluffing hands and the hand is
+              // inside the range it currently trusts: fire more readily on a
+              // board it can credibly have hit.
+              ? aggression *
+                  barrel *
+                  (tex.paired
+                      ? 0.4
+                      : tex.highCard >= 12
+                      ? 0.72
+                      : 0.6)
               : tex.highCard >= 12 && s.street != Street.flop
               ? aggression * 0.12
               : 0.0;
-      if (rng.nextDouble() < bluffP * multiDamp) {
-        final to = _clampInt(s.pot * 0.66, la.minRaiseTo, la.maxRaiseTo);
+      if (rng.nextDouble() < bluffP * viable) {
+        // Remember that this was a bluff, so the hand's outcome can score it.
+        if (e < 0.45) p.bluffedThisHand = true;
+        // Size a pure bluff like a value bet — the point is to be the same
+        // shape as the hand it is pretending to be.
+        final to = _clampInt(
+          s.pot * (tex.wet ? 0.7 : 0.6),
+          la.minRaiseTo,
+          la.maxRaiseTo,
+        );
         return BotDecision(
           action: Action.bet(to),
           range: narrowed(NarrowKind.aggro),
@@ -748,7 +816,11 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   if (draw == 2 &&
       s.street != Street.river &&
       la.canRaise &&
-      rng.nextDouble() < aggression * 0.3 * multiDamp) {
+      rng.nextDouble() <
+          aggression *
+              0.3 *
+              bluffPolicy(p).frequency *
+              bluffViability(liveOpps, difficulty)) {
     final to = _clampInt(
       s.currentBet + s.pot * 0.9,
       la.minRaiseTo,

@@ -212,6 +212,100 @@ class PlayerLastAction {
   final Street street;
 }
 
+/// Recency-weighted mirrors of the observed counters: the same events, but
+/// old hands fade out.
+///
+/// A cumulative average is the wrong estimator for a poker opponent, because
+/// opponents are not stationary. Somebody who folds for thirty hands and then
+/// loosens up once they have chips would take another thirty hands to show up
+/// in `vpipCount / handsSeen`. These decay once per hand, so a change of gear
+/// is visible in about ten. The integer counters are kept alongside for the
+/// HUD and the Stats page, which ask a different question: what has this
+/// player done overall, not what are they doing now.
+class RecentStats {
+  RecentStats({
+    this.hands = 0,
+    this.vpip = 0,
+    this.pfr = 0,
+    this.threeBet = 0,
+    this.threeBetOpp = 0,
+    this.foldToRaise = 0,
+    this.faceRaise = 0,
+    this.foldTo3Bet = 0,
+    this.face3Bet = 0,
+    this.foldToCbet = 0,
+    this.faceCbet = 0,
+    this.cbet = 0,
+    this.cbetOpp = 0,
+    this.postAggro = 0,
+    this.postAction = 0,
+    this.showdown = 0,
+    this.sawFlop = 0,
+  });
+
+  double hands;
+  double vpip;
+  double pfr;
+  double threeBet;
+  double threeBetOpp;
+  double foldToRaise;
+  double faceRaise;
+  double foldTo3Bet;
+  double face3Bet;
+  double foldToCbet;
+  double faceCbet;
+  double cbet;
+  double cbetOpp;
+  double postAggro;
+  double postAction;
+  double showdown;
+  double sawFlop;
+
+  /// Fade everything by one hand's worth of forgetting.
+  void decay(double by) {
+    hands *= by;
+    vpip *= by;
+    pfr *= by;
+    threeBet *= by;
+    threeBetOpp *= by;
+    foldToRaise *= by;
+    faceRaise *= by;
+    foldTo3Bet *= by;
+    face3Bet *= by;
+    foldToCbet *= by;
+    faceCbet *= by;
+    cbet *= by;
+    cbetOpp *= by;
+    postAggro *= by;
+    postAction *= by;
+    showdown *= by;
+    sawFlop *= by;
+  }
+
+  RecentStats clone() => RecentStats(
+    hands: hands,
+    vpip: vpip,
+    pfr: pfr,
+    threeBet: threeBet,
+    threeBetOpp: threeBetOpp,
+    foldToRaise: foldToRaise,
+    faceRaise: faceRaise,
+    foldTo3Bet: foldTo3Bet,
+    face3Bet: face3Bet,
+    foldToCbet: foldToCbet,
+    faceCbet: faceCbet,
+    cbet: cbet,
+    cbetOpp: cbetOpp,
+    postAggro: postAggro,
+    postAction: postAction,
+    showdown: showdown,
+    sawFlop: sawFlop,
+  );
+}
+
+/// How fast the recency window forgets — ~25 hands of effective memory.
+const double kRecentDecay = 0.96;
+
 class Player {
   Player({
     required this.id,
@@ -247,13 +341,19 @@ class Player {
     this.sawFlopCount = 0,
     this.showdownCount = 0,
     List<HandLabel>? shownHands,
+    RecentStats? recent,
+    this.bluffAttempts = 0,
+    this.bluffWins = 0,
+    this.bluffNetBb = 0,
+    this.bluffedThisHand = false,
     this.vpipThisHand = false,
     this.pfrThisHand = false,
     this.sawFlopThisHand = false,
     this.cbetChanceThisHand = false,
     this.dials,
     this.sittingOut = false,
-  }) : shownHands = shownHands ?? <HandLabel>[];
+  }) : shownHands = shownHands ?? <HandLabel>[],
+       recent = recent ?? RecentStats();
 
   /// Seat index 0..n-1; 0 is hero.
   final int id;
@@ -323,6 +423,25 @@ class Player {
   /// Hands they actually turned over — the strongest read there is.
   List<HandLabel> shownHands;
 
+  /// The same events, recency-weighted. This is what the bots actually read.
+  RecentStats recent;
+
+  /// Bluffs run and bluffs that got through, this session. The bandit the
+  /// bots use to decide how often — and how wide — to bluff.
+  int bluffAttempts;
+  int bluffWins;
+
+  /// Net big blinds won across the hands it bluffed on.
+  ///
+  /// The reward signal that matters. Counting how often a bluff "got through"
+  /// is not enough: the ones that get through win a small pot and the ones
+  /// that get called lose a big one, so a 43% success rate can still be
+  /// setting money on fire.
+  double bluffNetBb;
+
+  /// Set when this seat has bet as a bluff during the current hand.
+  bool bluffedThisHand;
+
   /// Transient per-hand flags backing the observed counters.
   bool vpipThisHand;
   bool pfrThisHand;
@@ -365,6 +484,11 @@ class Player {
     sawFlopCount: sawFlopCount,
     showdownCount: showdownCount,
     shownHands: List<HandLabel>.of(shownHands),
+    recent: recent.clone(),
+    bluffAttempts: bluffAttempts,
+    bluffWins: bluffWins,
+    bluffNetBb: bluffNetBb,
+    bluffedThisHand: bluffedThisHand,
     vpipThisHand: vpipThisHand,
     pfrThisHand: pfrThisHand,
     sawFlopThisHand: sawFlopThisHand,

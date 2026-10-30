@@ -12,6 +12,9 @@
 /// 1:1 port of `src/game/profile.ts`.
 library;
 
+import 'dart:math' as math;
+
+import 'prng.dart' show hashSeed;
 import 'ranges.dart';
 import 'types.dart';
 
@@ -34,6 +37,7 @@ class Read {
     required this.cbet,
     required this.postAggro,
     required this.wtsd,
+    required this.faceCbetWeight,
     required this.style,
   });
 
@@ -51,10 +55,42 @@ class Read {
   final double cbet;
   final double postAggro;
   final double wtsd;
+
+  /// Recency-weighted count of c-bets faced — how much the fold rate is worth
+  /// trusting, as opposed to what it says.
+  final double faceCbetWeight;
+
   final PlayerStyle style;
 }
 
-double _ratio(int a, int b, double dflt) => b > 0 ? a / b : dflt;
+/// A rate, or [dflt] when nothing has been observed. Operates on the decayed
+/// float accumulators, so [b] is a weight rather than a count.
+double _ratio(double a, double b, double dflt) => b > 1e-9 ? a / b : dflt;
+
+/// Below this many hands, no label — the numbers are noise.
+const int kStyleMinHands = 12;
+
+/// The label a human would put on these numbers.
+///
+/// One definition, used by the bots to read the table and by the Stats page to
+/// tell the player how they have been playing. Two copies of these thresholds
+/// would mean the app could call you a TAG while the bots treated you as a
+/// station.
+PlayerStyle classifyStyle(double vpip, double pfr, double postAggro) {
+  final loose = vpip > 0.4;
+  final veryLoose = vpip > 0.6;
+  // Passive means passive overall. Someone raising half their hands before
+  // the flop is not a calling station, whatever they do after it.
+  final passive = postAggro < 0.3 && pfr < 0.3;
+  if (veryLoose && pfr > 0.35) return PlayerStyle.maniac;
+  if (loose && passive) return PlayerStyle.station;
+  if (veryLoose) return PlayerStyle.maniac;
+  if (loose) return PlayerStyle.loose;
+  if (vpip < 0.12) return PlayerStyle.rock;
+  if (vpip < 0.18) return PlayerStyle.nit;
+  if (vpip < 0.24) return PlayerStyle.tight;
+  return PlayerStyle.solid;
+}
 
 /// How much weight to give a statistic given how often it has been tested.
 /// Ten observations is roughly the point a person says "he keeps doing that";
@@ -66,51 +102,245 @@ double _weight(int n, [int full = 12]) {
 }
 
 Read readPlayer(Player p) {
+  // Every rate comes from the RECENCY-WEIGHTED window, not the lifetime
+  // counters. Opponents change gear — somebody folds for thirty hands, then
+  // picks up chips and starts playing back — and a cumulative average cannot
+  // see it happen. `handsSeen` is still the sample size for confidence,
+  // because trust should grow with how long you have been watching even
+  // though the rates themselves only describe recent hands.
+  final w = p.recent;
   final hands = p.handsSeen;
-  final vpip = _ratio(p.vpipCount, hands, 0.25);
-  final pfr = _ratio(p.pfrCount, hands, 0.18);
-  final postAggro = _ratio(p.postAggroCount, p.postActionCount, 0.4);
+  final vpip = _ratio(w.vpip, w.hands, 0.25);
+  final pfr = _ratio(w.pfr, w.hands, 0.18);
+  final postAggro = _ratio(w.postAggro, w.postAction, 0.4);
 
-  var style = PlayerStyle.unknown;
-  if (hands >= 12) {
-    final loose = vpip > 0.4;
-    final veryLoose = vpip > 0.6;
-    // Passive means passive overall. Someone raising half their hands
-    // before the flop is not a calling station, whatever they do after it.
-    final passive = postAggro < 0.3 && pfr < 0.3;
-    if (veryLoose && pfr > 0.35) {
-      style = PlayerStyle.maniac;
-    } else if (loose && passive) {
-      style = PlayerStyle.station;
-    } else if (veryLoose) {
-      style = PlayerStyle.maniac;
-    } else if (loose) {
-      style = PlayerStyle.loose;
-    } else if (vpip < 0.12) {
-      style = PlayerStyle.rock;
-    } else if (vpip < 0.18) {
-      style = PlayerStyle.nit;
-    } else if (vpip < 0.24) {
-      style = PlayerStyle.tight;
-    } else {
-      style = PlayerStyle.solid;
-    }
-  }
+  final style =
+      hands >= kStyleMinHands
+          ? classifyStyle(vpip, pfr, postAggro)
+          : PlayerStyle.unknown;
 
   return Read(
     hands: hands,
     confidence: _weight(hands, 25),
     vpip: vpip,
     pfr: pfr,
-    threeBet: _ratio(p.threeBetCount, p.threeBetOpp, 0.07),
-    foldToRaise: _ratio(p.foldToRaiseCount, p.faceRaiseCount, 0.6),
-    foldTo3Bet: _ratio(p.foldTo3BetCount, p.face3BetCount, 0.6),
-    foldToCbet: _ratio(p.foldToCbetCount, p.faceCbetCount, 0.5),
-    cbet: _ratio(p.cbetCount, p.cbetOpp, 0.6),
+    threeBet: _ratio(w.threeBet, w.threeBetOpp, 0.07),
+    foldToRaise: _ratio(w.foldToRaise, w.faceRaise, 0.6),
+    foldTo3Bet: _ratio(w.foldTo3Bet, w.face3Bet, 0.6),
+    foldToCbet: _ratio(w.foldToCbet, w.faceCbet, 0.5),
+    cbet: _ratio(w.cbet, w.cbetOpp, 0.6),
     postAggro: postAggro,
-    wtsd: _ratio(p.showdownCount, p.sawFlopCount, 0.3),
+    wtsd: _ratio(w.showdown, w.sawFlop, 0.3),
+    faceCbetWeight: w.faceCbet,
     style: style,
   );
+}
+
+/// What the table thinks this player is, as probabilities rather than a label.
+///
+/// Nobody sits down knowing the others are a TAG and two stations. They watch,
+/// and they form an opinion that firms up and sometimes changes. So this starts
+/// at a flat 25% each and moves as the evidence comes in — "80% station, 5%
+/// nit" rather than "station".
+///
+/// Built only from the recency-weighted read, so a player who changes gear gets
+/// re-assessed instead of being stuck with what they did an hour ago. The
+/// declared archetype is never consulted; the bots genuinely do not know it.
+typedef StyleBelief = Map<Archetype, double>;
+
+class _Shape {
+  const _Shape(this.vpip, this.pfr, this.aggro);
+  final double vpip;
+  final double pfr;
+  final double aggro;
+}
+
+/// What each archetype looks like from the outside: VPIP, PFR, post-flop
+/// aggression. The yardstick the observed numbers are compared against.
+const Map<Archetype, _Shape> _kArchetypeShape = {
+  Archetype.tag: _Shape(0.22, 0.18, 0.55),
+  Archetype.lag: _Shape(0.34, 0.27, 0.68),
+  Archetype.nit: _Shape(0.12, 0.09, 0.4),
+  Archetype.station: _Shape(0.46, 0.07, 0.18),
+};
+
+StyleBelief archetypeBelief(Player p) {
+  final read = readPlayer(p);
+  final flat = 1 / Archetype.values.length;
+  // Nothing watched yet: no opinion. Saying "probably a TAG" after two hands
+  // would be worse than admitting there is no read.
+  if (read.confidence <= 0.02) {
+    return {for (final a in Archetype.values) a: flat};
+  }
+  // Sharpness grows with the sample, so early evidence nudges and later
+  // evidence decides. Without this a single loose hand reads as a maniac.
+  final sharpness = 1 + 7 * read.confidence;
+  final scores = <Archetype, double>{};
+  var total = 0.0;
+  for (final a in Archetype.values) {
+    final shape = _kArchetypeShape[a]!;
+    // Squared error over the three signals that actually separate the four,
+    // with PFR weighted hardest: it is what tells a station from a LAG, both
+    // of whom play a lot of hands.
+    final dv = (read.vpip - shape.vpip) / 0.18;
+    final dp = (read.pfr - shape.pfr) / 0.12;
+    final da = (read.postAggro - shape.aggro) / 0.3;
+    final d = dv * dv + dp * dp * 1.5 + da * da;
+    final s = math.exp(-d * sharpness * 0.5);
+    scores[a] = s;
+    total += s;
+  }
+  // Degenerate case: nothing fits at all. Fall back to no opinion rather than
+  // dividing by zero.
+  if (total <= 1e-12) return {for (final a in Archetype.values) a: flat};
+  return {for (final a in Archetype.values) a: scores[a]! / total};
+}
+
+/// How willing this player is to let a bet go through, as a multiplier on how
+/// often it is worth bluffing at them.
+double _foldability(Player p) {
+  final read = readPlayer(p);
+  // Two sources, because each is weak alone. The direct observation is the
+  // better evidence once there is enough of it; the archetype belief covers
+  // the early hands, where a station who has not yet been bet at still looks
+  // like everybody else.
+  final belief = archetypeBelief(p);
+  final expected =
+      belief[Archetype.station]! * 0.2 +
+      belief[Archetype.nit]! * 0.72 +
+      belief[Archetype.tag]! * 0.55 +
+      belief[Archetype.lag]! * 0.42;
+  final trust = _clamp(read.faceCbetWeight / 8, 0, 1);
+  final f = read.foldToCbet * trust + expected * (1 - trust);
+  // 0.8 folds → 1.6x; 0.5 → 1.0x; 0.2 → 0.4x.
+  return _clamp(f * 2, 0.35, 1.7);
+}
+
+/// Whether a bluff is worth running against the people still in the hand.
+///
+/// A bluff has to get through EVERYBODY, so the stickiest live opponent sets
+/// the price: two nits are easy to bluff, one calling station makes it
+/// hopeless no matter who else is in. That is why this takes the minimum over
+/// the field rather than looking at one nominated villain — and why a flat
+/// "bluff less multiway" damping is the wrong shape, since it cannot tell
+/// three folders apart from one station.
+double bluffViability(
+  List<Player> opponents, [
+  TableDifficulty difficulty = TableDifficulty.regular,
+]) {
+  final live = opponents.where((q) => !q.hasFolded && !q.sittingOut).toList();
+  if (live.isEmpty) return 0;
+  var worst = double.infinity;
+  for (final q in live) {
+    final f = _foldability(q);
+    if (f < worst) worst = f;
+  }
+  // Each extra body is another hand that has to miss, on top of whoever is
+  // hardest to move. Milder than 1/n, because who they are matters more than
+  // how many: 1/n says bluffing three nits is hopeless, and it is not.
+  final crowd = 1 / (1 + (live.length - 1) * 0.45);
+  // A tougher table is better at picking the moment, not more reckless.
+  final gain = _kDifficulty[difficulty]!.gain;
+  final sharpen = 1 + (worst - 1) * 0.35 * math.min(gain, 1.3);
+  return _clamp(worst * crowd * sharpen, 0.1, 1.8);
+}
+
+/// What a seat has learned about bluffing, this session.
+class BluffPolicy {
+  const BluffPolicy({
+    required this.frequency,
+    required this.minEquity,
+    required this.attempts,
+    required this.successRate,
+  });
+
+  /// Multiplier on how often to try it.
+  final double frequency;
+
+  /// The least equity a hand needs before it counts as a bluffing candidate.
+  /// Zero means anything will do — 2-6 offsuit included. It climbs when the
+  /// bluffs keep getting caught, so the bot falls back on hands that have
+  /// something going for them instead of pure air.
+  final double minEquity;
+  final int attempts;
+  final double successRate;
+}
+
+/// The bluffing bandit.
+///
+/// A fixed bluff rate is a rate somebody can work out and then simply call.
+/// So the rate is not fixed: the bot tries it, watches what happens, and moves.
+/// Getting through means it can afford to do it more often and with worse
+/// hands; getting caught means it does it less and needs a hand with some
+/// equity behind it. Both dials move, because a human caught bluffing twice
+/// does not only slow down, they also stop doing it with total air.
+///
+/// The archetype sets the prior and nothing more. That part is who the bot is,
+/// and it is also what stops a session of bad luck turning a Nit into a maniac.
+BluffPolicy bluffPolicy(Player p) {
+  final attempts = p.bluffAttempts;
+  // Beta-style smoothing: with no history the archetype's prior stands, and it
+  // takes a run of real evidence to move far from it.
+  // Four, not six. Two properties pull against each other here: a bot that
+  // opens a session firing at a table full of callers should notice inside
+  // ten hands rather than forty, because the money it loses learning is money
+  // it does not get back — but one caught bluff must not rewrite the policy
+  // either. Four is where a single bad outcome moves the rate under a fifth,
+  // and twenty hands of evidence all but replaces the prior.
+  const priorWeight = 4;
+  const priorRate = 0.5;
+  final rate =
+      (p.bluffWins + priorWeight * priorRate) / (attempts + priorWeight);
+  // What the bluffing has actually been WORTH, in big blinds per attempt.
+  //
+  // This is the number that matters, not the success rate. How often a bluff
+  // got through misses the asymmetry: the ones that work win a small pot and
+  // the ones that get called lose a big one, so a bot can get through 43% of
+  // the time and still be setting money on fire.
+  //
+  // Smoothed harder than the success rate, because chip results are far
+  // noisier than fold counts: one big pot is worth twenty folds.
+  const netPrior = 8;
+  final meanNet = p.bluffNetBb / (attempts + netPrior);
+  // About 3bb per attempt either way covers the useful range.
+  final edge = _clamp(1 + meanNet / 3, 0.3, 1.9);
+  return BluffPolicy(
+    // The LEARNED multiplier only. How foldable the field is is a separate
+    // factor applied once at the call site — folding both in here double
+    // counts it, which is quietly how bluffing got suppressed to nothing.
+    frequency: edge,
+    // Caught more often than break-even → demand equity. The ceiling is 0.32
+    // because past that there is nothing left to bluff with: the branch is
+    // only reached with a weak hand in the first place.
+    minEquity: _clamp((1 - edge) * 0.42, 0, 0.32),
+    attempts: attempts,
+    successRate: rate,
+  );
+}
+
+/// Does this seat run a bluff on THIS hand at all?
+///
+/// Decided once per hand from a deterministic seed rather than re-rolled every
+/// street. That is what produces barrels: a bot that fires the flop keeps
+/// firing the turn instead of tossing a fresh coin, so "bet, check, bet" stops
+/// being a reliable tell and you are left guessing whether the story is real.
+///
+/// Stateless on purpose — nothing to serialise, and both languages compute the
+/// same answer from the same FNV-1a hash.
+bool bluffsThisHand(int handNumber, int seat, double rate) {
+  if (rate <= 0) return false;
+  if (rate >= 1) return true;
+  // FNV-1a leaves its top bits almost untouched by a one-character change, so
+  // seat 1 and seat 2 in the same hand came out the same 97% of the time —
+  // every bot at the table bluffing on the same hands. Finalise the hash
+  // before using it as a probability.
+  var h = hashSeed('bluff:$handNumber:$seat');
+  h = (h ^ (h >>> 15)) & 0xFFFFFFFF;
+  h = (h * 0x2c1b3c6d) & 0xFFFFFFFF;
+  h = (h ^ (h >>> 12)) & 0xFFFFFFFF;
+  h = (h * 0x297a2d39) & 0xFFFFFFFF;
+  h = (h ^ (h >>> 15)) & 0xFFFFFFFF;
+  return h / 0x100000000 < rate;
 }
 
 /// What they just did pre-flop — the strongest single piece of evidence.

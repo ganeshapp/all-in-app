@@ -23,6 +23,8 @@ class HandRecord {
     this.archetypes = const [],
     this.position,
     this.sawFlop,
+    this.vpip,
+    this.pfr,
     this.handJson,
     required this.ts,
   });
@@ -53,6 +55,13 @@ class HandRecord {
   /// then excluded from WTSD).
   final bool? sawFlop;
 
+  /// Hero put money in voluntarily before the flop — the blinds alone do not
+  /// count (schema v4+; null on older rows, which are excluded from VPIP).
+  final bool? vpip;
+
+  /// Hero raised before the flop (schema v4+; null on older rows).
+  final bool? pfr;
+
   /// The full replayable `HHHand` payload. Persisted to `hand_history`, never
   /// loaded back into the snapshot window.
   final String? handJson;
@@ -70,6 +79,8 @@ class HandRecord {
         archetypes: archetypes,
         position: position,
         sawFlop: sawFlop,
+        vpip: vpip,
+        pfr: pfr,
         handJson: clearHandJson ? null : (handJson ?? this.handJson),
         ts: ts,
       );
@@ -85,6 +96,8 @@ class HandRecord {
     'archetypes': archetypes.map((a) => a.label).toList(),
     'position': position?.label,
     'sawFlop': sawFlop,
+    'vpip': vpip,
+    'pfr': pfr,
     if (includeHandJson) 'handJson': handJson,
     'ts': ts,
   };
@@ -98,6 +111,8 @@ class HandRecord {
     archetypes: decodeArchetypes(j['archetypes']),
     position: positionOrNull(j['position']),
     sawFlop: j['sawFlop'] == null ? null : j['sawFlop'] == true,
+    vpip: j['vpip'] == null ? null : j['vpip'] == true,
+    pfr: j['pfr'] == null ? null : j['pfr'] == true,
     handJson: j['handJson'] as String?,
     ts: (j['ts'] as num?)?.toInt() ?? 0,
   );

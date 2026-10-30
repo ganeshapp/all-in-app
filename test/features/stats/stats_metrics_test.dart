@@ -22,6 +22,8 @@ HandRecord _hand({
   required List<Archetype> archetypes,
   required Position position,
   bool? sawFlop,
+  bool? vpip,
+  bool? pfr,
 }) => HandRecord(
   n: n,
   netBb: netBb,
@@ -31,6 +33,8 @@ HandRecord _hand({
   archetypes: archetypes,
   position: position,
   sawFlop: sawFlop,
+  vpip: vpip,
+  pfr: pfr,
   ts: 1700000000000 + n,
 );
 
@@ -266,6 +270,90 @@ void main() {
       expect(empty.trackedPositions, 0);
       expect(empty.maxArchetypeHands, 1);
       expect(empty.maxPositionRate, 1);
+    });
+  });
+
+  group('how the hero has been playing (§7.8)', () {
+    HandRecord h(
+      int n, {
+      required bool vpip,
+      required bool pfr,
+      double net = 0,
+    }) => _hand(
+      n: n,
+      netBb: net,
+      showdown: false,
+      won: net > 0,
+      archetypes: const [],
+      position: Position.btn,
+      sawFlop: true,
+      vpip: vpip,
+      pfr: pfr,
+    );
+
+    test('VPIP and PFR come only from rows that recorded them', () {
+      // Rows written before the fields existed must be excluded, not counted
+      // as folds — otherwise every historical VPIP reads far too tight.
+      final m = computeStatsMetrics(
+        StatsSnapshot(
+          handsPlayed: 4,
+          history: [
+            h(1, vpip: true, pfr: true),
+            h(2, vpip: true, pfr: false),
+            _hand(
+              n: 3,
+              netBb: 0,
+              showdown: false,
+              won: false,
+              archetypes: const [],
+              position: Position.btn,
+            ),
+          ],
+        ),
+      );
+      expect(m.lifetimeStyle.hands, 2, reason: 'the legacy row is excluded');
+      expect(m.lifetimeStyle.vpip, 1.0);
+      expect(m.lifetimeStyle.pfr, 0.5);
+    });
+
+    test('no label until there are enough hands', () {
+      final thin = computeStatsMetrics(
+        StatsSnapshot(history: [h(1, vpip: true, pfr: true)]),
+      );
+      expect(thin.lifetimeStyle.style, isNull);
+      expect(thin.styleSpells, isEmpty);
+    });
+
+    test('a loose passive session is labelled a station and pooled', () {
+      // 20 hands, 18 played, 1 raised — loose and passive.
+      final hands = [
+        for (var i = 1; i <= 20; i++) h(i, vpip: i <= 18, pfr: i == 1, net: -1),
+      ];
+      final m = computeStatsMetrics(
+        StatsSnapshot(handsPlayed: hands.length, history: hands),
+      );
+      expect(m.lifetimeStyle.style, PlayerStyle.station);
+      expect(m.styleSpells, hasLength(1));
+      expect(m.styleSpells.first.style, PlayerStyle.station);
+      expect(m.styleSpells.first.hands, 20);
+      expect(m.styleSpells.first.bb100, closeTo(-100, 0.01));
+    });
+
+    test('sessions split on a restarting hand number and group by style', () {
+      // Session A: loose-passive, losing. Session B: tight, winning.
+      final a = [
+        for (var i = 1; i <= 20; i++) h(i, vpip: i <= 18, pfr: i == 1, net: -2),
+      ];
+      final b = [
+        for (var i = 1; i <= 20; i++) h(i, vpip: i <= 2, pfr: i <= 2, net: 3),
+      ];
+      final m = computeStatsMetrics(
+        StatsSnapshot(handsPlayed: 40, history: [...a, ...b]),
+      );
+      expect(m.styleSpells, hasLength(2), reason: 'two sessions, two styles');
+      final byStyle = {for (final s in m.styleSpells) s.style: s};
+      expect(byStyle[PlayerStyle.station]!.bb100, closeTo(-200, 0.01));
+      expect(byStyle[PlayerStyle.rock]!.bb100, closeTo(300, 0.01));
     });
   });
 }

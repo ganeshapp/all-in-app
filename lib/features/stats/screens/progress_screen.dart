@@ -170,6 +170,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         const SizedBox(height: AllInSpace.md),
         StyleNumbersCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),
+        StyleWinRateCard(metrics: metrics),
+        const SizedBox(height: AllInSpace.md),
         ReadAccuracyCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),
         PracticeCard(cells: cells),

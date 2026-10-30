@@ -15,7 +15,8 @@
 library;
 
 import '../../../engine/engine.dart';
-import '../../../services/persistence.dart' show GuessRecord, StatsSnapshot;
+import '../../../services/persistence.dart'
+    show GuessRecord, HandRecord, StatsSnapshot;
 import '../stats_copy.dart';
 
 /// One row of "Hands vs each style" (§7.5).
@@ -83,6 +84,57 @@ const int kRecentMistakeLimit = 5;
 /// Peek scores drawn by `MiniBars` (§7.4).
 const int kReadBarLimit = 30;
 
+/// Hands played while the hero's own style read a particular way, and what
+/// they won doing it — the answer to "do I win more as a TAG or as a LAG?".
+class StyleSpell {
+  const StyleSpell({
+    required this.style,
+    required this.hands,
+    required this.netBb,
+  });
+  final PlayerStyle style;
+  final int hands;
+  final double netBb;
+
+  double get bb100 => hands > 0 ? (netBb / hands) * 100 : 0;
+}
+
+/// VPIP, PFR and the style they add up to, over some set of hands.
+class StyleProfile {
+  const StyleProfile({
+    required this.hands,
+    required this.vpipHands,
+    required this.pfrHands,
+    required this.postAggro,
+  });
+
+  /// Hands with the fields recorded. Rows written before VPIP was persisted
+  /// are excluded rather than counted as folds.
+  final int hands;
+  final int vpipHands;
+  final int pfrHands;
+
+  /// Post-flop aggression over the coached decisions, which is what the
+  /// classifier needs to tell a station from a nit.
+  final double postAggro;
+
+  static const StyleProfile empty = StyleProfile(
+    hands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    postAggro: 0,
+  );
+
+  double? get vpip => hands == 0 ? null : vpipHands / hands;
+  double? get pfr => hands == 0 ? null : pfrHands / hands;
+
+  /// Null until there are enough hands for the label to mean anything.
+  PlayerStyle? get style =>
+      hands < kStyleMinHands
+          ? null
+          : classifyStyle(vpipHands / hands, pfrHands / hands, postAggro);
+}
+
 class StatsMetrics {
   const StatsMetrics({
     required this.snapshot,
@@ -99,6 +151,8 @@ class StatsMetrics {
     required this.lostBb,
     required this.flopsSeen,
     required this.showdownsFromFlops,
+    required this.lifetimeStyle,
+    required this.styleSpells,
     required this.aggressiveActions,
     required this.callActions,
   });
@@ -138,6 +192,13 @@ class StatsMetrics {
   /// §7.8), and how many of those reached showdown.
   final int flopsSeen;
   final int showdownsFromFlops;
+
+  /// How the hero has been playing over every recorded hand.
+  final StyleProfile lifetimeStyle;
+
+  /// The same, split by the style each session read as — so the player can
+  /// see which of their own gears actually makes money.
+  final List<StyleSpell> styleSpells;
 
   /// Coached decisions that bet or raised, and that called (§7.8 AF).
   final int aggressiveActions;
@@ -323,6 +384,60 @@ StatsMetrics computeStatsMetrics(StatsSnapshot snapshot) {
           .reversed
           .toList();
 
+  // ---- how the hero has been playing (§7.8) ----
+  //
+  // Only rows that actually recorded the flags count. Older rows predate
+  // them, and treating a missing value as "did not play the hand" would
+  // quietly drag every VPIP down.
+  final vpipRows = [
+    for (final h in history)
+      if (h.vpip != null) h,
+  ];
+  final postAggro =
+      calls + aggressive == 0 ? 0.0 : aggressive / (calls + aggressive);
+  final lifetimeStyle = StyleProfile(
+    hands: vpipRows.length,
+    vpipHands: vpipRows.where((h) => h.vpip == true).length,
+    pfrHands: vpipRows.where((h) => h.pfr == true).length,
+    postAggro: postAggro,
+  );
+
+  // Split the history into sessions. A session boundary is a hand number that
+  // does not continue the previous one — hand numbers restart at 1 each time.
+  final sessions = <List<HandRecord>>[];
+  for (final h in vpipRows) {
+    if (sessions.isEmpty || h.n <= sessions.last.last.n) {
+      sessions.add([h]);
+    } else {
+      sessions.last.add(h);
+    }
+  }
+  final byStyle = <PlayerStyle, List<num>>{};
+  for (final session in sessions) {
+    final profile = StyleProfile(
+      hands: session.length,
+      vpipHands: session.where((h) => h.vpip == true).length,
+      pfrHands: session.where((h) => h.pfr == true).length,
+      // Per-session post-flop aggression is not recorded per hand, so the
+      // lifetime figure stands in. It moves the station/nit split only.
+      postAggro: postAggro,
+    );
+    final style = profile.style;
+    if (style == null) continue;
+    final net = session.fold<double>(0, (a, h) => a + h.netBb);
+    final bucket = byStyle.putIfAbsent(style, () => <num>[0, 0]);
+    bucket[0] = bucket[0] + session.length;
+    bucket[1] = bucket[1] + net;
+  }
+  final styleSpells = [
+    for (final e in byStyle.entries)
+      StyleSpell(
+        style: e.key,
+        hands: e.value[0].toInt(),
+        netBb: e.value[1].toDouble(),
+      ),
+  ]..sort((a, b) => b.hands.compareTo(a.hands));
+
   return StatsMetrics(
     snapshot: snapshot,
     chartBase: chartBase,
@@ -338,6 +453,8 @@ StatsMetrics computeStatsMetrics(StatsSnapshot snapshot) {
     lostBb: lostBb,
     flopsSeen: flopsSeen,
     showdownsFromFlops: showdownsFromFlops,
+    lifetimeStyle: lifetimeStyle,
+    styleSpells: styleSpells,
     aggressiveActions: aggressive,
     callActions: calls,
   );
