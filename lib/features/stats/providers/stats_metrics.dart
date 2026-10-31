@@ -99,42 +99,6 @@ class StyleSpell {
   double get bb100 => hands > 0 ? (netBb / hands) * 100 : 0;
 }
 
-/// VPIP, PFR and the style they add up to, over some set of hands.
-class StyleProfile {
-  const StyleProfile({
-    required this.hands,
-    required this.vpipHands,
-    required this.pfrHands,
-    required this.postAggro,
-  });
-
-  /// Hands with the fields recorded. Rows written before VPIP was persisted
-  /// are excluded rather than counted as folds.
-  final int hands;
-  final int vpipHands;
-  final int pfrHands;
-
-  /// Post-flop aggression over the coached decisions, which is what the
-  /// classifier needs to tell a station from a nit.
-  final double postAggro;
-
-  static const StyleProfile empty = StyleProfile(
-    hands: 0,
-    vpipHands: 0,
-    pfrHands: 0,
-    postAggro: 0,
-  );
-
-  double? get vpip => hands == 0 ? null : vpipHands / hands;
-  double? get pfr => hands == 0 ? null : pfrHands / hands;
-
-  /// Null until there are enough hands for the label to mean anything.
-  PlayerStyle? get style =>
-      hands < kStyleMinHands
-          ? null
-          : classifyStyle(vpipHands / hands, pfrHands / hands, postAggro);
-}
-
 class StatsMetrics {
   const StatsMetrics({
     required this.snapshot,

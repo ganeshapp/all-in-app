@@ -157,7 +157,7 @@ void main() {
 
       expect(
         debrief.paragraph,
-        '18 coached decisions, 2 flagged as mistakes '
+        '18 decisions graded, 2 flagged as mistakes '
         '(11 % vs your usual 14 % — cleaner than average).',
       );
       expect(debrief.best, 'Best: a turn raise worth +3.2 bb.');
@@ -215,7 +215,7 @@ void main() {
         lifetimeFlagged: 1,
       );
       // Nothing outside this session to compare with.
-      expect(debrief.paragraph, '8 coached decisions, 1 flagged as mistake.');
+      expect(debrief.paragraph, '8 decisions graded, 1 flagged as mistake.');
       expect(
         debrief.mathLines.last,
         '8 decisions is a small sample — one flagged call moves this by '

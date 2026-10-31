@@ -951,17 +951,29 @@ class SessionNotifier extends Notifier<SessionState> {
     _applyStep(0, action);
     unawaited(_persist()); // §4.14: after EVERY hero action.
     _maybeAutoLoop();
-    if (!coachOn) return;
 
-    state = state.copyWith(coachComputing: true);
+    // The coach runs even when it is switched OFF.
+    //
+    // "Off" means it does not interrupt you — not that the app stops
+    // watching. Its verdicts still feed the Aggression factor, the leak
+    // finder, the Review queue and the post-session summary, which is
+    // exactly where you go to learn from a session you chose to play
+    // without a coach talking over it. Skipping the whole evaluation meant
+    // an uncoached session produced no AF, no flagged hands and nothing to
+    // review — the session you most wanted to look back on was the one the
+    // app remembered least about.
+    //
+    // It costs nothing on screen: the equity work is already in an isolate,
+    // and with the coach off nothing below touches the UI state.
+    if (coachOn) state = state.copyWith(coachComputing: true);
     final review = await ref
         .read(equityServiceProvider)
         .evaluateHero(t, action, id, settings: _settings.coachSettings);
     if (!_alive) return;
-    state = state.copyWith(coachComputing: false);
+    if (coachOn) state = state.copyWith(coachComputing: false);
 
     if (review == null) {
-      _noteCoachFailure(t);
+      if (coachOn) _noteCoachFailure(t);
       return;
     }
 
@@ -973,8 +985,9 @@ class SessionNotifier extends Notifier<SessionState> {
     );
 
     // §4.8: a verdict that resolves after the hand changed is recorded but
-    // never shown as a chip.
-    if (state.table?.handNumber == t.handNumber) {
+    // never shown as a chip. Nor is anything shown while the coach is off —
+    // that is the entire difference between on and off.
+    if (coachOn && state.table?.handNumber == t.handNumber) {
       _pushReview(review);
     }
 

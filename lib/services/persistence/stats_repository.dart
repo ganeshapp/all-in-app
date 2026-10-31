@@ -111,7 +111,7 @@ class StatsRepository {
 
         final hands = await db.rawQuery(
           'SELECT n, net_bb, pot_bb, showdown, won, archetypes, position, '
-          'saw_flop, ts FROM hand_history WHERE source IS NULL '
+          'saw_flop, vpip, pfr, ts FROM hand_history WHERE source IS NULL '
           'ORDER BY id DESC LIMIT $historyCap',
         );
         final guesses = await db.rawQuery(
@@ -175,8 +175,8 @@ class StatsRepository {
         final db = _database.db;
         await db.rawInsert(
           'INSERT INTO hand_history (n, net_bb, pot_bb, showdown, won, '
-          'archetypes, position, saw_flop, hand_json, ts) '
-          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'archetypes, position, saw_flop, vpip, pfr, hand_json, ts) '
+          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [
             rec.n,
             rec.netBb,
@@ -186,6 +186,8 @@ class StatsRepository {
             jsonEncode(rec.archetypes.map((a) => a.label).toList()),
             rec.position?.label,
             rec.sawFlop == null ? null : (rec.sawFlop! ? 1 : 0),
+            rec.vpip == null ? null : (rec.vpip! ? 1 : 0),
+            rec.pfr == null ? null : (rec.pfr! ? 1 : 0),
             rec.handJson,
             rec.ts,
           ],
@@ -279,8 +281,9 @@ class StatsRepository {
         for (final json in handJsons) {
           batch.rawInsert(
             'INSERT INTO hand_history (n, net_bb, pot_bb, showdown, won, '
-            'archetypes, position, saw_flop, hand_json, source, ts) '
-            "VALUES (0, 0, 0, 0, 0, '[]', NULL, NULL, ?, ?, ?)",
+            'archetypes, position, saw_flop, vpip, pfr, hand_json, source, '
+            'ts) '
+            "VALUES (0, 0, 0, 0, 0, '[]', NULL, NULL, NULL, NULL, ?, ?, ?)",
             [json, source, now],
           );
         }
@@ -351,8 +354,8 @@ class StatsRepository {
         for (final h in snapshot.history) {
           batch.rawInsert(
             'INSERT INTO hand_history (n, net_bb, pot_bb, showdown, won, '
-            'archetypes, position, saw_flop, hand_json, ts) '
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)',
+            'archetypes, position, saw_flop, vpip, pfr, hand_json, ts) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)',
             [
               h.n,
               h.netBb,
@@ -362,6 +365,8 @@ class StatsRepository {
               jsonEncode(h.archetypes.map((a) => a.label).toList()),
               h.position?.label,
               h.sawFlop == null ? null : (h.sawFlop! ? 1 : 0),
+              h.vpip == null ? null : (h.vpip! ? 1 : 0),
+              h.pfr == null ? null : (h.pfr! ? 1 : 0),
               h.ts,
             ],
           );
@@ -447,6 +452,8 @@ class StatsRepository {
     archetypes: HandRecord.decodeArchetypes(_decodeJson(r['archetypes'])),
     position: positionOrNull(r['position']),
     sawFlop: r['saw_flop'] == null ? null : _truthy(r['saw_flop']),
+    vpip: r['vpip'] == null ? null : _truthy(r['vpip']),
+    pfr: r['pfr'] == null ? null : _truthy(r['pfr']),
     ts: (r['ts'] as num?)?.toInt() ?? 0,
   );
 

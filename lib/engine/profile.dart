@@ -343,6 +343,64 @@ bool bluffsThisHand(int handNumber, int seat, double rate) {
   return h / 0x100000000 < rate;
 }
 
+/// VPIP, PFR and the style they add up to, over some set of hands.
+class StyleProfile {
+  const StyleProfile({
+    required this.hands,
+    required this.vpipHands,
+    required this.pfrHands,
+    required this.postAggro,
+  });
+
+  /// Hands with the fields recorded. Rows written before VPIP was persisted
+  /// are excluded rather than counted as folds.
+  final int hands;
+  final int vpipHands;
+  final int pfrHands;
+
+  /// Post-flop aggression over the coached decisions, which is what the
+  /// classifier needs to tell a station from a nit.
+  final double postAggro;
+
+  static const StyleProfile empty = StyleProfile(
+    hands: 0,
+    vpipHands: 0,
+    pfrHands: 0,
+    postAggro: 0,
+  );
+
+  double? get vpip => hands == 0 ? null : vpipHands / hands;
+  double? get pfr => hands == 0 ? null : pfrHands / hands;
+
+  /// Null until there are enough hands for the label to mean anything.
+  PlayerStyle? get style =>
+      hands < kStyleMinHands
+          ? null
+          : classifyStyle(vpipHands / hands, pfrHands / hands, postAggro);
+}
+
+/// The style label in a sentence: "a TAG", "a calling station".
+///
+/// Tight and TAG are not the same thing — somebody who sees few flops and
+/// never raises is tight and *passive*, a different leak — so the aggressive
+/// names are only used when the raising backs them up.
+String styleSentenceWord(PlayerStyle s, double vpip, double pfr) {
+  final aggressive = vpip > 0 && pfr / vpip >= 0.6;
+  return switch (s) {
+    PlayerStyle.unknown => 'hard to label yet',
+    PlayerStyle.rock => 'a rock — very tight',
+    PlayerStyle.nit => 'a nit',
+    PlayerStyle.tight =>
+      aggressive ? 'a TAG — tight and aggressive' : 'tight but passive',
+    PlayerStyle.solid =>
+      aggressive ? 'solid and aggressive' : 'solid but passive',
+    PlayerStyle.loose =>
+      aggressive ? 'a LAG — loose and aggressive' : 'loose but passive',
+    PlayerStyle.maniac => 'a maniac',
+    PlayerStyle.station => 'a calling station',
+  };
+}
+
 /// What they just did pre-flop — the strongest single piece of evidence.
 enum PreflopAction { open, call, threebet, defend }
 

@@ -338,7 +338,8 @@ abstract final class StatsCopy {
   static const String afLabel = 'Aggression factor (AF)';
   static const String afBand = '2.0–4.0';
   static const String afBlurb =
-      'Your bets + raises divided by your calls, over coached decisions. '
+      'Your bets + raises divided by your calls, over every graded decision '
+      '— including sessions you played with the coach switched off. '
       'Below ~1.5 means you call far more than you pressure — the most '
       'common beginner leak.';
 

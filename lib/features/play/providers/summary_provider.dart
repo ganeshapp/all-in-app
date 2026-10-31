@@ -117,6 +117,39 @@ class SessionDebrief {
 }
 
 /// §4.13's expert layer, verbatim *(all new)*.
+/// How the hero played THIS session, read off the live table.
+///
+/// The table's own counters are the session's counters — it was created when
+/// the session started — so this needs no extra bookkeeping.
+StyleProfile? _styleOf(SessionState session) {
+  final hero = session.table?.players.firstOrNull;
+  if (hero == null) return null;
+  final seen = hero.handsSeen;
+  if (seen <= 0) return null;
+  final read = readPlayer(hero);
+  return StyleProfile(
+    hands: seen,
+    vpipHands: hero.vpipCount,
+    pfrHands: hero.pfrCount,
+    postAggro: read.postAggro,
+  );
+}
+
+/// "You played this one as a TAG — 23% of hands, 18% raised."
+///
+/// Null until there are enough hands for the label to mean anything, because
+/// a style read off nine hands is noise with a name on it.
+String? _styleLine(StyleProfile? style) {
+  if (style == null) return null;
+  final label = style.style;
+  final vpip = style.vpip;
+  final pfr = style.pfr;
+  if (label == null || vpip == null || pfr == null) return null;
+  final word = styleSentenceWord(label, vpip, pfr);
+  return 'You played this one as $word — ${(vpip * 100).round()}% of hands, '
+      '${(pfr * 100).round()}% raised.';
+}
+
 const List<String> kDebriefExpertLines = [
   "A decision is flagged when the coach's EV estimate for your action is "
       'below the best legal action by more than the strictness threshold — '
@@ -125,8 +158,10 @@ const List<String> kDebriefExpertLines = [
   "'Cleaner than average' means this session's rate is at least 2 points "
       "under your lifetime rate; '— a rougher one' is 2 points over; inside "
       '±2 the clause is omitted.',
-  'Only decisions made with the EV Coach on are counted, so a session played '
-      'with it off shows no card at all.',
+  'Every decision is graded, including sessions played with the EV Coach '
+      'switched off. Off means it does not interrupt you — the verdicts still '
+      'feed this card, your Aggression factor and the Review queue, so a '
+      'session you played uninterrupted is still one you can learn from.',
 ];
 
 /// Builds §4.13's debrief from this session's counters and the lifetime
@@ -136,16 +171,23 @@ SessionDebrief buildDebrief({
   required int lifetimeCoached,
   required int lifetimeFlagged,
   bool coachWasOff = true,
+  StyleProfile? style,
 }) {
   final n = counters.coachedDecisions;
   final m = counters.flaggedDecisions;
+  // How you played, before how it paid — the card's own promise. It leads,
+  // because it is the part you can act on: the result is variance, the style
+  // is a choice.
+  final styleLine = _styleLine(style);
 
   if (n == 0) {
     return SessionDebrief(
-      paragraph:
-          coachWasOff
-              ? SummaryCopy.noCoachedDecisions
-              : SummaryCopy.noDecisionsYet,
+      paragraph: [
+        if (styleLine != null) styleLine,
+        coachWasOff
+            ? SummaryCopy.noCoachedDecisions
+            : SummaryCopy.noDecisionsYet,
+      ].join(' '),
       mathLines: const <String>[],
       expertLines: const <String>[],
     );
@@ -171,9 +213,10 @@ SessionDebrief buildDebrief({
   final rateClause =
       compare ? ' ($sessionRate % vs your usual $lifeRate %$judgement)' : '';
 
-  final paragraph =
-      '$n coached decision${n == 1 ? '' : 's'}, $m flagged as '
+  final graded =
+      '$n decision${n == 1 ? '' : 's'} graded, $m flagged as '
       'mistake${m == 1 ? '' : 's'}$rateClause.';
+  final paragraph = [if (styleLine != null) styleLine, graded].join(' ');
 
   final bestEv = counters.bestEvBb;
   final bestLabel = counters.bestEvLabel;
@@ -335,6 +378,7 @@ SessionSummaryData assembleSummary({
   required int lifetimeCoached,
   required int lifetimeFlagged,
   bool coachWasOff = true,
+  StyleProfile? sessionStyle,
   int? handsFallback,
   double? netBbOverride,
   double? bb100Override,
@@ -371,6 +415,7 @@ SessionSummaryData assembleSummary({
       lifetimeCoached: lifetimeCoached,
       lifetimeFlagged: lifetimeFlagged,
       coachWasOff: coachWasOff,
+      style: sessionStyle,
     ),
     rows: [
       for (final h in history.reversed)
@@ -428,6 +473,7 @@ final sessionSummaryProvider =
           coachWasOff:
               !ref.read(settingsProvider).coachEnabled ||
               session.coachOffThisSession,
+          sessionStyle: _styleOf(session),
         );
       }
 

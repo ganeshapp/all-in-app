@@ -675,6 +675,16 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   final draw = drawStrength(holeInts, boardInts);
   final multiDamp = 1 / max(1, liveOpps.length); // bluff less multiway
 
+  // Whether this is one of the hands this bot is running a bluff on, and how
+  // hard it is leaning on bluffs generally. Decided once for the hand and
+  // shared by both branches below, so a bot that would have bet as a bluff
+  // also raises as one — otherwise a raise always means a hand, which is the
+  // easiest read at the table.
+  final viable = bluffViability(liveOpps, difficulty);
+  final policy = bluffPolicy(p);
+  final bluffRate = kBluffHands[archetype]! * policy.frequency * viable;
+  final committed = bluffsThisHand(s.handNumber, seat, bluffRate);
+
   if (!facingBet) {
     if (la.canBet) {
       if (e > 0.8) {
@@ -729,14 +739,6 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       // most c-bets is free money; firing at a station is setting money on
       // fire. The field decides it, not one nominated villain, because the
       // bluff has to get through all of them.
-      final viable = bluffViability(liveOpps, difficulty);
-      // How often, and how wide, is learned — see `bluffPolicy`. The
-      // archetype only supplies the prior.
-      final policy = bluffPolicy(p);
-      // Three factors, each applied exactly once: who the bot is, what it has
-      // learned, and how foldable the people still in the hand are.
-      final rate = kBluffHands[archetype]! * policy.frequency * viable;
-      final committed = bluffsThisHand(s.handNumber, seat, rate);
       // The range it is willing to bluff with. Getting caught raises this, so
       // the bot stops firing with pure air and goes back to hands that have
       // something behind them.
@@ -812,17 +814,54 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       range: narrowed(NarrowKind.aggro),
     );
   }
+  final raiseOdds = policy.frequency * viable;
   // Semi-bluff (check-)raise with strong draws.
   if (draw == 2 &&
       s.street != Street.river &&
       la.canRaise &&
-      rng.nextDouble() <
-          aggression *
-              0.3 *
-              bluffPolicy(p).frequency *
-              bluffViability(liveOpps, difficulty)) {
+      rng.nextDouble() < aggression * 0.3 * raiseOdds) {
     final to = _clampInt(
       s.currentBet + s.pot * 0.9,
+      la.minRaiseTo,
+      la.maxRaiseTo,
+    );
+    return BotDecision(
+      action: Action.raise(to),
+      range: narrowed(NarrowKind.aggro),
+    );
+  }
+  // Thin value. Raising only the very top of the range is a range somebody
+  // can read: if a raise always means two pair or better, folding to it is
+  // free. A good hand that is probably best is worth a raise too, just less
+  // often.
+  if (e > 0.62 &&
+      e <= 0.72 &&
+      la.canRaise &&
+      rng.nextDouble() < aggression * 0.24) {
+    final to = _clampInt(
+      s.currentBet + s.pot * 0.7,
+      la.minRaiseTo,
+      la.maxRaiseTo,
+    );
+    return BotDecision(
+      action: Action.raise(to),
+      range: narrowed(NarrowKind.aggro),
+    );
+  }
+  // Bluff-raise — the most unreadable action in poker, and the bots had none
+  // of it. Facing a bet they folded or called, so a raise from a bot always
+  // meant a hand, every time. Now it sometimes means nothing at all, on the
+  // hands this bot had already decided to run a bluff on, and the bandit
+  // scores the result like any other bluff.
+  if (e < 0.45 &&
+      committed &&
+      e >= policy.minEquity &&
+      la.canRaise &&
+      la.callAmount <= s.pot * 0.8 &&
+      rng.nextDouble() < aggression * 0.2 * raiseOdds) {
+    p.bluffedThisHand = true;
+    final to = _clampInt(
+      s.currentBet + s.pot * 0.75,
       la.minRaiseTo,
       la.maxRaiseTo,
     );

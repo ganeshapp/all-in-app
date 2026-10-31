@@ -473,6 +473,59 @@ class CoachNoteRecord {
   );
 }
 
+/// What the hero did before the flop, recovered from a stored hand.
+class PreflopFlags {
+  const PreflopFlags({required this.vpip, required this.pfr});
+
+  /// Put money in by choice. Posting a blind does not count, which is the
+  /// whole subtlety: the big blind who checks has not played the hand.
+  final bool vpip;
+
+  /// Raised before the flop.
+  final bool pfr;
+}
+
+/// Reads [PreflopFlags] back out of a `hand_json` payload.
+///
+/// Used to backfill hands played before the columns existed, so the Stats
+/// page can report VPIP and PFR over a whole history instead of starting the
+/// count from the day the feature shipped. Returns null when the payload is
+/// unusable, which the caller records as "did not play" rather than leaving
+/// null and re-scanning the row forever.
+PreflopFlags? preflopFlagsFromHandJson(String raw) {
+  try {
+    final j = jsonDecode(raw);
+    if (j is! Map) return null;
+    final seats = j['seats'];
+    final actions = j['actions'];
+    if (seats is! List || actions is! List) return null;
+    // Which seat is the hero? Stored per hand, because the hero is not
+    // always seat 0 in an imported history.
+    int? heroSeat;
+    for (final s in seats) {
+      if (s is Map && s['isHero'] == true) {
+        heroSeat = (s['seat'] as num?)?.toInt();
+        break;
+      }
+    }
+    heroSeat ??= 0;
+    var vpip = false;
+    var pfr = false;
+    for (final a in actions) {
+      if (a is! Map) continue;
+      if (a['street'] != 'preflop') continue;
+      if ((a['seat'] as num?)?.toInt() != heroSeat) continue;
+      final type = a['type'];
+      // `post` is the blind going in, which is not voluntary.
+      if (type == 'call' || type == 'bet' || type == 'raise') vpip = true;
+      if (type == 'bet' || type == 'raise') pfr = true;
+    }
+    return PreflopFlags(vpip: vpip, pfr: pfr);
+  } catch (_) {
+    return null;
+  }
+}
+
 /// The `hand_json` payload: the engine's `HHHand` JSON plus, when the coach
 /// was on, a `coachNotes` array. Adding the key here keeps `lib/engine` pure.
 String encodeHandJson(

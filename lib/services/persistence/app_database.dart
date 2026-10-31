@@ -16,6 +16,8 @@ library;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import 'serialization.dart';
+
 /// Opens (and migrates) the app database.
 ///
 /// Inject [factory] on a desktop test host (`sqflite_common_ffi`'s
@@ -29,8 +31,9 @@ class AppDatabase {
   /// The schema version the desktop app ships (`SCHEMA_VERSION = 4`).
   static const int desktopSchemaVersion = 4;
 
-  /// The version this app writes: desktop v4 + the `sessions` table.
-  static const int schemaVersion = 5;
+  /// The version this app writes: desktop v4 + `sessions` (v5) + the
+  /// pre-flop VPIP/PFR flags, backfilled from stored hands (v6).
+  static const int schemaVersion = 6;
 
   /// File name inside the platform databases directory.
   static const String defaultFileName = 'allin.db';
@@ -159,7 +162,55 @@ CREATE TABLE IF NOT EXISTS sessions (
   summary_json TEXT
 )''');
     }
+    if (from < 6) {
+      await _tryExecute(db, 'ALTER TABLE hand_history ADD COLUMN vpip INTEGER');
+      await _tryExecute(db, 'ALTER TABLE hand_history ADD COLUMN pfr INTEGER');
+      await _backfillPreflopFlags(db);
+    }
     await db.execute('PRAGMA user_version = $schemaVersion');
+  }
+
+  /// Fills `vpip` / `pfr` for hands played before the columns existed.
+  ///
+  /// Without this the Stats page shows a dash for VPIP, PFR and style no
+  /// matter how many thousand hands are behind you, because every historical
+  /// row is null — a new number that only starts counting today is not a
+  /// statistic, it is an apology. The answer is already in `hand_json`: it
+  /// holds the full action list, so what the hero did before the flop can be
+  /// recovered exactly rather than estimated.
+  static Future<void> _backfillPreflopFlags(DatabaseExecutor db) async {
+    const chunk = 500;
+    while (true) {
+      final rows = await db.rawQuery(
+        'SELECT id, hand_json FROM hand_history '
+        'WHERE vpip IS NULL AND hand_json IS NOT NULL '
+        'ORDER BY id LIMIT $chunk',
+      );
+      if (rows.isEmpty) break;
+      final batch = db is Database ? db.batch() : null;
+      for (final row in rows) {
+        final raw = row['hand_json'];
+        if (raw is! String) continue;
+        final flags = preflopFlagsFromHandJson(raw);
+        final values = [
+          flags == null ? 0 : (flags.vpip ? 1 : 0),
+          flags == null ? 0 : (flags.pfr ? 1 : 0),
+          row['id'],
+        ];
+        const sql = 'UPDATE hand_history SET vpip = ?, pfr = ? WHERE id = ?';
+        if (batch != null) {
+          batch.rawUpdate(sql, values);
+        } else {
+          await db.rawUpdate(sql, values);
+        }
+      }
+      await batch?.commit(noResult: true);
+      // No OFFSET: every row read here is written below, so the WHERE clause
+      // shrinks by exactly the rows just handled. A payload that will not
+      // parse is still written (as 0/0), which is what stops this spinning
+      // on a row it can never satisfy.
+      if (rows.length < chunk) break;
+    }
   }
 
   /// Reads `PRAGMA user_version` (0 on a fresh file).
