@@ -25,10 +25,17 @@ import '../../../services/persistence.dart' show CoachNoteRecord;
 /// The largest table the felt draws; above it §7.7's refusal state applies.
 const int kMaxReplaySeats = 10;
 
-/// Desktop `seatPos(n, i)` (§7.7): hero (i = 0) at the bottom, increasing i
-/// counter-clockwise on screen, one formula for any n >= 2.
+/// Hero (i = 0) at the bottom, then round the table in the SAME direction the
+/// live felt uses: i = 1 on the hero's right, up that side, across the top and
+/// down the left.
+///
+/// The sign of the angle used to be the other way, which mirrored the whole
+/// table: a player who sat on your right all hand reappeared on your left in
+/// the replay, so the person who acted before you looked like they acted
+/// after you. The live anchors in `felt_canvas.dart` are the reference —
+/// for six seats this formula lands within a few hundredths of each of them.
 Offset replaySeatPos(int n, int i) {
-  final theta = math.pi / 2 + 2 * math.pi * i / n;
+  final theta = math.pi / 2 - 2 * math.pi * i / n;
   return Offset(0.5 + 0.39 * math.cos(theta), 0.5 + 0.40 * math.sin(theta));
 }
 
@@ -88,10 +95,19 @@ class ReplayModel {
         heroes.isNotEmpty
             ? heroes.first
             : (hand.seats.isEmpty ? null : hand.seats.first);
-    final ordered = <HHSeat>[
-      if (hero != null) hero,
-      ...hand.seats.where((s) => s != hero),
-    ];
+    // Round the table FROM the hero, wrapping — not "hero, then everyone
+    // else in file order". With the hero at seat 0 the two agree, but an
+    // imported hand seats the hero anywhere, and the old form put the
+    // table's seat 0 immediately to their right whoever they were.
+    final ordered = <HHSeat>[];
+    if (hero != null) {
+      final from = hand.seats.indexOf(hero);
+      for (var k = 0; k < hand.seats.length; k++) {
+        ordered.add(hand.seats[(from + k) % hand.seats.length]);
+      }
+    } else {
+      ordered.addAll(hand.seats);
+    }
     final n = ordered.length;
     final seats = <ReplaySeat>[
       for (var i = 0; i < n; i++)

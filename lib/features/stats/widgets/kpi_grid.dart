@@ -114,8 +114,6 @@ class KpiGrid extends ConsumerWidget {
     ref,
     title: StatsCopy.kpiHands,
     body: StatsCopy.handsBody,
-    math: StatsCopy.handsMath,
-    expert: StatsCopy.handsExpert,
   );
 
   void _explainNet(BuildContext context, WidgetRef ref) => showStatsExplainer(

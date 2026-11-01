@@ -17,7 +17,111 @@
 library;
 
 import 'cards.dart';
+import 'hand_history.dart';
 import 'types.dart';
+
+/// Rebuilds a [BotMoveSnapshot] for one action of a stored hand, so a hand
+/// being replayed can be explained move by move.
+///
+/// Reviewing a hand used to mean watching it happen and working out for
+/// yourself why anybody did anything — the read was available while playing
+/// and gone afterwards, which is backwards: afterwards is when there is time
+/// to think about it.
+///
+/// Everything needed is already in the payload. What is NOT recoverable is
+/// how many hands that player had been watched for and the range they were
+/// representing, both of which are session state; the read degrades honestly
+/// without them rather than inventing a number.
+BotMoveSnapshot? replayMoveSnapshot(HHHand h, int actionIndex) {
+  if (actionIndex < 0 || actionIndex >= h.actions.length) return null;
+  final a = h.actions[actionIndex];
+  if (a.type == ActionType.post) return null;
+
+  // Rebuild the pot, who is left, and the board as they stood BEFORE this
+  // action — the read is about the decision, not its consequences.
+  var pot = 0;
+  final committed = <int, int>{};
+  final folded = <int>{};
+  var street = Street.preflop;
+  var preflopRaiser = -1;
+  var checkedThisStreet = false;
+  var betLastStreet = false;
+  var sawBetOnPreviousStreet = false;
+
+  void post(int seat, num amount) {
+    pot += amount.round();
+    committed[seat] = (committed[seat] ?? 0) + amount.round();
+  }
+
+  post(h.sbSeat, h.sb);
+  post(h.bbSeat, h.bb);
+
+  for (var i = 0; i < actionIndex; i++) {
+    final x = h.actions[i];
+    if (x.street != street) {
+      street = x.street;
+      committed.clear();
+      betLastStreet = sawBetOnPreviousStreet;
+      sawBetOnPreviousStreet = false;
+      checkedThisStreet = false;
+    }
+    switch (x.type) {
+      case ActionType.fold:
+        folded.add(x.seat);
+      case ActionType.check:
+        if (x.seat == a.seat) checkedThisStreet = true;
+      case ActionType.call:
+        pot += x.amount.round();
+        committed[x.seat] = (committed[x.seat] ?? 0) + x.amount.round();
+      case ActionType.bet:
+      case ActionType.raise:
+        pot += x.amount.round() - (committed[x.seat] ?? 0);
+        committed[x.seat] = x.amount.round();
+        if (x.street == Street.preflop) preflopRaiser = x.seat;
+        if (x.seat == a.seat) sawBetOnPreviousStreet = true;
+      case ActionType.post:
+        break;
+    }
+  }
+  if (a.street != street) {
+    street = a.street;
+    committed.clear();
+    betLastStreet = sawBetOnPreviousStreet;
+    checkedThisStreet = false;
+  }
+
+  final boardTo = switch (a.street) {
+    Street.preflop => 0,
+    Street.flop => 3,
+    Street.turn => 4,
+    _ => 5,
+  };
+  return BotMoveSnapshot(
+    name: a.name,
+    // Stored hands do not carry an archetype, and guessing one would be the
+    // boilerplate this read exists to replace.
+    archetype: null,
+    street: a.street,
+    board: h.board.take(boardTo).toList(),
+    action: a.type,
+    amount: switch (a.type) {
+      ActionType.bet ||
+      ActionType.raise => a.amount.round() - (committed[a.seat] ?? 0),
+      ActionType.call => a.amount.round(),
+      _ => 0,
+    },
+    pot: pot,
+    playersIn: h.seats.length - folded.length,
+    wasPreflopRaiser: preflopRaiser == a.seat,
+    checkedThisStreet: checkedThisStreet,
+    betLastStreet: betLastStreet,
+    // Not recoverable from a stored hand: both are session state. Zero is
+    // the honest value — the read treats it as "no pattern to claim" rather
+    // than inventing one, which is exactly right when reviewing later.
+    handsSeen: 0,
+    rangeCombos: 0,
+  );
+}
 
 /// Everything the read needs, captured at the moment they acted.
 class BotMoveSnapshot {

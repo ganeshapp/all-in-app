@@ -75,13 +75,13 @@ void main() {
     // `sixMaxHand` deals the hero As Ks.
     expect(find.text('A♠ K♠'), findsNWidgets(2));
 
-    final dots = tester.widgetList<VerdictDot>(find.byType(VerdictDot));
-    expect(dots.length, 2);
-    // Most recent first, so the uncoached hand #2 leads. The worst of hand
-    // #1's three notes stands for it; the uncoached row still reserves the
-    // dot's box so the column stays aligned.
-    expect(dots.first.verdict, isNull);
-    expect(dots.last.verdict, Verdict.mistake);
+    // A word, not a colour: "which of these were my great plays?" is not
+    // answerable from a dot you have to decode. Only the graded hand carries
+    // one — an uncoached hand has nothing to say.
+    final tags = tester.widgetList<VerdictTag>(find.byType(VerdictTag));
+    expect(tags.length, 1, reason: 'only hand #1 was graded');
+    expect(tags.single.verdict, Verdict.mistake);
+    expect(find.text('Mistake'), findsOneWidget);
   });
 
   testWidgets('the source filter narrows the list', (tester) async {

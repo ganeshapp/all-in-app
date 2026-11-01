@@ -19,6 +19,7 @@ import 'package:allin/features/stats/providers/stats_metrics.dart';
 import 'package:allin/features/stats/providers/stats_providers.dart';
 import 'package:allin/features/stats/stats_copy.dart';
 import 'package:allin/features/stats/widgets/breakdown_cards.dart';
+import 'package:allin/features/stats/widgets/sessions_card.dart';
 import 'package:allin/features/stats/widgets/charts_cards.dart';
 import 'package:allin/features/stats/widgets/coaching_review_card.dart';
 import 'package:allin/features/stats/widgets/data_card.dart';
@@ -171,6 +172,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         StyleNumbersCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),
         StyleWinRateCard(metrics: metrics),
+        const SizedBox(height: AllInSpace.md),
+        const SessionsCard(),
         const SizedBox(height: AllInSpace.md),
         ReadAccuracyCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),

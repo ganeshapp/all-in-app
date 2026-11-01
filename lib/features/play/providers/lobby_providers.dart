@@ -21,6 +21,16 @@ final recentSessionsProvider = FutureProvider<List<SessionRecord>>((ref) {
   return ref.watch(sessionRepositoryProvider).recentSessions();
 });
 
+/// Every ended session, newest first — what the Sessions list reads.
+///
+/// `recentSessionsProvider` caps at ten for the lobby's "Recent sessions"
+/// strip. Reviewing how you have been playing needs the lot: how many
+/// sessions, how each one went, and which style you were in at the time.
+final allSessionsProvider = FutureProvider<List<SessionRecord>>((ref) {
+  ref.watch(sessionsRevisionProvider);
+  return ref.watch(sessionRepositoryProvider).recentSessions(limit: 500);
+});
+
 /// The seats / ante the setup card is currently showing. Seeded from
 /// `allin.table.v1` and only written back when "Deal me in" is pressed, so
 /// browsing the segmented controls never changes what a Resume would use.

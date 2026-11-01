@@ -14,9 +14,13 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../app/routes.dart';
 import '../../../engine/engine.dart'
     show
         DecisionRecord,
+        Verdict,
         kLeakCallTooWide,
         kLeakCleanDiscipline,
         kLeakFoldTooOften;
@@ -82,6 +86,7 @@ class CoachingReviewCard extends ConsumerWidget {
                   label: StatsCopy.verdictMistakes,
                   value: leak.mistakes,
                   color: c.bad,
+                  onTap: () => _openVerdict(context, Verdict.mistake),
                 ),
               ),
               const SizedBox(width: AllInSpace.sm),
@@ -90,6 +95,7 @@ class CoachingReviewCard extends ConsumerWidget {
                   label: StatsCopy.verdictThinSpots,
                   value: leak.thin,
                   color: c.warn,
+                  onTap: () => _openVerdict(context, Verdict.thin),
                 ),
               ),
               const SizedBox(width: AllInSpace.sm),
@@ -98,6 +104,7 @@ class CoachingReviewCard extends ConsumerWidget {
                   label: StatsCopy.verdictGreatPlays,
                   value: leak.great,
                   color: c.good,
+                  onTap: () => _openVerdict(context, Verdict.great),
                 ),
               ),
             ],
@@ -188,7 +195,7 @@ class CoachingReviewCard extends ConsumerWidget {
           count: leak.foldMistakes,
           total: leak.total,
         ),
-        StatsCopy.leakExpert,
+        StatsCopy.leakExpert('folds'),
         potOddsLesson,
       ),
       kLeakCallTooWide => (
@@ -197,7 +204,7 @@ class CoachingReviewCard extends ConsumerWidget {
           count: leak.callMistakes,
           total: leak.total,
         ),
-        StatsCopy.leakExpert,
+        StatsCopy.leakExpert('calls'),
         potOddsLesson,
       ),
       kLeakCleanDiscipline => (
@@ -245,46 +252,61 @@ class CoachingReviewCard extends ConsumerWidget {
   }
 }
 
+/// Opens the hand list filtered to one verdict.
+void _openVerdict(BuildContext context, Verdict verdict) =>
+    context.go(AllInRoutes.allHandsPath(verdict: verdict.label));
+
 class _VerdictBox extends StatelessWidget {
   const _VerdictBox({
     required this.label,
     required this.value,
     required this.color,
+    this.onTap,
   });
 
   final String label;
   final int value;
   final Color color;
 
+  /// Opens the hands behind the number. A count you cannot open is a dead
+  /// end: "11 great plays" is only useful if you can go and see which.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final tappable = onTap != null && value > 0;
     return Semantics(
-      label: '$label, $value',
+      button: tappable,
+      label: tappable ? '$label, $value, see them' : '$label, $value',
       child: ExcludeSemantics(
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AllInSpace.sm,
-            vertical: AllInSpace.md,
-          ),
-          decoration: BoxDecoration(
-            color: c.ink850,
-            borderRadius: BorderRadius.circular(AllInRadius.md),
-            border: Border.all(color: c.line),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // "0 great plays" in the win green and "0 thin spots" in the
-              // warn gold both drew the eye to nothing having happened. Zero
-              // is not a verdict, so it is muted like any neutral fact (§13).
-              Text(
-                '$value',
-                style: AllInText.mono(22, color: c.countTone(value, color)),
-              ),
-              const SizedBox(height: 2),
-              Eyebrow(label, color: c.textFaint, textAlign: TextAlign.center),
-            ],
+        child: InkWell(
+          onTap: tappable ? onTap : null,
+          borderRadius: BorderRadius.circular(AllInRadius.md),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AllInSpace.sm,
+              vertical: AllInSpace.md,
+            ),
+            decoration: BoxDecoration(
+              color: c.ink850,
+              borderRadius: BorderRadius.circular(AllInRadius.md),
+              border: Border.all(color: c.line),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // "0 great plays" in the win green and "0 thin spots" in the
+                // warn gold both drew the eye to nothing having happened. Zero
+                // is not a verdict, so it is muted like any neutral fact (§13).
+                Text(
+                  '$value',
+                  style: AllInText.mono(22, color: c.countTone(value, color)),
+                ),
+                const SizedBox(height: 2),
+                Eyebrow(label, color: c.textFaint, textAlign: TextAlign.center),
+              ],
+            ),
           ),
         ),
       ),

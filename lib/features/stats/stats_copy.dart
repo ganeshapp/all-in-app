@@ -49,12 +49,11 @@ abstract final class StatsCopy {
       'few thousand hands.';
 
   static const String handsBody =
-      'Every hand you finished, counted once at hand-over.';
-  static const String handsMath =
-      'A count — every hand you finished. Imported hands are not counted.';
-  static const String handsExpert =
-      'Hands are recorded at hand-over, so leaving a session mid-hand loses '
-      'only that hand.';
+      'Every hand you finished, counted once at hand-over. Imported hands are '
+      'not counted — leaving a session mid-hand loses only that hand.';
+  // No "show me the math" here on purpose: it is a count. The layer used to
+  // repeat the sentence above it in different words, which teaches nothing
+  // and trains you to stop opening the layers that do.
 
   static const String netBody =
       'Your lifetime result in big blinds — everything you have won minus '
@@ -195,8 +194,23 @@ abstract final class StatsCopy {
       'flagged — ${fmtPct(total == 0 ? 0 : count / total)}.';
 
   /// H1's "Expert detail" for the two leak lines *(mobile §3.4)*.
-  static const String leakExpert =
-      'Flagged when ≥ 3 fold mistakes and > 12 % of coached decisions.';
+  ///
+  /// This used to print the threshold that triggered the flag — "≥ 3 fold
+  /// mistakes and > 12 %" — which tells you how the app decided, not what to
+  /// do. The layer is for the part a good player would add, not for the
+  /// implementation.
+  static String leakExpert(String kind) =>
+      kind.contains('call')
+          ? 'Calling too wide is usually a price problem, not a card problem. '
+              'Before you call, say what you need to win: a quarter of a pot-'
+              'sized bet means you need about a third of the time. Hands that '
+              'beat a bluff and nothing else almost never clear that bar, and '
+              'they are the ones that feel hardest to fold.'
+          : 'Folding too much is the cheaper leak to fix, because the hands '
+              'you are throwing away are already paid for. The spots to stop '
+              'folding are the ones where you closed the action and the price '
+              'is small — a last-to-act call with any piece of the board beats '
+              'giving up on the pot you have already put money into.';
 
   static const String cleanDisciplineMath =
       'No decision in your coached log carries the "mistake" verdict.';
@@ -306,6 +320,57 @@ abstract final class StatsCopy {
       'The label these numbers add up to — the same one the bots at your '
       'table work out about you from watching, and play back against.';
 
+  /// The arithmetic behind the label — the numbers, not the label again.
+  static String styleMath({
+    required int vpipHands,
+    required int pfrHands,
+    required int hands,
+  }) =>
+      hands == 0
+          ? 'No hands recorded yet.'
+          : 'You put money in before the flop in $vpipHands of $hands hands '
+              '= ${(vpipHands / hands * 100).round()} %, and raised in '
+              '$pfrHands = ${(pfrHands / hands * 100).round()} %. The gap '
+              'between the two is the limping and cold-calling.';
+
+  /// What to do about it. Not a definition — the thing a coach would
+  /// actually tell you to change next.
+  static String styleAdvice(String style) => switch (style) {
+    'maniac' =>
+      'Playing almost everything and raising a lot means your raises stop '
+          'meaning anything, and good players call you down light. Pick one '
+          'change: fold your worst opens from early position. You keep the '
+          'aggression that wins pots and lose the hands that cannot stand a '
+          'raise.',
+    'station' =>
+      'You see a lot of flops and rarely raise, so you pay to find out and '
+          'win only when you hit. Raise the hands you were going to call '
+          'with: the same hands win more when you are the one applying the '
+          'pressure, and folding the bottom of that range costs you almost '
+          'nothing.',
+    'loose' =>
+      'You play a lot of hands. That is fine if you keep raising with them '
+          'and give up on later streets — it stops being fine when you call '
+          'down out of position. Tighten from the first two seats and keep '
+          'the rest.',
+    'rock' || 'nit' =>
+      'You are folding your way out of pots you could win. The blinds come '
+          'round whatever you do, so a range this tight loses slowly even '
+          'when every hand is played well. Open more from the button and the '
+          'cutoff first — the cheapest place to widen.',
+    'tight' =>
+      'A good base. The next gain is positional: widen on the button and in '
+          'the cutoff, where you act last and can fold cheaply when the flop '
+          'misses you.',
+    'solid' =>
+      'A reasonable range played with some aggression. Look at your fold-to-'
+          'continuation-bet number next: that is usually where a solid '
+          'player is still leaking.',
+    _ =>
+      'Not enough hands yet for the label to mean anything. Play a few more '
+          'and this will firm up.',
+  };
+
   /// What each style label means, in one line.
   static String styleMeaning(String style) => switch (style) {
     'rock' => 'Very tight. You fold almost everything and wait for the top.',
@@ -334,6 +399,22 @@ abstract final class StatsCopy {
           ? 'No hands recorded yet.'
           : '$hits of $of hands '
               '= ${(hits / of * 100).round()}%';
+
+  static const String sessionsCard = 'Sessions';
+  static const String sessionsEmpty =
+      'No finished sessions yet. End one and it will be listed here, with how '
+      'you played it.';
+
+  /// "38 sessions · 21 finished up · 3 busted".
+  static String sessionsSummary({
+    required int sessions,
+    required int won,
+    required int busted,
+  }) => [
+    '$sessions session${sessions == 1 ? '' : 's'}',
+    '$won finished up',
+    if (busted > 0) '$busted busted',
+  ].join(' · ');
 
   static const String afLabel = 'Aggression factor (AF)';
   static const String afBand = '2.0–4.0';

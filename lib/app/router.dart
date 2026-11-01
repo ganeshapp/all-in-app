@@ -281,6 +281,7 @@ GoRouter createRouter({
                           AllHandsScreen(
                             filter: state.uri.queryParameters['filter'],
                             tag: state.uri.queryParameters['tag'],
+                            verdict: state.uri.queryParameters['verdict'],
                           ),
                         ),
                   ),

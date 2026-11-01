@@ -21,7 +21,7 @@ import '../../../theme/motion.dart';
 import '../../../theme/tokens.dart';
 import '../../../theme/typography.dart';
 import '../../../engine/engine.dart' show Verdict, fmtSigned, prettyHoleCards;
-import '../../../widgets/widgets.dart' show VerdictBadge, VerdictDot;
+import '../../../widgets/widgets.dart' show VerdictBadge, VerdictTag;
 import '../stats_copy.dart';
 import '../stats_format.dart';
 
@@ -111,11 +111,15 @@ class HandRow extends StatelessWidget {
                                 style: AllInText.mono(13, color: c.textMuted),
                               ),
                             ],
-                            // The dot reserves its box either way, so a
-                            // column of rows keeps its alignment when only
-                            // some hands were coached.
-                            const SizedBox(width: 2),
-                            VerdictDot(verdict: verdict),
+                            // A word, not a dot. "Which of these were my
+                            // great plays?" is not answerable from a colour
+                            // you have to decode, and the alternative was
+                            // opening every hand in turn to find out.
+                            if (verdict != null &&
+                                VerdictTag.shortLabelOf(verdict) != null) ...[
+                              const SizedBox(width: AllInSpace.xs),
+                              VerdictTag(verdict: verdict),
+                            ],
                             if (hand.imported) ...[
                               const SizedBox(width: AllInSpace.xs),
                               const _ImportedBadge(),

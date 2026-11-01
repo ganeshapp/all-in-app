@@ -193,6 +193,13 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
             _CoachNoteStrip(
               note: model.noteAt(index),
               onOpen: (note) => _openNote(note, stored),
+              // No coach note here, but the frame shows somebody else acting:
+              // offer the read. Reviewing a hand should not mean watching it
+              // happen and working out for yourself why anybody did anything.
+              onExplain:
+                  _explainableAction(stored, frame) == null
+                      ? null
+                      : () => _explainMove(stored, frame),
             ),
             const SizedBox(height: AllInSpace.sm),
             FrameScrubber(
@@ -238,6 +245,65 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
 
   /// P3, read-only: the note the coach left on this action, rebuilt from the
   /// record stored inside `hand_json` (§16.4).
+  /// The action this frame shows, when it is one worth explaining: somebody
+  /// other than the hero, actually doing something.
+  int? _explainableAction(StoredHand stored, ReplayFrame frame) {
+    final ai = frame.actionIndex;
+    if (ai == null || ai >= stored.hand.actions.length) return null;
+    final a = stored.hand.actions[ai];
+    if (a.seat == 0 || a.type == ActionType.post) return null;
+    return ai;
+  }
+
+  Future<void> _explainMove(StoredHand stored, ReplayFrame frame) async {
+    final ai = _explainableAction(stored, frame);
+    if (ai == null) return;
+    final snapshot = replayMoveSnapshot(stored.hand, ai);
+    if (snapshot == null) return;
+    final read = readBotAction(snapshot);
+    final settings = ref.read(settingsProvider);
+    final review = CoachReview(
+      id: 0,
+      kind: ReviewKind.bot,
+      blocking: false,
+      verdict: Verdict.info,
+      title: read.title,
+      villainName: snapshot.name,
+      board: List<poker.Card>.of(snapshot.board),
+      plain: read.plain,
+      text: read.plain,
+      steps: read.steps,
+      expert: read.expert,
+    );
+    if (!mounted) return;
+    await AllInSheet.show<void>(
+      context,
+      detent: AllInSheetDetent.m,
+      reducedMotion: settings.reducedMotion,
+      builder:
+          (sheetContext) => SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AllInSpace.lg,
+                0,
+                AllInSpace.lg,
+                AllInSpace.xl + MediaQuery.paddingOf(sheetContext).bottom,
+              ),
+              child: CoachNoteView(
+                review: review,
+                readOnly: true,
+                bigBlind: 1,
+                alwaysExpandMath: settings.alwaysExpandMath,
+                enableHaptics: settings.haptics,
+                reducedMotion: settings.reducedMotion,
+                onDismiss: () => Navigator.of(sheetContext).pop(),
+                dismissLabel: CoachCopy.close,
+              ),
+            ),
+          ),
+    );
+  }
+
   Future<void> _openNote(CoachNoteRecord note, StoredHand stored) {
     final settings = ref.read(settingsProvider);
     // `CoachNoteView` reads the street off the board it is given, so the board
@@ -431,16 +497,52 @@ class _FrameText extends StatelessWidget {
 /// Fixed 48 pt so the scrubber never jumps between frames with and without a
 /// note (§7.7).
 class _CoachNoteStrip extends StatelessWidget {
-  const _CoachNoteStrip({required this.note, required this.onOpen});
+  const _CoachNoteStrip({
+    required this.note,
+    required this.onOpen,
+    this.onExplain,
+  });
 
   final CoachNoteRecord? note;
   final ValueChanged<CoachNoteRecord> onOpen;
+
+  /// Set when this frame shows an opponent's move that can be explained.
+  final VoidCallback? onExplain;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final n = note;
-    if (n == null) return const SizedBox(height: 48);
+    if (n == null) {
+      final explain = onExplain;
+      if (explain == null) return const SizedBox(height: 48);
+      return SizedBox(
+        height: 48,
+        child: Semantics(
+          button: true,
+          label: 'Why did they do that?',
+          child: ExcludeSemantics(
+            child: InkWell(
+              onTap: explain,
+              borderRadius: BorderRadius.circular(AllInRadius.md),
+              child: Row(
+                children: [
+                  Icon(Icons.psychology_outlined, size: 18, color: c.gold),
+                  const SizedBox(width: AllInSpace.sm),
+                  Expanded(
+                    child: Text(
+                      'Why did they do that?',
+                      style: AllInText.body(12, color: c.gold, height: 1.3),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 18, color: c.textFaint),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final verdict = Verdict.fromLabel(n.verdict);
 
     return SizedBox(

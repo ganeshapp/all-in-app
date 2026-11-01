@@ -389,6 +389,49 @@ class SessionState {
 
 /* ========================================================================== */
 
+/// How the hero played THIS session, read off the live table.
+///
+/// The table's own counters are the session's counters — it was created when
+/// the session started — so this needs no extra bookkeeping.
+StyleProfile? sessionStyleOf(SessionState session) {
+  final hero = session.table?.players.firstOrNull;
+  if (hero == null) return null;
+  final seen = hero.handsSeen;
+  if (seen <= 0) return null;
+  final read = readPlayer(hero);
+  return StyleProfile(
+    hands: seen,
+    vpipHands: hero.vpipCount,
+    pfrHands: hero.pfrCount,
+    postAggro: read.postAggro,
+  );
+}
+
+/// The session's style, stored alongside its hands so reopening it later
+/// shows the same card it showed when it ended.
+Map<String, Object?>? styleProfileToJson(StyleProfile? s) =>
+    s == null
+        ? null
+        : {
+          'hands': s.hands,
+          'vpipHands': s.vpipHands,
+          'pfrHands': s.pfrHands,
+          'postAggro': s.postAggro,
+        };
+
+StyleProfile? styleProfileFromJson(Object? raw) {
+  if (raw is! Map) return null;
+  final j = raw.cast<String, Object?>();
+  final hands = (j['hands'] as num?)?.toInt();
+  if (hands == null) return null;
+  return StyleProfile(
+    hands: hands,
+    vpipHands: (j['vpipHands'] as num?)?.toInt() ?? 0,
+    pfrHands: (j['pfrHands'] as num?)?.toInt() ?? 0,
+    postAggro: (j['postAggro'] as num?)?.toDouble() ?? 0,
+  );
+}
+
 class SessionNotifier extends Notifier<SessionState> {
   /// The last bot action, captured as they made it (see `snapshotMove`).
   (int, BotMoveSnapshot)? _lastBotMove;
@@ -989,6 +1032,9 @@ class SessionNotifier extends Notifier<SessionState> {
     // that is the entire difference between on and off.
     if (coachOn && state.table?.handNumber == t.handNumber) {
       _pushReview(review);
+    } else {
+      // Still recorded, just never shown — see `_logReviewOnly`.
+      _logReviewOnly(review);
     }
 
     if (review.kind != ReviewKind.decision) return;
@@ -1111,6 +1157,18 @@ class SessionNotifier extends Notifier<SessionState> {
   }
 
   /* ------------------------------------------------------------ the coach */
+
+  /// Record a verdict without showing it.
+  ///
+  /// `reviewLog` is not display state: it is what the stored hand's
+  /// `coachNotes[]` is built from, which is in turn what puts the verdict tag
+  /// on a hand in the list and the dot in the session's hand verdicts. Gating
+  /// it on the coach being ON meant a session played uninterrupted produced
+  /// hands you could not tell apart afterwards — the great plays and the
+  /// mistakes looked identical in every list.
+  void _logReviewOnly(CoachReview review) {
+    state = state.copyWith(reviewLog: [...state.reviewLog, review]);
+  }
 
   void _pushReview(CoachReview review) {
     final log = [...state.reviewLog, review];
@@ -1473,6 +1531,16 @@ class SessionNotifier extends Notifier<SessionState> {
           'startedAt': state.startedAt,
           'endedAt': _now,
           'seats': state.options.seats,
+          // How the hero played THIS session. Stored, because the live table
+          // is gone by the time anybody reopens the session from Home — and
+          // reopening it was showing every number except the one the card
+          // leads with.
+          'style': styleProfileToJson(sessionStyleOf(state)),
+          // Whether it ended with the hero out of chips. The Sessions list
+          // shows it, and it cannot be re-derived later: a session that
+          // busted and one that was simply ended down the same amount look
+          // identical in the numbers.
+          'busted': state.busted,
           'hands': [for (final h in state.history) h.toJson()],
         },
       ),

@@ -36,8 +36,11 @@ Future<void> showHomeGoalSheet(BuildContext context, WidgetRef ref) {
       child: ExplainerSheet(
         title: HomeCopy.goalSheetTitle,
         body: HomeCopy.goalSheetBody,
-        math: HomeCopy.goalSheetMath,
-        expert: HomeCopy.goalSheetExpert,
+        // No math and no expert layer: a daily goal has neither. What used
+        // to be here restated the body ("the ring fills at 20 answers") and
+        // then explained how the streak counter is drawn — mechanics, in a
+        // place reserved for the part a good player would add. Both layers
+        // are optional, and an empty one is better than a filled one.
         alwaysExpandMath: settings.alwaysExpandMath,
         enableHaptics: settings.haptics,
         reducedMotion: settings.reducedMotion,

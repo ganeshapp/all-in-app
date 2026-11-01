@@ -424,7 +424,14 @@ class StyleNumbersCard extends ConsumerWidget {
                   label: StatsCopy.styleLabel,
                   blurb: StatsCopy.styleBlurb,
                   band: null,
-                  math: StatsCopy.styleMeaning(
+                  // The arithmetic, then what to do about it — not the label
+                  // restated in a longer sentence.
+                  math: StatsCopy.styleMath(
+                    vpipHands: metrics.lifetimeStyle.vpipHands,
+                    pfrHands: metrics.lifetimeStyle.pfrHands,
+                    hands: metrics.lifetimeStyle.hands,
+                  ),
+                  expert: StatsCopy.styleAdvice(
                     metrics.lifetimeStyle.style?.name ?? 'unknown',
                   ),
                 ),
@@ -466,6 +473,9 @@ class StyleNumbersCard extends ConsumerWidget {
     // A label has no "healthy range" — there is no number to be inside one.
     required String? band,
     required String math,
+    // Real coaching for this number when there is any; the small-sample
+    // footnote otherwise. The layer is not a slot that has to be filled.
+    String? expert,
   }) => showStatsExplainer(
     context,
     ref,
@@ -473,7 +483,7 @@ class StyleNumbersCard extends ConsumerWidget {
     body: blurb,
     math: math,
     mathExtra: band == null ? null : _HealthyRange(band: band),
-    expert: StatsCopy.styleFootnote,
+    expert: expert ?? StatsCopy.styleFootnote,
   );
 
   /// The style label as the player sees it. The engine's names are terse

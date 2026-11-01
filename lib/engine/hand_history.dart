@@ -548,6 +548,7 @@ class ReplayFrame {
     required this.pot,
     required this.folded,
     this.revealAll = false,
+    this.actionIndex,
   });
 
   final String text;
@@ -556,6 +557,12 @@ class ReplayFrame {
   final num pot;
   final List<int> folded;
   final bool revealAll;
+
+  /// Index into [HHHand.actions] for the move this frame shows, or null for
+  /// a blinds / board / result frame. Lets the replayer explain the move
+  /// being shown — without it, reviewing a hand means watching it happen and
+  /// working out for yourself why anybody did anything.
+  final int? actionIndex;
 
   @override
   String toString() => 'ReplayFrame(${street.label}, $text, pot $pot)';
@@ -618,7 +625,9 @@ List<ReplayFrame> buildReplayFrames(HHHand h) {
     }
 
     final vis = boardForStreet ?? <Card>[];
-    for (final a in h.actions.where((x) => x.street == street)) {
+    for (var ai = 0; ai < h.actions.length; ai++) {
+      final a = h.actions[ai];
+      if (a.street != street) continue;
       var text = '';
       final allIn = a.allIn ? ' (all-in)' : '';
       if (a.type == ActionType.fold) {
@@ -646,6 +655,7 @@ List<ReplayFrame> buildReplayFrames(HHHand h) {
           board: vis,
           pot: pot,
           folded: List<int>.of(folded),
+          actionIndex: ai,
         ),
       );
     }

@@ -8,6 +8,7 @@ library;
 
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/app/routes.dart';
+import 'package:allin/engine/engine.dart' show Verdict;
 import 'package:allin/features/stats/providers/data_actions.dart';
 import 'package:allin/features/stats/providers/import_provider.dart';
 import 'package:allin/features/stats/providers/stats_providers.dart';
@@ -25,10 +26,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class AllHandsScreen extends ConsumerStatefulWidget {
-  const AllHandsScreen({super.key, this.filter, this.tag});
+  const AllHandsScreen({super.key, this.filter, this.tag, this.verdict});
 
   /// `all` · `played` · `imported`; null means all.
   final String? filter;
+
+  /// Verdict filter from `?verdict=` — "mistake", "thin", "great". What the
+  /// Coaching review's counters link to: the counts were a dead end, and
+  /// "which hands were my great plays?" had no answer but opening each one.
+  final String? verdict;
 
   /// Tag chip filter from `?tag=`.
   final String? tag;
@@ -59,7 +65,10 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
       _ => HandSource.all,
     };
     _tag = widget.tag;
+    _verdict = Verdict.fromLabelOrNull(widget.verdict ?? '');
   }
+
+  Verdict? _verdict;
 
   ImportFlowController get _flow =>
       _import ??= ImportFlowController(
@@ -159,6 +168,10 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
     if (tag != null) {
       rows = HandsRepository.filterByTag(rows, notes, tag);
     }
+    final verdict = _verdict;
+    if (verdict != null) {
+      rows = rows.where((h) => h.worstVerdict == verdict).toList();
+    }
     final more = all.length >= _limit;
 
     return Column(
@@ -167,7 +180,7 @@ class _AllHandsScreenState extends ConsumerState<AllHandsScreen> {
         HandList(
           hands: rows,
           notes: notes,
-          filtered: tag != null || _source != HandSource.all,
+          filtered: tag != null || _source != HandSource.all || verdict != null,
           reducedMotion: reducedMotion,
           onOpen: _open,
           onNote: _note,

@@ -68,13 +68,9 @@ abstract final class HomeCopy {
   static const String goalSheetBody =
       'A quiet daily goal: 20 drill answers (or 30 hands) keeps the day-streak '
       'alive. No reminders, no guilt — just a nudge to come back tomorrow.';
-  static const String goalSheetMath =
-      'The ring fills at 20 drill answers. Thirty played hands fill it just as '
-      'well — whichever you reach first keeps the day.';
-  static const String goalSheetExpert =
-      'The day-streak counts back from today, and skips today until it is met '
-      "— so a morning visit never shows a broken streak. It doesn't count "
-      'down and is never coloured.';
+  // `goalSheetMath` / `goalSheetExpert` were removed: a daily goal has no
+  // arithmetic and no expert reading. They restated the body and then
+  // described how the streak ring is drawn.
 
   /* -------------------------------------------------------- plan cards */
 

@@ -65,6 +65,7 @@ HHHand _twelveHanded() {
 }
 
 void main() {
+  _seatLayoutMatchesTheLiveFelt();
   final hand = sixMaxHand();
   final frames = buildReplayFrames(hand);
 
@@ -232,5 +233,54 @@ void main() {
         });
       }
     }
+  });
+}
+
+void _seatLayoutMatchesTheLiveFelt() {
+  group('seat layout matches the live table', () {
+    // The live anchors, from `felt_canvas.dart`'s `_seatFractions` for 6-max.
+    // A player who sat on your right all hand must still be on your right in
+    // the replay: mirroring the table made the person who acted before you
+    // look like they acted after you.
+    const live = <int, Offset>{
+      1: Offset(0.89, 0.675),
+      2: Offset(0.89, 0.315),
+      3: Offset(0.50, 0.14),
+      4: Offset(0.11, 0.315),
+      5: Offset(0.11, 0.675),
+    };
+
+    test('the hero sits at the bottom', () {
+      final hero = replaySeatPos(6, 0);
+      expect(hero.dx, closeTo(0.5, 0.01));
+      expect(hero.dy, greaterThan(0.8), reason: 'bottom of the felt');
+    });
+
+    test('every seat lands on the same side as the live felt', () {
+      /// -1 left of centre, 0 centred, 1 right of centre.
+      int side(double v) => v < 0.49 ? -1 : (v > 0.51 ? 1 : 0);
+
+      for (final e in live.entries) {
+        final got = replaySeatPos(6, e.key);
+        // Same side of the table — the sign is the whole bug. Seat 3 sits
+        // dead centre at the top, which is why this compares sides rather
+        // than signs.
+        expect(
+          side(got.dx),
+          side(e.value.dx),
+          reason: 'seat ${e.key} is on the wrong side',
+        );
+        expect(
+          side(got.dy),
+          side(e.value.dy),
+          reason: 'seat ${e.key} is at the wrong height',
+        );
+      }
+    });
+
+    test('seat 1 is on the hero right, not the left', () {
+      expect(replaySeatPos(6, 1).dx, greaterThan(0.5));
+      expect(replaySeatPos(6, 5).dx, lessThan(0.5));
+    });
   });
 }

@@ -137,11 +137,12 @@ class AllInRoutes {
         queryParameters: term == null ? null : {'term': term},
       ).toString();
 
-  /// `/stats/hands?filter=…&tag=…`.
-  static String allHandsPath({String? filter, String? tag}) {
+  /// `/stats/hands?filter=…&tag=…&verdict=…`.
+  static String allHandsPath({String? filter, String? tag, String? verdict}) {
     final q = <String, String>{
       if (filter != null) 'filter': filter,
       if (tag != null) 'tag': tag,
+      if (verdict != null) 'verdict': verdict,
     };
     final path = '$progressPath/hands';
     return q.isEmpty ? path : Uri(path: path, queryParameters: q).toString();

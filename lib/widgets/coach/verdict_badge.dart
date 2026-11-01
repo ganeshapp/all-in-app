@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 import '../../engine/coach.dart';
 import '../../theme/tokens.dart';
+import '../../theme/typography.dart';
 
 class VerdictBadge extends StatelessWidget {
   const VerdictBadge({
@@ -101,6 +102,46 @@ class VerdictBadge extends StatelessWidget {
 ///
 /// It occupies its box whether or not there is a verdict, so a column of rows
 /// keeps its alignment when only some hands were coached.
+/// A short, readable verdict tag for a list row — "Mistake", "Nice play".
+///
+/// A coloured dot is enough to spot one row among many, but not enough to
+/// answer "which of these were my great plays?" without tapping each one in
+/// turn. The word costs a few pixels and removes the guessing.
+class VerdictTag extends StatelessWidget {
+  const VerdictTag({super.key, required this.verdict});
+
+  final Verdict verdict;
+
+  /// The terse form used in a dense row. "Reasonable" and "Read" are not
+  /// worth the space — they are the absence of news.
+  static String? shortLabelOf(Verdict v) => switch (v) {
+    Verdict.mistake => 'Mistake',
+    Verdict.thin => 'Thin',
+    Verdict.great => 'Nice',
+    Verdict.ok => null,
+    Verdict.info => null,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final label = shortLabelOf(verdict);
+    if (label == null) return const SizedBox.shrink();
+    final colour = VerdictBadge.colorOf(verdict, context.colors);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: colour.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AllInRadius.sm),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: AllInText.body(11, weight: FontWeight.w600, color: colour),
+      ),
+    );
+  }
+}
+
 class VerdictDot extends StatelessWidget {
   const VerdictDot({super.key, this.verdict, this.diameter = 8, this.box = 14});
 

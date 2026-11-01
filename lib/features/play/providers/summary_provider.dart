@@ -117,23 +117,6 @@ class SessionDebrief {
 }
 
 /// §4.13's expert layer, verbatim *(all new)*.
-/// How the hero played THIS session, read off the live table.
-///
-/// The table's own counters are the session's counters — it was created when
-/// the session started — so this needs no extra bookkeeping.
-StyleProfile? _styleOf(SessionState session) {
-  final hero = session.table?.players.firstOrNull;
-  if (hero == null) return null;
-  final seen = hero.handsSeen;
-  if (seen <= 0) return null;
-  final read = readPlayer(hero);
-  return StyleProfile(
-    hands: seen,
-    vpipHands: hero.vpipCount,
-    pfrHands: hero.pfrCount,
-    postAggro: read.postAggro,
-  );
-}
 
 /// "You played this one as a TAG — 23% of hands, 18% raised."
 ///
@@ -473,7 +456,7 @@ final sessionSummaryProvider =
           coachWasOff:
               !ref.read(settingsProvider).coachEnabled ||
               session.coachOffThisSession,
-          sessionStyle: _styleOf(session),
+          sessionStyle: sessionStyleOf(session),
         );
       }
 
@@ -523,5 +506,6 @@ SessionSummaryData summaryFromRecord(
     handsFallback: record.hands,
     netBbOverride: record.netBb,
     bb100Override: record.bb100,
+    sessionStyle: styleProfileFromJson(payload['style']),
   );
 }
