@@ -8,6 +8,7 @@ import 'dart:typed_data';
 
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/engine/engine.dart';
+import 'package:allin/features/stats/widgets/replay_broadcast.dart';
 import 'package:allin/features/stats/providers/import_provider.dart';
 import 'package:allin/services/file_service.dart';
 import 'package:allin/services/persistence.dart';
@@ -121,6 +122,9 @@ List<Override> statsOverrides({
   final picker = files ?? fakePicker();
   return [
     keyValueStoreProvider.overrideWithValue(fixture.store),
+    replayEquityRunnerProvider.overrideWithValue(
+      (r) async => calculateReplayEquity(r),
+    ),
     fileServiceProvider.overrideWithValue(picker),
     shareServiceProvider.overrideWithValue(
       ShareService(files: picker, adapter: share ?? FakeShareAdapter()),

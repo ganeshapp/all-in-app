@@ -14,6 +14,7 @@ import 'archetypes.dart';
 import 'cards.dart';
 import 'evaluator.dart';
 import 'notation.dart';
+import 'opponent_model.dart';
 import 'types.dart';
 
 const List<Position> _pos6 = [
@@ -232,6 +233,7 @@ TableState startHand(TableState prev, {Random? rng}) {
     // hand then lands at full weight, so the last ten hands dominate.
     if (!p.sittingOut) {
       p.recent.decay(kRecentDecay);
+      p.memory.decay(kRecentDecay);
       p.recent.hands += 1;
     }
     p.isAllIn = false;
@@ -242,6 +244,7 @@ TableState startHand(TableState prev, {Random? rng}) {
     if (!p.sittingOut) p.handsSeen += 1;
   }
 
+  s.observations = [];
   s.board = <Card>[];
   s.pot = 0;
   s.currentBet = s.bigBlind;
@@ -380,7 +383,16 @@ void _observeBefore(TableState s, Player p, Action action, int toCall) {
   if (s.street == Street.preflop) {
     // Facing a raise, or a re-raise?
     if (facing && s.currentBet > s.bigBlind) {
-      final isReraise = s.currentBet > s.bigBlind * 4.5;
+      final raisesBefore =
+          s.observations
+              .take(s.observations.length - 1)
+              .where(
+                (a) =>
+                    a.street == Street.preflop &&
+                    (a.type == ActionType.bet || a.type == ActionType.raise),
+              )
+              .length;
+      final isReraise = raisesBefore >= 2;
       if (isReraise) {
         p.face3BetCount += 1;
         p.recent.face3Bet += 1;
@@ -448,6 +460,7 @@ TableState applyAction(TableState prev, int seat, Action action) {
   final toCall = s.currentBet - p.committed;
   final maxTotal = p.committed + p.stack;
 
+  observePublicAction(s, p, action, toCall);
   _observeBefore(s, p, action, toCall);
 
   switch (action.type) {
@@ -883,6 +896,8 @@ void _settleShowdown(TableState s) {
   // A hand that reaches showdown is, by definition, a bluff that did not get
   // through: somebody paid to see it.
   _scoreBluffs(s, null);
+
+  observeExposedShowdown(s, liveIds);
 
   // Cards shown at showdown are public knowledge, and the strongest read
   // anyone gets. Every seat remembers them for the rest of the session.

@@ -414,18 +414,18 @@ List<HandLabel> inferredPreflopRange(
   Position pos,
   PreflopAction action,
 ) {
-  final read = readPlayer(p);
-  // Until there is a sample, fall back to a sane default rather than
-  // pretending to know: a typical opening range, not "any two cards".
-  final vpip = read.confidence > 0.2 ? read.vpip : 0.26;
-  final pfr = read.confidence > 0.2 ? read.pfr : 0.19;
+  final w = p.recent;
+  // Eight prior hands prevent a couple of opens from becoming a certainty.
+  // Each rate uses its own opportunity count, not lifetime hands played.
+  final vpip = (w.vpip + 8 * .26) / (w.hands + 8);
+  final pfr = (w.pfr + 8 * .19) / (w.hands + 8);
   final ranges = buildPreflopRanges(vpip * 100, pfr * 100, pos);
 
   switch (action) {
     case PreflopAction.threebet:
       // Re-raising range: scaled by how often they actually do it, floored
       // so a maniac's 3-bet is still wide and a rock's is still premium.
-      var pct = read.threeBet * 100 * 1.6;
+      var pct = (w.threeBet + 10 * .07) / (w.threeBetOpp + 10) * 100 * 1.6;
       if (pct < 2.5) pct = 2.5;
       if (pct > 30) pct = 30;
       return topPercentRange(pct).toList();

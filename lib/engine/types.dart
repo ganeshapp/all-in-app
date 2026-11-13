@@ -13,6 +13,8 @@
 /// * No Flutter imports anywhere under `lib/engine/`.
 library;
 
+import 'opponent_memory.dart';
+
 import 'format.dart';
 
 typedef Card = String;
@@ -342,6 +344,7 @@ class Player {
     this.showdownCount = 0,
     List<HandLabel>? shownHands,
     RecentStats? recent,
+    OpponentMemory? memory,
     this.bluffAttempts = 0,
     this.bluffWins = 0,
     this.bluffNetBb = 0,
@@ -353,7 +356,8 @@ class Player {
     this.dials,
     this.sittingOut = false,
   }) : shownHands = shownHands ?? <HandLabel>[],
-       recent = recent ?? RecentStats();
+       recent = recent ?? RecentStats(),
+       memory = memory ?? OpponentMemory();
 
   /// Seat index 0..n-1; 0 is hero.
   final int id;
@@ -426,6 +430,9 @@ class Player {
   /// The same events, recency-weighted. This is what the bots actually read.
   RecentStats recent;
 
+  /// Contextual observations available equally to every seat at this table.
+  OpponentMemory memory;
+
   /// Bluffs run and bluffs that got through, this session. The bandit the
   /// bots use to decide how often — and how wide — to bluff.
   int bluffAttempts;
@@ -485,6 +492,7 @@ class Player {
     showdownCount: showdownCount,
     shownHands: List<HandLabel>.of(shownHands),
     recent: recent.clone(),
+    memory: memory.clone(),
     bluffAttempts: bluffAttempts,
     bluffWins: bluffWins,
     bluffNetBb: bluffNetBb,
@@ -664,6 +672,32 @@ class LegalActions {
   final int bigBlind;
 }
 
+/// Public action context, captured before the action changes the pot.
+class ObservedAction {
+  ObservedAction({
+    required this.seat,
+    required this.street,
+    required this.type,
+    required this.pot,
+    required this.price,
+    required this.wager,
+    required this.opponents,
+    required List<Card> board,
+    this.aggressor,
+  }) : board = List.unmodifiable(board);
+  final int seat;
+  final Street street;
+  final ActionType type;
+  final int pot;
+  final int price;
+
+  /// Chips added by a bet/raise, including the call portion of a raise.
+  final int wager;
+  final int opponents;
+  final List<Card> board;
+  final int? aggressor;
+}
+
 /// The full table state (desktop `GameState`). Mutable; see library docs.
 class TableState {
   TableState({
@@ -688,7 +722,9 @@ class TableState {
     Map<int, List<HandLabel>>? botRanges,
     List<int>? stacksAtStart,
     this.summary,
-  }) : board = board ?? <Card>[],
+    List<ObservedAction>? observations,
+  }) : observations = observations ?? [],
+       board = board ?? <Card>[],
        deck = deck ?? <Card>[],
        log = log ?? <LogEntry>[],
        botRanges = botRanges ?? <int, List<HandLabel>>{},
@@ -723,6 +759,7 @@ class TableState {
   Map<int, List<HandLabel>> botRanges;
   List<int> stacksAtStart;
   HandSummary? summary;
+  List<ObservedAction> observations;
 
   Player get hero => players[0];
   bool get isHeroTurn => phase == GamePhase.betting && toAct == 0;
@@ -751,6 +788,7 @@ class TableState {
     },
     stacksAtStart: List<int>.of(stacksAtStart),
     summary: summary,
+    observations: List.of(observations),
   );
 }
 

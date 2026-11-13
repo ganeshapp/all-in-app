@@ -37,6 +37,10 @@ import 'package:flutter/foundation.dart';
 import '../engine/coach.dart' as coach;
 import '../engine/engine.dart';
 
+/// Replay work stays off the UI isolate, just like the coach's simulations.
+Future<ReplayEquity> runReplayEquity(ReplayEquityRequest request) =>
+    compute(calculateReplayEquity, request);
+
 /// Which engine entry point an [EquityJob] runs.
 enum EquityJobKind {
   /// Hero combo vs a villain range (exact on turn/river).

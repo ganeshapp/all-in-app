@@ -27,6 +27,7 @@ import 'hand_engine.dart';
 import 'notation.dart';
 import 'prng.dart';
 import 'profile.dart';
+import 'opponent_model.dart';
 import 'ranges.dart';
 import 'types.dart';
 
@@ -265,58 +266,6 @@ Set<HandLabel> _defendRangeFor(double defendMult, Position pos) {
   return _defendCache[key] ??= topPercentRange(key);
 }
 
-/// Narrowing a hundred-odd labels against a board costs a Monte-Carlo run per
-/// label, and every bot asks about every opponent on every decision — the same
-/// question, with the same answer, several times per betting round. Cache it
-/// for as long as the answer cannot have changed: same hand, same board, same
-/// last thing that player did.
-final Map<String, List<HandLabel>> _rangeMemo = {};
-int _rangeMemoHand = -1;
-
-/// The hands an opponent is likely holding right now.
-///
-/// A bot that has been acting has a stored range (it narrows its own as it
-/// plays). Anybody else — the hero above all — gets a range inferred from what
-/// they have actually been doing this session.
-List<HandLabel> _opponentRange(TableState s, Player q) {
-  final stored = s.botRanges[q.id];
-  if (stored != null && stored.isNotEmpty) return stored;
-  final raisedPre = q.pfrThisHand;
-  final action =
-      raisedPre
-          ? (s.aggressorPreflop == q.id
-              ? PreflopAction.open
-              : PreflopAction.threebet)
-          : PreflopAction.call;
-  if (s.board.isEmpty) return inferredPreflopRange(q, q.position, action);
-
-  if (_rangeMemoHand != s.handNumber) {
-    _rangeMemo.clear();
-    _rangeMemoHand = s.handNumber;
-  }
-  // What they have done on THIS board matters more than what they play in
-  // general: somebody who plays every hand but only bets good ones has a
-  // wide pre-flop range and a narrow betting range, and it is the betting
-  // range you are up against.
-  final lastLabel = q.lastAction?.label;
-  final kind =
-      (lastLabel == 'Bet' || lastLabel == 'Raise' || lastLabel == 'All-In')
-          ? NarrowKind.aggro
-          : (lastLabel == 'Call' ? NarrowKind.call : NarrowKind.check);
-  final key =
-      '${q.id}|${s.board.join()}|${action.name}|${kind.name}|${q.handsSeen}';
-  final hit = _rangeMemo[key];
-  if (hit != null) return hit;
-  final out = narrowRange(
-    inferredPreflopRange(q, q.position, action),
-    s.board,
-    kind,
-    null,
-  );
-  _rangeMemo[key] = out;
-  return out;
-}
-
 BotDecision decideBot(TableState s, int seat, {Random? rng}) {
   final d = _decideBotInner(s, seat, rng ?? Random());
   final p = s.players[seat];
@@ -349,11 +298,14 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   // Each archetype leans in its own direction; none of them becomes the same
   // player, and none of them remembers any of it next session.
   Player? villain;
-  if (s.aggressor != null && s.aggressor != seat) {
+  if (s.aggressor != null &&
+      s.aggressor != seat &&
+      !s.players[s.aggressor!].hasFolded &&
+      !s.players[s.aggressor!].sittingOut) {
     villain = s.players[s.aggressor!];
   } else {
     for (final q in s.players) {
-      if (!q.hasFolded && q.id != seat) {
+      if (!q.hasFolded && !q.sittingOut && q.id != seat) {
         villain = q;
         break;
       }
@@ -620,34 +572,17 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       narrowRange(stored, s.board, kind, label);
 
   // Equity against the hands these people are actually likely to hold. Every
-  // opponent now has a range — a bot's own narrowed one, or one inferred
-  // from how that player has been playing this session. Before this, the bots
-  // measured every post-flop decision against RANDOM cards, which makes
-  // bottom pair look like a 70% favourite and is why they could never fold.
+  // opponent now has a range inferred from public actions and observed
+  // showdowns. The private Peek ranges are never decision inputs.
   final liveOpps =
-      s.players.where((q) => !q.hasFolded && q.id != seat).toList();
-  final blocked = <int>{...holeInts, ...boardInts};
-  List<IntCombo> toCombos(List<HandLabel> labels) {
-    final combos = <IntCombo>[];
-    for (final l in labels) {
-      for (final (a, b) in labelToCombos(l)) {
-        final ai = cardToInt(a);
-        final bi = cardToInt(b);
-        if (!blocked.contains(ai) && !blocked.contains(bi)) {
-          combos.add([ai, bi]);
-        }
-      }
-    }
-    return combos;
-  }
-
-  final oppCombos = <List<IntCombo>>[];
-  for (final q in liveOpps) {
-    final c = toCombos(_opponentRange(s, q));
-    if (c.isNotEmpty) oppCombos.add(c);
-  }
+      s.players
+          .where((q) => !q.hasFolded && !q.sittingOut && q.id != seat)
+          .toList();
+  final oppCombos = [
+    for (final q in liveOpps) publicOpponentCombos(s, q, hole),
+  ];
   double e;
-  if (oppCombos.length == liveOpps.length && oppCombos.length == 1) {
+  if (oppCombos.every((c) => c.isNotEmpty) && oppCombos.length == 1) {
     e =
         equityVsRange(
           holeInts,
@@ -656,7 +591,7 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
           iters: 260,
           rng: rng,
         ).equity;
-  } else if (oppCombos.length == liveOpps.length && oppCombos.length > 1) {
+  } else if (oppCombos.every((c) => c.isNotEmpty) && oppCombos.length > 1) {
     e =
         equityVsRanges(
           holeInts,
@@ -668,7 +603,14 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   } else {
     // Somebody's range came back empty (fully blocked) — fall back rather
     // than pretend to know.
-    e = equityVsRandom(holeInts, boardInts, iters: 320, rng: rng).equity;
+    e =
+        equityVsField(
+          holeInts,
+          boardInts,
+          max(1, liveOpps.length),
+          iters: 320,
+          rng: rng,
+        ).equity;
   }
 
   final tex = boardTexture(boardInts);
@@ -684,6 +626,30 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   final policy = bluffPolicy(p);
   final bluffRate = kBluffHands[archetype]! * policy.frequency * viable;
   final committed = bluffsThisHand(s.handNumber, seat, bluffRate);
+  // No fold equity against an all-in player. Against a field, everyone must
+  // fold; the product replaces the old "stickiest opponent" approximation.
+  bool canBluffTo(int to) {
+    if (liveOpps.any((q) => q.isAllIn)) return false;
+    final risk = to - p.committed;
+    var folds = 1.0;
+    for (final q in liveOpps) {
+      final price = min(max(0, to - q.committed), q.stack);
+      folds *= foldProbability(
+        q,
+        bettor: seat,
+        street: s.street,
+        fraction: price / max(1, s.pot + risk - price),
+        opponents: liveOpps.length,
+      );
+    }
+    return profitableBluff(
+      foldProbability: folds,
+      equity: e,
+      pot: s.pot,
+      risk: risk,
+      callPrice: la.callAmount,
+    );
+  }
 
   if (!facingBet) {
     if (la.canBet) {
@@ -775,7 +741,12 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
               : tex.highCard >= 12 && s.street != Street.flop
               ? aggression * 0.12
               : 0.0;
-      if (rng.nextDouble() < bluffP * viable) {
+      final bluffTo = _clampInt(
+        s.pot * (tex.wet ? .7 : .6),
+        la.minRaiseTo,
+        la.maxRaiseTo,
+      );
+      if (canBluffTo(bluffTo) && rng.nextDouble() < bluffP * viable) {
         // Remember that this was a bluff, so the hand's outcome can score it.
         if (e < 0.45) p.bluffedThisHand = true;
         // Size a pure bluff like a value bet — the point is to be the same
@@ -798,7 +769,14 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   }
 
   // ---- Facing a bet ----
-  final needed = la.callAmount / (s.pot + la.callAmount);
+  // A short stack cannot win the unmatched part of another player's wager.
+  final contributions = s.players.fold<int>(0, (n, q) => n + q.committedTotal);
+  final cap = p.committedTotal + la.callAmount;
+  final eligiblePot =
+      contributions == s.pot
+          ? s.players.fold<int>(0, (n, q) => n + min(q.committedTotal, cap))
+          : s.pot; // legacy/manual snapshots can lack total contributions
+  final needed = la.callAmount / max(1, eligiblePot + la.callAmount);
   // Value raises from 0.72 (non-nutted included), sized up on wet boards.
   if (e > 0.72 &&
       la.canRaise &&
@@ -819,6 +797,9 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
   if (draw == 2 &&
       s.street != Street.river &&
       la.canRaise &&
+      canBluffTo(
+        _clampInt(s.currentBet + s.pot * .9, la.minRaiseTo, la.maxRaiseTo),
+      ) &&
       rng.nextDouble() < aggression * 0.3 * raiseOdds) {
     final to = _clampInt(
       s.currentBet + s.pot * 0.9,
@@ -858,6 +839,9 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       e >= policy.minEquity &&
       la.canRaise &&
       la.callAmount <= s.pot * 0.8 &&
+      canBluffTo(
+        _clampInt(s.currentBet + s.pot * .75, la.minRaiseTo, la.maxRaiseTo),
+      ) &&
       rng.nextDouble() < aggression * 0.2 * raiseOdds) {
     p.bluffedThisHand = true;
     final to = _clampInt(
@@ -870,19 +854,24 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       range: narrowed(NarrowKind.aggro),
     );
   }
-  // Draws call a little wider (implied-odds proxy); rivers don't.
-  final effE = min(0.95, e + (s.street != Street.river ? draw * 0.05 : 0));
-  final callThreshold = needed * (1 - stickiness * 0.5);
-  if (effE >= callThreshold && la.canCall) {
-    return BotDecision(
-      action: Action.call(amount: la.callAmount),
-      range: narrowed(NarrowKind.call),
-    );
-  }
-  if (stickiness > 0.7 &&
-      la.canCall &&
-      la.callAmount <= s.pot * 0.5 &&
-      rng.nextDouble() < 0.7) {
+  // Price-aware bluff catching. The inferred range already incorporates
+  // exposed bluffs; a personality cannot discount the price by half or pay
+  // any amount simply to "find out". Small probes only happen near break-even.
+  final hasFuture =
+      s.street != Street.river &&
+      !p.isAllIn &&
+      p.stack > la.callAmount &&
+      liveOpps.any((q) => !q.isAllIn);
+  final realization = hasFuture ? (liveOpps.length > 1 ? .86 : .94) : 1.0;
+  final effE = e * realization;
+  final margin = (0.5 - stickiness) * .025;
+  final exploration =
+      villain == null ? .08 : exploreRate(readPlayer(villain), difficulty);
+  final closeProbe =
+      effE >= needed - .02 &&
+      la.callAmount <= s.pot * .5 &&
+      rng.nextDouble() < exploration;
+  if (la.canCall && (effE >= needed + margin || closeProbe)) {
     return BotDecision(
       action: Action.call(amount: la.callAmount),
       range: narrowed(NarrowKind.call),

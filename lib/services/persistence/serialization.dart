@@ -102,6 +102,8 @@ Map<String, Object?> playerToJson(Player p) => {
   'showdownCount': p.showdownCount,
   'shownHands': p.shownHands,
   'recent': recentStatsToJson(p.recent),
+  'opponentMemory': p.memory.toJson(),
+  'bluffedThisHand': p.bluffedThisHand,
   'bluffAttempts': p.bluffAttempts,
   'bluffWins': p.bluffWins,
   'bluffNetBb': p.bluffNetBb,
@@ -204,6 +206,10 @@ Player playerFromJson(Map<String, Object?> j) => Player(
       j['recent'] == null
           ? null
           : recentStatsFromJson((j['recent'] as Map).cast<String, Object?>()),
+  memory: OpponentMemory.fromJson(
+    ((j['opponentMemory'] as Map?) ?? {}).cast<String, Object?>(),
+  ),
+  bluffedThisHand: j['bluffedThisHand'] as bool? ?? false,
   bluffAttempts: (j['bluffAttempts'] as num?)?.toInt() ?? 0,
   bluffWins: (j['bluffWins'] as num?)?.toInt() ?? 0,
   bluffNetBb: (j['bluffNetBb'] as num?)?.toDouble() ?? 0,
@@ -334,6 +340,8 @@ Map<String, Object?> tableStateToJson(TableState t) => {
   'currentBet': t.currentBet,
   'lastRaiseSize': t.lastRaiseSize,
   'aggressor': t.aggressor,
+  'aggressorPreflop': t.aggressorPreflop,
+  'observations': t.observations.map(observedActionToJson).toList(),
   'toAct': t.toAct,
   'handNumber': t.handNumber,
   'smallBlind': t.smallBlind,
@@ -361,6 +369,11 @@ TableState tableStateFromJson(Map<String, Object?> j) => TableState(
   currentBet: (j['currentBet'] as num?)?.toInt() ?? 0,
   lastRaiseSize: (j['lastRaiseSize'] as num).toInt(),
   aggressor: (j['aggressor'] as num?)?.toInt(),
+  aggressorPreflop: (j['aggressorPreflop'] as num?)?.toInt(),
+  observations: [
+    for (final a in (j['observations'] as List? ?? []))
+      observedActionFromJson((a as Map).cast<String, Object?>()),
+  ],
   toAct: (j['toAct'] as num?)?.toInt(),
   handNumber: (j['handNumber'] as num?)?.toInt() ?? 0,
   smallBlind: (j['smallBlind'] as num).toInt(),
@@ -586,3 +599,26 @@ Position? positionOrNull(Object? label) {
   }
   return null;
 }
+
+Map<String, Object?> observedActionToJson(ObservedAction a) => {
+  'seat': a.seat,
+  'street': a.street.name,
+  'type': a.type.name,
+  'pot': a.pot,
+  'price': a.price,
+  'wager': a.wager,
+  'opponents': a.opponents,
+  'board': a.board,
+  'aggressor': a.aggressor,
+};
+ObservedAction observedActionFromJson(Map<String, Object?> j) => ObservedAction(
+  seat: (j['seat'] as num).toInt(),
+  street: Street.values.byName(j['street'] as String),
+  type: ActionType.values.byName(j['type'] as String),
+  pot: (j['pot'] as num).toInt(),
+  price: (j['price'] as num).toInt(),
+  wager: (j['wager'] as num).toInt(),
+  opponents: (j['opponents'] as num).toInt(),
+  board: (j['board'] as List).cast<Card>(),
+  aggressor: (j['aggressor'] as num?)?.toInt(),
+);

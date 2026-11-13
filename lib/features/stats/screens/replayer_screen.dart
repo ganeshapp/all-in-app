@@ -16,7 +16,7 @@ import 'package:allin/features/stats/providers/replay_model.dart';
 import 'package:allin/features/stats/providers/stats_providers.dart';
 import 'package:allin/features/stats/stats_copy.dart';
 import 'package:allin/features/stats/widgets/note_editor_sheet.dart';
-import 'package:allin/features/stats/widgets/replay_felt.dart';
+import 'package:allin/features/stats/widgets/replay_broadcast.dart';
 import 'package:allin/services/persistence.dart';
 import 'package:allin/services/share_service.dart';
 import 'package:allin/theme/motion.dart';
@@ -177,17 +177,13 @@ class _ReplayerScreenState extends ConsumerState<ReplayerScreen> {
               child:
                   model.tooManySeats
                       ? _TooManySeats(model: model, frame: frame)
-                      : LayoutBuilder(
-                        builder:
-                            (context, constraints) => ReplayFelt(
-                              model: model,
-                              frameIndex: index,
-                              height: constraints.maxHeight.clamp(180.0, 360.0),
-                              fourColorDeck: settings.fourColorDeck,
-                              reducedMotion: settings.reducedMotion,
-                              onNext: () => _go(index + 1, model),
-                              onPrevious: () => _go(index - 1, model),
-                            ),
+                      : ReplayBroadcast(
+                        model: model,
+                        index: index,
+                        fourColorDeck: settings.fourColorDeck,
+                        reducedMotion: settings.reducedMotion,
+                        onNext: () => _go(index + 1, model),
+                        onPrevious: () => _go(index - 1, model),
                       ),
             ),
             _CoachNoteStrip(

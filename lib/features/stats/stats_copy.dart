@@ -14,6 +14,27 @@ import '../../engine/engine.dart'
     show fmtNeed, fmtPct, fmtSigned, fmtTimes, jsToFixed, kArchetypes;
 
 abstract final class StatsCopy {
+  static const equityToggle = 'Show cards and win equity';
+  static const equityHidden = 'Your view · cards hidden';
+  static const equityCalculating = 'Win equity · calculating…';
+  static const equityUnknown = 'Win equity unavailable';
+  static const equityExact = 'Win equity · exact';
+  static const equityEstimated = 'Win equity · estimated';
+  static const equityHelpTitle = 'About win equity';
+  static const equityHelp =
+      'See the hand like a poker broadcast. Known cards '
+      'are shown and each percentage is that player’s expected share at showdown, '
+      'splitting ties equally. Folded players are excluded.\n\n'
+      'Only the board at this replay step is used. Known folded cards are removed '
+      'from the deck. Pre-flop percentages are sampled estimates; from the flop '
+      'onward, every possible runout is counted.\n\n'
+      'If a live player’s cards are missing from an imported hand, percentages '
+      'stay unavailable. These are showdown equities, not predictions of future '
+      'folds or payouts from different side pots. Turn this off to review from '
+      'your own perspective.';
+  static String seatEquity(double? value) =>
+      value == null ? '—' : '${(value * 100).toStringAsFixed(1)}%';
+
   /* ------------------------------------------------------------ T0 header */
 
   /// §7.1 page title *(desktop h1)*.

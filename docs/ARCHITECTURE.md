@@ -244,3 +244,53 @@ it asserts a reason the user can disprove in one tap when a session ends with th
 decision yet graded.
 
 Any further deviation from the desktop wording needs a row here.
+
+
+## Replay equity and public opponent inference
+
+The mobile bot policy now intentionally diverges from the desktop. Card encoding,
+evaluation, equity enumeration, rules and hand-history formats retain their independent
+regression suites. `test/fixtures/lockstep_bots.txt` now pins the **mobile policy** across
+four seeded table configurations; regenerate it only for deliberate policy changes with
+`ALLIN_UPDATE_BOT_FIXTURE=1 flutter test test/engine/lockstep_test.dart`.
+
+- `engine/replay_equity.dart` takes a frozen map of recorded hole cards, live seat IDs and
+  only the selected frame's board. Known folded cards are dead; unknown folded cards are
+  marginalized. It enumerates flop/turn/river runouts, samples 12,000 pre-flop runouts, and
+  divides tied outcomes equally. Missing live cards or invalid/duplicate cards yield no
+  percentages. One surviving player has 100% regardless of whether cards were recorded.
+  These are showdown shares among remaining players, not monetary side-pot equities or
+  predictions of subsequent folds.
+- `ReplayBroadcast` runs through `services/equity_service.dart` off the UI isolate. At most
+  one replay job runs per route; rapid scrubbing replaces the pending request, obsolete
+  results never paint, and a 40-entry route-local cache avoids repeating board calculations.
+  The switch hides percentages and restores player-view card visibility. Actual folded
+  cards are never displayed just because they were available for dead-card removal.
+- `engine/opponent_model.dart` consumes `ObservedAction` records captured before each move
+  changes the pot. No opponent hole cards, internal Peek ranges, archetypes, dials, private
+  bluff flags or future deck cards are inference inputs. All seats watch the same public
+  evidence, including bot-versus-bot actions.
+- Each `Player.memory` stores decaying successes/opportunities for folds by street, sizing
+  bucket, heads-up/multiway context and aggressor. The pair-specific estimate borrows from
+  other opponents' contexts without counting the same observations twice. Showdown weak
+  aggression is assessed on the board **when the wager happened**, only for actual showdown
+  contenders; end-of-hand learning reveals from folded seats never count as observations.
+  Showdowns are a selected sample, so their influence has a strong prior and a cap.
+- Pre-flop reads shrink toward neutral priors with their own opportunity counts. Each exact
+  post-flop combo gets sequential action likelihoods from board-relative strength, draws,
+  bet size and observed weak aggression. Integer replication supplies bounded weights to
+  the existing range-equity functions. Checks retain traps and aggression retains bluffs.
+  These likelihoods and the one-street bluff EV gate are heuristics, not GTO guarantees.
+- Bluff attempts must clear a conservative expected-value gate using every remaining
+  opponent's estimated fold response. All-in players cannot be bluffed out. Calls use pot
+  odds (capped to the caller's eligible contributions) and future-street realization; small
+  exploratory calls are confined to a two-percentage-point band near break-even. The
+  existing archetypes, difficulty settings and own-bluff reward policy remain in effect.
+- Memory decays by .96 at the start of each hand and resets with a new table. Snapshots
+  add optional `opponentMemory`, `observations`, `aggressorPreflop` and `bluffedThisHand`
+  fields; legacy snapshots default to empty memory/contexts. No SQLite migration is needed.
+
+Mobile copy additions: the replay's “Win equity” status, view toggle and explanatory dialog
+live in `StatsCopy`. They explain sampling, ties, unavailable cards and side-pot limitations.
+The replayer also preserves each engine frame's `actionIndex` so action explanations continue
+working after the frame wording is adapted for the phone.

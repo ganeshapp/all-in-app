@@ -21,6 +21,7 @@ import '../../../theme/tokens.dart';
 import '../../../theme/typography.dart';
 import '../../../widgets/widgets.dart';
 import '../providers/replay_model.dart';
+import '../stats_copy.dart';
 
 /// Chips per big blind in the plate's display unit.
 const int _unit = 100;
@@ -38,8 +39,12 @@ class ReplayFelt extends StatelessWidget {
     this.reducedMotion = false,
     this.onNext,
     this.onPrevious,
+    this.broadcast = false,
+    this.equities,
   });
 
+  final bool broadcast;
+  final Map<int, double>? equities;
   final ReplayModel model;
   final int frameIndex;
   final double height;
@@ -110,8 +115,11 @@ class ReplayFelt extends StatelessWidget {
                     seats: n,
                     folded: frame.folded.contains(seat.seat),
                     hole: hand.holes[seat.seat],
-                    revealAll: frame.revealAll,
-                    caption: captions[seat.seat],
+                    revealAll: broadcast || frame.revealAll,
+                    caption:
+                        broadcast && !frame.folded.contains(seat.seat)
+                            ? StatsCopy.seatEquity(equities?[seat.seat])
+                            : captions[seat.seat],
                     stackUnits: (seat.stack / bb * _unit).round(),
                     nameLimit: n >= 10 ? 4 : null,
                     fourColorDeck: fourColorDeck,
@@ -192,7 +200,7 @@ class _Seat extends StatelessWidget {
           plate,
           SizedBox(
             width: size.width,
-            height: 14,
+            height: 20,
             child:
                 caption == null
                     ? null
@@ -201,7 +209,7 @@ class _Seat extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: AllInText.mono(10, color: c.goldLight),
+                      style: AllInText.mono(12, color: c.goldLight),
                     ),
           ),
         ],

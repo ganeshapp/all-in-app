@@ -88,6 +88,7 @@ class ReplayModel {
           pot: f.pot,
           folded: f.folded,
           revealAll: f.revealAll,
+          actionIndex: f.actionIndex,
         ),
     ];
     final heroes = hand.seats.where((s) => s.isHero);

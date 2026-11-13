@@ -68,6 +68,11 @@ disagree about which lesson is next.
   9-max**, with optional **0.25 bb antes**, 100 bb stacks and 0.5/1 bb blinds. Manual step-through
   (tap the felt, "Next action", hold to fast-forward) or auto-play at three speeds, plus a
   skip-to-my-turn control.
+- **Adaptive opponents.** Every seat learns from public actions and actual showdowns, with
+  recency-weighted priors, street/size-specific reads, and responses to individual opponents.
+  Bots infer weighted ranges, account for blockers and draws, and price bluff catches against
+  pot odds. Learning stays within the session and survives resume; private cards and Peek
+  ranges are never shared with other bots. This is a lightweight heuristic policy, not a solver.
 - **Fold / Check-Call / Bet-Raise** with exact-commit labels ("Call 6 bb", not "Call"), a 150 ms tap
   guard when the row appears so a stray tap can't fold for you, and no confirm step; the sizing rail
   and keypad above.
@@ -140,7 +145,10 @@ Chess-puzzle practice: a spot is replayed to the decision point, you answer, you
 - **All hands** with filters (all / played / imported) and tag chips, **notes and tags** per hand
   (the `review later` tag *is* the bookmark — there is no separate flag), and swipe actions.
 - **Hand replayer** — step any hand with a scrubber or swipes, with the coach notes that were
-  recorded at the time.
+  recorded at the time. Broadcast mode reveals known hands and updates win equity after each
+  board change or fold. Pre-flop uses deterministic sampling; flop/turn/river enumerate all
+  runouts. Ties split equity. Unknown live cards stay unavailable, and a toggle restores your
+  own view. Percentages describe showdown equity, not side-pot payouts.
 - **Hand-history import (.txt)** — pick a PokerStars-format file and it is parsed, persisted and
   analysed off the UI thread with a real progress count ("Reviewing your calls… 12 of 40"). It can be
   cancelled, or backgrounded while it finishes. Imported hands feed the same coaching review.
@@ -234,12 +242,12 @@ dart format lib test
 flutter test
 ```
 
-**1424 tests** across 80 test files, all runnable on a Mac with no device attached
+**1,678 tests** across 88 test files, all runnable on a Mac with no device attached
 (`sqflite_common_ffi` backs the database tests):
 
 | Area | What it covers |
 |---|---|
-| `test/engine/` | every engine module, plus golden pins, purity, a lockstep sim against the desktop, and parity reviews for the coach, hand histories, drills and persisted JSON |
+| `test/engine/` | every engine module, plus golden pins, purity, seeded mobile bot-policy transcripts, and parity reviews for the coach, hand histories, drills and persisted JSON |
 | `test/services/` | sqflite schema + migrations, repositories, backup/restore, the equity isolate |
 | `test/widgets/` | the shared component library, and fit tests for the hero strip and action row at 360/390/430 pt and 1.3× text |
 | `test/features/` | providers and screens for all seven features |
@@ -312,7 +320,7 @@ play-money only**.
 | Hand-history import from more sites | Only the PokerStars format parses today |
 | Share a hand as an image | The replayer already draws the felt |
 | Ante-aware push/fold tables | The bundled Nash tables are no-ante |
-| Adaptive bots and difficulty levels | The archetypes are fixed policies |
+| Longer-term opponent modelling | Current learning is deliberately scoped to one table session |
 | Landscape / tablet layouts | Portrait-first was a v1 decision, not a permanent one |
 
 ## Credits

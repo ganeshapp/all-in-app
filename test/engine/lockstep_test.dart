@@ -1,12 +1,8 @@
-// Lockstep parity against the desktop TypeScript: whole bot-vs-bot hands
-// (hand_engine + bot_brain, including the equity sampling the bots consume),
-// then the hand-history export of every hand (hand_history), compared line
-// by line with a transcript produced by the desktop code driven by the same
-// mulberry32 stream (`Math.random = mulberry32(seed)` in Node 23).
-//
-// The fixture `test/fixtures/lockstep_bots.txt` holds one section per table
-// configuration: decisions, log lines, stacks, pot results, the
-// PokerStars-style export and the replay frames of every hand.
+// Deterministic mobile-policy transcript across HU, 6-max, short stacks and
+// 9-max with antes. Poker-math and hand-engine desktop pins live in their
+// respective suites; adaptive mobile bot decisions intentionally diverge.
+// Regenerate after an intentional policy change with:
+// ALLIN_UPDATE_BOT_FIXTURE=1 flutter test test/engine/lockstep_test.dart
 import 'dart:io';
 
 import 'package:allin/engine/bot_brain.dart';
@@ -177,7 +173,29 @@ void main() {
     }
   }
 
-  group('desktop lockstep transcript', () {
+  final regenerate = Platform.environment['ALLIN_UPDATE_BOT_FIXTURE'] == '1';
+  if (regenerate) {
+    final lines = <String>[];
+    for (final key in sections.keys.toList()) {
+      final p = {
+        for (final item in key.split(' '))
+          item.split('=')[0]: int.parse(item.split('=')[1]),
+      };
+      final result = transcript(
+        seed: p['seed']!,
+        hands: p['hands']!,
+        seats: p['seats']!,
+        ante: p['ante']!,
+        stack: p['stack']!,
+      );
+      sections[key] = result;
+      lines.addAll(['### $key', ...result.map(_tzAgnostic)]);
+    }
+    File(
+      'test/fixtures/lockstep_bots.txt',
+    ).writeAsStringSync('${lines.join('\n')}\n');
+  }
+  group('mobile adaptive policy transcript', () {
     test('fixture has sections', () => expect(sections.length, 4));
     for (final entry in sections.entries) {
       final params = {

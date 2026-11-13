@@ -644,38 +644,19 @@ void main() {
       },
     );
 
-    test('equity vs the sole opponent\'s stored range is used heads-up', () {
-      // Reference outputs from the desktop under Node (Math.random = 0.6) on
-      // the Kc 8d 3h 2s 9c river. Top set vs a range of small sets bets
-      // 1.25x pot; 72o (a pair of deuces) checks vs random but bets when the
-      // sole opponent's stored range is pure air, and checks when it is sets.
-      var s = _toRiver(Archetype.tag, ['Ks', 'Kd']);
-      s.botRanges = {
-        0: ['22', '33', '44'],
-      };
-      var d = decideBot(s, 2, rng: _FixedRandom(0.6));
-      expect(d.action.type, ActionType.bet);
-      expect(d.action.amount, 138);
-      s = _toRiver(Archetype.station, ['7s', '2h']);
-      expect(
-        decideBot(s, 2, rng: _FixedRandom(0.6)).action.type,
-        ActionType.check,
-      );
-      s = _toRiver(Archetype.station, ['7s', '2h']);
-      s.botRanges = {
-        0: ['54o'],
-      };
-      d = decideBot(s, 2, rng: _FixedRandom(0.6));
-      expect(d.action.type, ActionType.bet);
-      expect(d.action.amount, 138);
-      s = _toRiver(Archetype.station, ['7s', '2h']);
-      s.botRanges = {
-        0: ['88', '33'],
-      };
-      expect(
-        decideBot(s, 2, rng: _FixedRandom(0.6)).action.type,
-        ActionType.check,
-      );
+    test('opponent Peek ranges cannot reveal private information to a bot', () {
+      final s = _toRiver(Archetype.station, ['7s', '2h']);
+      final before = decideBot(s.clone(), 2, rng: _FixedRandom(.6));
+      for (final hidden in [
+        ['54o'],
+        ['88', '33'],
+        ['AA'],
+      ]) {
+        final changed = s.clone()..botRanges = {0: hidden};
+        final after = decideBot(changed, 2, rng: _FixedRandom(.6));
+        expect(after.action.type, before.action.type);
+        expect(after.action.amount, before.action.amount);
+      }
     });
 
     test('flop decisions consume the injected rng (deterministic)', () {
