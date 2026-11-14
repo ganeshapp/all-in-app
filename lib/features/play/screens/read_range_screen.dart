@@ -1,18 +1,7 @@
-/// P7 · Read range: Guess → Peek — the full-screen modal over the table at
-/// `/table/read/:seat` (DESIGN.md §4.9, §16.1; port §12).
-///
-/// Two states on one route, crossfaded: the **painter** (a 13×13
-/// `RangeMatrix.editable` with presets, undo, clear and the loupe) and the
-/// **reveal** (the compare grid, the compare legend and the plain-English
-/// score card under a pinned Continue). The matrix is width-driven — the
-/// screen hands it the box it may occupy and the widget solves for the cell,
-/// so the §4.9 arithmetic holds at 360, 390 and 430 without a magic number
-/// per size.
-///
-/// The pause belongs to the table: it wraps the push in `setSurfaceOpen`, so
-/// the auto loop is stopped for the whole modal and released on the way out.
-/// Closing before Peek scores nothing (desktop parity); after Peek, ✕ and
-/// system back are Continue.
+/// P7: select a hand type or range, save it, then review the actual-card
+/// result at hand-over. The estimated range comparison is a separate,
+/// optional disclosure. The selection and result scroll above Continue.
+/// The table owns pausing while this modal route is open.
 library;
 
 import 'dart:math' as math;
@@ -20,6 +9,9 @@ import 'dart:math' as math;
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/engine/engine.dart';
 import 'package:allin/features/play/providers/guess_provider.dart';
+import '../providers/hand_reads_provider.dart';
+import '../widgets/hand_read_card.dart';
+import '../widgets/hand_read_copy.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/coach_copy.dart';
 import 'package:allin/features/play/widgets/coach_sheet.dart'
@@ -123,12 +115,15 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
   @override
   Widget build(BuildContext context) {
     final reduced = ref.watch(reducedMotionProvider);
-    final table = ref.watch(sessionProvider.select((s) => s.table));
+    final session = ref.watch(sessionProvider);
+    final table = session.table;
     final raw = ref.watch(guessProvider);
     // A stale reveal from another seat or an earlier hand is not this screen's
     // state; `open()` clears it on the next microtask.
     final guess =
-        raw.seat == widget.seat && raw.handNumber == (table?.handNumber ?? 0)
+        raw.sessionId == session.startedAt &&
+                raw.seat == widget.seat &&
+                raw.handNumber == (table?.handNumber ?? 0)
             ? raw
             : const GuessState();
 
@@ -214,11 +209,14 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
         _TopBar(
           title: CoachSheetCopy.readTitle(name),
           onClose: _close,
-          trailing: _TextAction(
-            label: CoachSheetCopy.peek,
-            emphasised: true,
-            onTap: _peek,
-          ),
+          trailing:
+              painted.isEmpty
+                  ? _TextAction(
+                    label: CoachSheetCopy.peek,
+                    emphasised: true,
+                    onTap: _peek,
+                  )
+                  : null,
         ),
         _Subtitle(lines: <String>[contextLine, CoachSheetCopy.readSubtitle]),
         Expanded(
@@ -243,6 +241,7 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
           child: CoachLegendRow(
+            comparisonIsEstimate: true,
             trailing: ComboCounter(
               combos: combosInSet(painted),
               textAlign: TextAlign.right,
@@ -358,9 +357,7 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
   ) {
     final size = MediaQuery.sizeOf(context);
     final width = size.width;
-    // §4.9: reading a compare grid needs a smaller cell than painting one —
-    // 305 at 390, 277 at 360, 334 at 430 — and the §4.9 budget keeps ≈ 220 pt
-    // for the score card under it whatever the height turns out to be.
+    // The optional comparison grid is compact; the whole result scrolls.
     final revealBox =
         width >= 430
             ? 334.0
@@ -370,46 +367,103 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
     final revealWidth = math.min(revealBox, math.max(160.0, size.height - 420));
     final header = width >= 390 ? 20.0 : 18.0;
 
-    return Column(
-      key: const ValueKey<String>('read-range-reveal'),
+    final reads = ref.watch(handReadsProvider);
+    final read =
+        reads
+            .where(
+              (r) =>
+                  r.sessionId == guess.sessionId &&
+                  r.handNumber == guess.handNumber &&
+                  r.seat == widget.seat &&
+                  r.street == guess.street,
+            )
+            .firstOrNull;
+    final c = context.colors;
+    final haptics = ref.watch(hapticsEnabledProvider);
+    final comparison = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _TopBar(title: CoachSheetCopy.revealTitle(name), onClose: _close),
-        _Subtitle(lines: <String>[contextLine]),
+      children: [
         Center(
           child:
               guess.scored
                   ? RangeMatrix.compare(
+                    comparisonIsEstimate: true,
                     painted: guess.painted,
                     actual: guess.actual,
                     width: revealWidth,
                     headerWidth: header,
                     reducedMotion: reduced,
-                    semanticLabel: CoachSheetCopy.revealTitle(name),
+                    semanticLabel: CoachSheetCopy.theirRange(
+                      guess.actualCombos,
+                    ),
                   )
                   : RangeMatrix.readOnly(
                     highlight: guess.actual,
                     width: revealWidth,
                     headerWidth: header,
                     reducedMotion: reduced,
-                    semanticLabel: CoachSheetCopy.revealTitle(name),
                   ),
         ),
         const SizedBox(height: AllInSpace.sm),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AllInSpace.lg),
-          child: CoachLegendRow(
-            mode: guess.scored ? RangeLegendMode.compare : RangeLegendMode.kind,
-            trailing: Text(
-              CoachSheetCopy.theirRange(guess.actualCombos),
-              textAlign: TextAlign.right,
-              style: AllInText.mono(12, color: context.colors.goldLight),
+        CoachLegendRow(
+          comparisonIsEstimate: true,
+          trailing: const SizedBox.shrink(),
+          mode: guess.scored ? RangeLegendMode.compare : RangeLegendMode.kind,
+        ),
+        const SizedBox(height: AllInSpace.sm),
+        Text(
+          CoachSheetCopy.theirRange(guess.actualCombos),
+          style: AllInText.mono(12, color: c.textMuted),
+        ),
+        if (guess.score case final score?) ...[
+          const SizedBox(height: AllInSpace.md),
+          Text(
+            CoachSheetCopy.caught(score.recall),
+            style: AllInText.body(15, color: c.text),
+          ),
+          Text(
+            CoachSheetCopy.painted(score.precision),
+            style: AllInText.body(15, color: c.text),
+          ),
+          DisclosureRow(
+            label: CoachCopy.showMath,
+            expandedLabel: CoachCopy.hideMath,
+            enableHaptics: haptics,
+            reducedMotion: reduced,
+            child: Text(
+              CoachSheetCopy.scoreMath(
+                accuracy: score.accuracy,
+                recall: score.recall,
+                precision: score.precision,
+                overlapCombos: guess.overlapCombos,
+                actualCombos: guess.actualCombos,
+                paintedCombos: guess.paintedCombos,
+              ).join('\n\n'),
+              style: AllInText.mono(13, color: c.textMuted),
             ),
           ),
+        ],
+        DisclosureRow(
+          label: CoachCopy.expertDetail,
+          expandedLabel: CoachCopy.hideExpert,
+          enableHaptics: haptics,
+          reducedMotion: reduced,
+          child: Text(
+            CoachSheetCopy.howTheRangeWasBuilt,
+            style: AllInText.body(15, color: c.textMuted),
+          ),
         ),
-        const SizedBox(height: AllInSpace.md),
-        // §4.9: everything between the legend and Continue scrolls; the
-        // matrix, the legend and the pinned button never move.
+      ],
+    );
+
+    return Column(
+      key: const ValueKey<String>('read-range-reveal'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _TopBar(title: CoachSheetCopy.revealTitle(name), onClose: _close),
+        _Subtitle(
+          lines: [read == null ? contextLine : HandReadCopy.context(read)],
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
@@ -418,88 +472,47 @@ class _ReadRangeScreenState extends ConsumerState<ReadRangeScreen>
               AllInSpace.lg,
               AllInSpace.md,
             ),
-            child:
-                guess.scored
-                    ? _scoreCard(guess, reduced)
-                    : _unscoredCard(name, reduced),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (read != null) ...[
+                  HandReadCard(read: read),
+                  const SizedBox(height: AllInSpace.md),
+                  Text(
+                    HandReadCopy.comparisonHint,
+                    style: AllInText.body(14, color: c.textMuted, height: 1.4),
+                  ),
+                  DisclosureRow(
+                    label: HandReadCopy.overlap(read.rangeOverlap),
+                    enableHaptics: haptics,
+                    reducedMotion: reduced,
+                    child: comparison,
+                  ),
+                ] else if (guess.actual.isNotEmpty) ...[
+                  Text(
+                    CoachSheetCopy.nothingPainted(name),
+                    style: AllInText.body(15, color: c.text),
+                  ),
+                  const SizedBox(height: AllInSpace.md),
+                  comparison,
+                  Text(
+                    CoachSheetCopy.modelNotTheirCards,
+                    style: AllInText.body(14, color: c.textMuted),
+                  ),
+                ] else ...[
+                  Text(
+                    HandReadCopy.noRead,
+                    style: AllInText.display(25, color: c.text),
+                  ),
+                  const SizedBox(height: AllInSpace.sm),
+                  Text(
+                    HandReadCopy.noReadBody,
+                    style: AllInText.body(15, color: c.textMuted),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _scoreCard(GuessState guess, bool reduced) {
-    final score = guess.score!;
-    return CoachNoteView.peek(
-      grade: guess.grade!,
-      plainLines: <String>[
-        CoachSheetCopy.caught(score.recall),
-        CoachSheetCopy.painted(score.precision),
-      ],
-      mathLines: CoachSheetCopy.scoreMath(
-        accuracy: score.accuracy,
-        recall: score.recall,
-        precision: score.precision,
-        overlapCombos: guess.overlapCombos,
-        actualCombos: guess.actualCombos,
-        paintedCombos: guess.paintedCombos,
-      ),
-      expertLines: <String>[
-        CoachSheetCopy.combosNotHands(
-          paintedCombos: guess.paintedCombos,
-          actualCombos: guess.actualCombos,
-          overlapCombos: guess.overlapCombos,
-        ),
-        CoachSheetCopy.howTheRangeWasBuilt,
-        CoachSheetCopy.modelNotTheirCards,
-      ],
-      footerCaption: CoachSheetCopy.exactCardsAtHandOver,
-      alwaysExpandMath: ref.watch(
-        settingsProvider.select((s) => s.alwaysExpandMath),
-      ),
-      enableHaptics: ref.watch(hapticsEnabledProvider),
-      reducedMotion: reduced,
-    );
-  }
-
-  /// §14 — nothing painted: the range is shown, nothing is scored or recorded.
-  Widget _unscoredCard(String name, bool reduced) {
-    final c = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text(
-          CoachSheetCopy.nothingPainted(name),
-          style: AllInText.body(17, color: c.text, height: 1.45),
-        ),
-        const SizedBox(height: AllInSpace.sm),
-        DisclosureRow(
-          label: CoachCopy.expertDetail,
-          expandedLabel: CoachCopy.hideExpert,
-          tone: DisclosureTone.muted,
-          enableHaptics: ref.watch(hapticsEnabledProvider),
-          reducedMotion: reduced,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                CoachSheetCopy.howTheRangeWasBuilt,
-                style: AllInText.body(15, color: c.textMuted, height: 1.4),
-              ),
-              const SizedBox(height: AllInSpace.sm),
-              Text(
-                CoachSheetCopy.modelNotTheirCards,
-                style: AllInText.body(15, color: c.textMuted, height: 1.4),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AllInSpace.md),
-        Text(
-          CoachSheetCopy.exactCardsAtHandOver,
-          style: AllInText.body(13, color: c.textFaint),
         ),
       ],
     );

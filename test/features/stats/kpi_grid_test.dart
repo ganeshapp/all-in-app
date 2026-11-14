@@ -29,7 +29,7 @@ const List<String> _kpiLabels = [
   'NET',
   'WIN RATE',
   'SHOWDOWN',
-  'READ ACC.',
+  'RANGE OVERLAP',
 ];
 
 /// `Inter` — the family `pubspec.yaml` bundles and `AllInText` asks for.

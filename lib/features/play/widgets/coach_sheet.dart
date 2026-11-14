@@ -529,10 +529,12 @@ class CoachLegendRow extends StatelessWidget {
     super.key,
     required this.trailing,
     this.mode = RangeLegendMode.kind,
+    this.comparisonIsEstimate = false,
   });
 
   final Widget trailing;
   final RangeLegendMode mode;
+  final bool comparisonIsEstimate;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -553,7 +555,10 @@ class CoachLegendRow extends StatelessWidget {
             // shrink-wraps whenever it fits, instead of taking half the row.
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: RangeLegend(mode: mode),
+              child: RangeLegend(
+                mode: mode,
+                comparisonIsEstimate: comparisonIsEstimate,
+              ),
             ),
           ),
           ConstrainedBox(

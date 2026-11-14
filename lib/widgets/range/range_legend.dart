@@ -21,9 +21,11 @@ class RangeLegend extends StatelessWidget {
     this.mode = RangeLegendMode.kind,
     this.hatchWhenNoColour = false,
     this.trailing,
+    this.comparisonIsEstimate = false,
   });
 
   final RangeLegendMode mode;
+  final bool comparisonIsEstimate;
   final bool hatchWhenNoColour;
 
   /// Optional right-hand text — the live counter on P7, "Their range: 312
@@ -57,9 +59,24 @@ class RangeLegend extends StatelessWidget {
           ComboKind.offsuit,
         ),
       ] else ...<_LegendItem>[
-        _LegendItem('Correct', c.good, RangeCellState.correct, ComboKind.pair),
-        _LegendItem('Missed', c.warn, RangeCellState.missed, ComboKind.pair),
-        _LegendItem('Extra', c.bad, RangeCellState.extra, ComboKind.pair),
+        _LegendItem(
+          comparisonIsEstimate ? 'Overlap' : 'Correct',
+          c.good,
+          RangeCellState.correct,
+          ComboKind.pair,
+        ),
+        _LegendItem(
+          comparisonIsEstimate ? 'Model only' : 'Missed',
+          c.warn,
+          RangeCellState.missed,
+          ComboKind.pair,
+        ),
+        _LegendItem(
+          comparisonIsEstimate ? 'Yours only' : 'Extra',
+          c.bad,
+          RangeCellState.extra,
+          ComboKind.pair,
+        ),
       ],
     ];
 

@@ -240,6 +240,7 @@ class RangeMatrix extends StatefulWidget {
     this.semanticLabel,
     this.enableHaptics = true,
     this.reducedMotion = false,
+    this.comparisonIsEstimate = false,
   }) : mode = RangeMatrixMode.readOnly,
        value = const <HandLabel>{},
        onChanged = null,
@@ -265,6 +266,7 @@ class RangeMatrix extends StatefulWidget {
     this.semanticLabel,
     this.enableHaptics = true,
     this.reducedMotion = false,
+    this.comparisonIsEstimate = false,
   }) : mode = RangeMatrixMode.editable,
        highlight = const <HandLabel>{},
        painted = const <HandLabel>{},
@@ -287,6 +289,7 @@ class RangeMatrix extends StatefulWidget {
     this.semanticLabel,
     this.enableHaptics = true,
     this.reducedMotion = false,
+    this.comparisonIsEstimate = false,
   }) : mode = RangeMatrixMode.compare,
        highlight = const <HandLabel>{},
        value = const <HandLabel>{},
@@ -294,6 +297,7 @@ class RangeMatrix extends StatefulWidget {
        undoController = null;
 
   final RangeMatrixMode mode;
+  final bool comparisonIsEstimate;
 
   /// `.readOnly` — the cells to fill in their kind colour.
   final Set<HandLabel> highlight;
@@ -993,18 +997,24 @@ class _RangeMatrixState extends State<RangeMatrix>
     )) {
       case RangeCellState.off:
         return widget.mode == RangeMatrixMode.compare
-            ? '$name, not in their range'
+            ? '$name, not selected in either range'
             : '$name, not painted';
       case RangeCellState.painted:
         return '$name, painted';
       case RangeCellState.highlighted:
         return '$name, in range';
       case RangeCellState.correct:
-        return '$name, correct';
+        return widget.comparisonIsEstimate
+            ? '$name, in both selections'
+            : '$name, correct';
       case RangeCellState.missed:
-        return '$name, missed';
+        return widget.comparisonIsEstimate
+            ? '$name, estimated range only'
+            : '$name, missed';
       case RangeCellState.extra:
-        return '$name, extra';
+        return widget.comparisonIsEstimate
+            ? '$name, your selection only'
+            : '$name, extra';
     }
   }
 }

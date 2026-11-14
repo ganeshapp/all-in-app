@@ -51,7 +51,7 @@ abstract final class StatsCopy {
   static const String kpiNet = 'Net';
   static const String kpiWinRate = 'Win rate';
   static const String kpiShowdown = 'Showdown';
-  static const String kpiReadAccuracy = 'Read acc.';
+  static const String kpiReadAccuracy = 'Range overlap';
 
   /// §7.2 sub-lines *(desktop)*.
   static const String kpiWinRateSub = 'bb/100 (lifetime)';
@@ -120,7 +120,7 @@ abstract final class StatsCopy {
 
   static const String readAccuracyBody =
       'How close your painted ranges have been to the range the coach '
-      'assumed, averaged over every Peek you have scored.';
+      'assumed, averaged over saved comparisons. This is not your actual-hand hit rate.';
 
   /// §4.9's prose says "(recall + precision) / 2", but the engine scores the
   /// *harmonic* mean (`coach.dart`: `2·p·r / (p + r)`), so the arithmetic mean
@@ -130,12 +130,12 @@ abstract final class StatsCopy {
   /// (`play/widgets/coach_copy.dart`).
   static const String readAccuracyExpert =
       'Each score balances two things — how much of their range you covered, '
-      'and how much of what you painted was really in it. '
+      'and how much of what you painted was in the estimated range. '
       'Score = 2 × coverage × precision ÷ (coverage + precision).';
 
-  /// "The mean of your last {n} Peek scores: {list}." *(mobile)*.
+  /// "The mean of your last {n} range comparisons: {list}." *(mobile)*.
   static String readAccuracyMath({required int n, required String list}) =>
-      'The mean of your last $n Peek scores: $list.';
+      'The mean of your last $n range comparisons: $list.';
 
   /* --------------------------------------------------------- chart cards */
 
@@ -144,13 +144,13 @@ abstract final class StatsCopy {
   /// §7.3 / desktop `LineChart` empty state *(desktop)*.
   static const String chartEmpty = 'Play a few hands to see your trend.';
 
-  static const String readAccuracyCard = 'Range-read accuracy';
+  static const String readAccuracyCard = 'Range overlap';
 
   /// Desktop `MiniBars` empty state *(desktop)*.
   static const String readsEmpty = 'No reads logged yet.';
 
-  /// "Last {n} Peek scores." *(desktop)*.
-  static String readsCaption(int n) => 'Last $n Peek scores.';
+  /// "Last {n} range comparisons." *(desktop)*.
+  static String readsCaption(int n) => 'Last $n range comparisons.';
 
   /// The floating scrub label — "Hand 212 · +31.5 bb" *(mobile §7.3)*.
   static String chartScrubLabel(int hand, double value) =>
@@ -203,9 +203,9 @@ abstract final class StatsCopy {
   /// for two names that appear on no screen is simply stuck, so the line uses
   /// the labels the app actually shows and the card routes to the lesson.
   static const String readAccuracyLeak =
-      'Your reads on what opponents might hold are often off — tap the eye on '
-      'a seat during a hand to practise, or open the Range-Building Drill in '
-      'Study.';
+      'Your selections differ from the coach’s estimated ranges. Narrow '
+      'predictions can still hit the actual hand. To practise broader ranges, '
+      'tap the eye on a seat or open the Range-Building Drill in Study.';
 
   /// H1's "Show me the math" for a fold-mistake leak *(mobile §3.4)*.
   static String leakMath({
@@ -581,7 +581,7 @@ abstract final class StatsCopy {
 
   /// §7.9 caption under the backup row *(mobile)*.
   static const String backupCaption =
-      'A safety copy of your stats, decisions, reads and hands. Restore it '
+      'A safety copy of your stats, decisions, range comparisons and hands. Restore it '
       'from this screen on a new phone.';
 
   /// What the share sheet came back with, shown in faint under the backup

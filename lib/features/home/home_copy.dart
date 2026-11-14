@@ -159,9 +159,9 @@ abstract final class HomeCopy {
   /// eye on a seat, titled "Read {name}'s range") and the Study lesson is
   /// called "Range-Building Drill", not a "Range-Building exercise".
   static const String coachReadLine =
-      'Your reads on what opponents might hold are often off — tap the eye on '
-      'a seat during a hand to practise, or open the Range-Building Drill in '
-      'Study.';
+      'Your selections differ from the coach’s estimated ranges. Narrow '
+      'predictions can still hit the actual hand. To practise broader ranges, '
+      'tap the eye on a seat or open the Range-Building Drill in Study.';
 
   /// §3.4 source 3 — yesterday's debrief line *(desktop shape)*.
   static String coachDebriefLine(String label, double evBb) =>
@@ -208,11 +208,11 @@ abstract final class HomeCopy {
 
   /// Layer 2 / 3 for the read-accuracy line *(new)*.
   static String coachMathReads({required int reads, required double mean}) =>
-      'Your last $reads range reads matched the real range '
-      '${fmtPct(mean)} of the time on average.';
+      'Your last $reads range comparisons overlapped the estimated range '
+      'by ${fmtPct(mean)} on average.';
   static const String coachExpertReads =
       'Flagged when you have logged at least 5 reads and they average under '
-      '50 % of the range right.';
+      '50 % overlap. This does not measure actual-hand hits.';
 
   /// Layer 2 / 3 for the debrief line *(new)*.
   static String coachMathDebrief(double evBb) =>

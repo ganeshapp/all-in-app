@@ -34,6 +34,7 @@ import 'package:allin/theme/tokens.dart';
 import 'package:allin/theme/typography.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import '../widgets/hand_reading_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -174,6 +175,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         StyleWinRateCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),
         const SessionsCard(),
+        const SizedBox(height: AllInSpace.md),
+        const HandReadingCard(),
         const SizedBox(height: AllInSpace.md),
         ReadAccuracyCard(metrics: metrics),
         const SizedBox(height: AllInSpace.md),

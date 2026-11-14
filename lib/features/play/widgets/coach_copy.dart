@@ -40,10 +40,10 @@ abstract final class CoachSheetCopy {
   /* ---------------------------------------------------------- P7 · read */
 
   /// *(desktop)* `GuessModal` title.
-  static String readTitle(String name) => "Read $name's range";
+  static String readTitle(String name) => "Read $name's hand";
 
   /// The route's own title when there is no seat to name (§14).
-  static const String readTitleGeneric = 'Read their range';
+  static const String readTitleGeneric = 'Read their hand';
 
   /// The second subtitle line.
   ///
@@ -54,10 +54,8 @@ abstract final class CoachSheetCopy {
   /// legend only colours Pairs / Suited / Offsuit). A first-week player could
   /// not start — and the reveal then graded them "Way off" (TONE.md).
   static const String readSubtitle =
-      "Their \u2018range\u2019 is every hand they would play here. Drag "
-      'across the squares to mark the ones you think they hold — "s" means '
-      'both cards the same suit, "o" means different suits. Or just tap Peek '
-      'to see their range.';
+      'Select the hand types you think they hold. Drag across squares for a range, '
+      'or choose just one. “s” means the same suit; “o” means different suits.';
 
   /// The label over the preset row, so the chips read as a starting point
   /// rather than ten unexplained abbreviations *(new)*.
@@ -82,7 +80,7 @@ abstract final class CoachSheetCopy {
   }) => '$position · $archetype · $street';
 
   static const String peek = 'Peek';
-  static const String peekAndScore = 'Peek & score';
+  static const String peekAndScore = 'Save read';
   static const String undo = 'Undo';
   static const String clear = 'Clear';
   static const String continueLabel = 'Continue';
@@ -95,18 +93,17 @@ abstract final class CoachSheetCopy {
   /// §4.9 — Clear is one stroke, so Undo brings it back *(new)*.
   static const String clearedUndo = 'Cleared';
 
-  static String revealTitle(String name) => "$name's range revealed";
+  static String revealTitle(String name) => "Your read on $name";
 
-  static String theirRange(int combos) => 'Their range: $combos combos';
+  static String theirRange(int combos) => 'Estimated range: $combos combos';
 
   /// *(desktop)* the caption under the score card.
   static const String exactCardsAtHandOver =
-      "Everyone's exact cards are revealed when the hand ends.";
+      'Saved reads are checked when cards are revealed at hand-over.';
 
   /// *(desktop)* nothing was painted, so nothing is scored (§14).
   static String nothingPainted(String name) =>
-      "Here's $name's assumed range. Paint a guess first next time for an "
-      'accuracy score.';
+      "Here’s the coach’s estimated range for $name. No prediction was saved.";
 
   /// §14 — P7 opened with no hand to read (a deep link, or the hand ended
   /// under the modal) *(new)*.
@@ -117,7 +114,7 @@ abstract final class CoachSheetCopy {
 
   /// Layer 1, plain-English recall *(new)*.
   static String caught(double recall) =>
-      'You caught ${fmtTimes(recall)} of the hands they play here.';
+      'Your selection covers ${fmtPct(recall)} of the estimated range.';
 
   /// Layer 1, plain-English precision *(new)*.
   ///
@@ -125,7 +122,7 @@ abstract final class CoachSheetCopy {
   /// 10"), so the sentence has to put it in the predicate — as a subject it
   /// reads "Almost every time of what you painted was right."
   static String painted(double precision) =>
-      'Of the hands you painted, you were right ${fmtTimes(precision)}.';
+      '${fmtPct(precision)} of your selected combinations are in the estimated range.';
 
   /// Layer 2 — the desktop's own numbers, mono (§4.9).
   static List<String> scoreMath({
@@ -136,16 +133,16 @@ abstract final class CoachSheetCopy {
     required int actualCombos,
     required int paintedCombos,
   }) => <String>[
-    'Score: ${fmtPct(accuracy)}',
+    'Range overlap: ${fmtPct(accuracy)}',
     'Coverage (recall): ${fmtPct(recall)} — $overlapCombos of the '
-        '$actualCombos combos they actually play',
+        '$actualCombos combos in the estimated range',
     'Precision: ${fmtPct(precision)} — $overlapCombos of the $paintedCombos '
         'combos you painted',
     // §4.9 prints "Score = (recall + precision) / 2"; the engine (and the
     // desktop it is ported from) scores the *harmonic* mean, which is what is
     // stated here — a formula that does not reproduce the number above it
     // would fail TONE.md's honesty rule.
-    'Score = 2 × recall × precision ÷ (recall + precision)',
+    'Overlap = 2 × recall × precision ÷ (recall + precision)',
   ];
 
   /// Layer 3 line 1 *(new)*.
@@ -154,7 +151,7 @@ abstract final class CoachSheetCopy {
     required int actualCombos,
     required int overlapCombos,
   }) =>
-      'Painted $paintedCombos combos; their range holds $actualCombos; '
+      'Painted $paintedCombos combos; the estimated range holds $actualCombos; '
       '$overlapCombos overlap. These are combos, not hands — AKs is 4 combos, '
       'AKo is 12, a pair is 6, so painting one pair cell is worth less than '
       'one offsuit cell.';
@@ -169,10 +166,9 @@ abstract final class CoachSheetCopy {
 
   /// Layer 3 line 3 *(new)*.
   static const String modelNotTheirCards =
-      'This is the coach\'s model of what they would play here, not the two '
-      'cards they were dealt. Their actual hand shows at hand-over. A '
-      "'Way off' score against a hand they should not have had is the model "
-      'being right and the deck being the deck.';
+      'This is an estimate, not ground truth. A correct narrow prediction can '
+      'have low overlap with this range. Your saved read is checked separately '
+      'against the actual cards when they are revealed.';
 
   /// The read badge P8 puts on the seat row at hand-over (§4.12).
   static String yourRead(double accuracy) => 'Your read ${fmtPct(accuracy)}';

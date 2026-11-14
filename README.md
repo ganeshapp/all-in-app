@@ -81,16 +81,18 @@ disagree about which lesson is next.
   verdict appears as a chip on the felt, expands to a badge, and opens a sheet with the three layers
   the whole app uses: **plain English → "Show me the math" → "Expert detail"**, plus the assumed
   range on a 13×13 matrix. Clear −EV mistakes pause the hand with a non-dismissable sheet.
-- **Read their range.** Tap the eye on a seat to paint what you think they hold, then peek: you get
-  accuracy, precision and recall as plain sentences ("you caught…", "you painted…") next to the real
-  range.
+- **Read their hand.** Tap the eye on a seat and select one hand type or a range. Save one
+  prediction per opponent per street; at hand-over, see whether it hit the revealed cards.
+  Selection size makes precise reads distinguishable from broad coverage. The coach’s estimated
+  **range overlap** remains a separate, optional comparison — a correct narrow read is still a hit.
+  Stats keeps the latest 500 completed reads, with hit counts, selection breadth and recent results.
 - **Explain their last move** for any bot action, and a player sheet with the archetype, the observed
   VPIP/PFR after 8 hands, and the 9-max position caveat.
 - **Hand log** — a live ticker on the felt and a full log in the session sheet with coach notes
   interleaved, plus copy-to-clipboard. Written in second person and in big blinds (see below).
 - **Hand-over reveals** on the felt with the board still visible, optional realistic reveals, and a
   results card that always opens expanded so you can see the opponent reveals.
-- **Session tiles** (hands, net bb, bb/100, read accuracy, your style) and an **end-of-session
+- **Session tiles** (hands, net bb, bb/100, your style) and an **end-of-session
   summary** that leads with decision quality, not money, and shares as a PokerStars-style history.
 - **Resume.** Leaving the table pauses it; Home, the lobby and a session pill all bring it back, and
   a cold start after a kill lands you back on the felt.
@@ -140,7 +142,7 @@ Chess-puzzle practice: a spot is replayed to the decision point, you answer, you
 
 - **KPI grid** (hands, bb/100, net, mistakes), a cumulative bb chart you scrub instead of hover, a
   **coaching review** of your leaks, results **vs. each archetype**, **positional** breakdown, your
-  style numbers, **range-read accuracy** and the practice heatmap. The ⓘ on a card or a dotted stat
+  style numbers, **hand-reading results and range overlap** and the practice heatmap. The ⓘ on a card or a dotted stat
   label opens an explainer sheet with the same three layers the coach uses.
 - **All hands** with filters (all / played / imported) and tag chips, **notes and tags** per hand
   (the `review later` tag *is* the bookmark — there is no separate flag), and swipe actions.
@@ -242,7 +244,7 @@ dart format lib test
 flutter test
 ```
 
-**1,686 tests** across 91 test files, all runnable on a Mac with no device attached
+**1,698 tests** across 93 test files, all runnable on a Mac with no device attached
 (`sqflite_common_ffi` backs the database tests):
 
 | Area | What it covers |

@@ -22,9 +22,11 @@ TableState playHand(
   ProviderContainer container, {
   poker.Action Function(LegalActions legal)? heroAction,
   TableOptions options = TableOptions.defaults,
+  int? readSeatBeforePlay,
 }) {
   final notifier = container.read(sessionProvider.notifier);
   notifier.newSession(options);
+  if (readSeatBeforePlay != null) readSeat(container, readSeatBeforePlay);
   for (var i = 0; i < 400; i++) {
     final state = container.read(sessionProvider);
     final table = state.table!;
@@ -393,8 +395,7 @@ void main() {
     ) async {
       final container = makeContainer();
       addTearDown(container.dispose);
-      final table = playHand(container);
-      readSeat(container, 1);
+      final table = playHand(container, readSeatBeforePlay: 1);
 
       var opened = -1;
       await pumpOverlay(
@@ -403,7 +404,7 @@ void main() {
         data: contextFor(table, onReadSeat: (seat) => opened = seat),
       );
 
-      final link = find.textContaining(RegExp(r'^Your read \d+ %$'));
+      final link = find.textContaining(RegExp(r'^Read (hit|missed) ·'));
       expect(link, findsOneWidget);
       await tester.tap(link);
       await tester.pumpAndSettle();
@@ -415,14 +416,16 @@ void main() {
     ) async {
       final container = makeContainer();
       addTearDown(container.dispose);
-      playHand(container);
-      readSeat(container, 1);
+      playHand(container, readSeatBeforePlay: 1);
       // The next deal is a different hand: last hand's read is not this
       // hand's read (§4.12).
       final table = dealAnother(container);
 
       await pumpOverlay(tester, container: container, data: contextFor(table));
-      expect(find.textContaining('Your read'), findsNothing);
+      expect(
+        find.textContaining(RegExp(r'^Read (hit|missed) ·')),
+        findsNothing,
+      );
     });
 
     testWidgets('the coach verdict renders as the card\'s header row', (

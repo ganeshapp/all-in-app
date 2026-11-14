@@ -21,6 +21,7 @@ import 'dart:math';
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/engine/engine.dart';
 import 'package:allin/features/play/providers/play_providers.dart';
+import 'package:allin/features/play/providers/hand_reads_provider.dart';
 import 'package:allin/services/persistence/goals_store.dart';
 import 'package:allin/services/persistence/records.dart';
 import 'package:allin/services/persistence/serialization.dart';
@@ -457,6 +458,7 @@ class SessionNotifier extends Notifier<SessionState> {
   /// False once the provider is disposed — every async continuation checks it
   /// before touching `state` (Riverpod 2 has no `ref.mounted`).
   bool _alive = true;
+  int _lastSessionId = 0;
 
   AppSettings get _settings => ref.read(settingsProvider);
   Random get _rng => ref.read(playRandomProvider);
@@ -474,7 +476,18 @@ class SessionNotifier extends Notifier<SessionState> {
       _skipTimer?.cancel();
       _loopToken++;
     });
-    return _restore();
+    final restored = _restore();
+    Future.microtask(() {
+      if (!_alive) return;
+      ref
+          .read(handReadsProvider.notifier)
+          .reconcileSession(
+            state.startedAt,
+            state.table,
+            realisticReveal: _settings.realisticReveal,
+          );
+    });
+    return restored;
   }
 
   /* ------------------------------------------------------------- restoring */
@@ -664,6 +677,8 @@ class SessionNotifier extends Notifier<SessionState> {
   void newSession([TableOptions? opts]) {
     _cancelLoop();
     _cancelAutoDeal();
+    ref.read(handReadsProvider.notifier).abandonSession(state.startedAt);
+    _lastSessionId = max(_now, max(_lastSessionId, state.startedAt) + 1);
     final store = ref.read(tableOptionsStoreProvider);
     final options = opts ?? store.load();
     unawaited(store.save(options));
@@ -690,7 +705,7 @@ class SessionNotifier extends Notifier<SessionState> {
       table: table,
       options: options,
       active: true,
-      startedAt: _now,
+      startedAt: _lastSessionId,
     );
     deal();
   }
@@ -900,6 +915,13 @@ class SessionNotifier extends Notifier<SessionState> {
     }
 
     unawaited(ref.read(playGoalsStoreProvider).record(ActivityKind.hand));
+    ref
+        .read(handReadsProvider.notifier)
+        .finishHand(
+          state.startedAt,
+          next,
+          realisticReveal: _settings.realisticReveal,
+        );
 
     if (summary != null) {
       final bb = next.bigBlind;
@@ -1503,6 +1525,7 @@ class SessionNotifier extends Notifier<SessionState> {
   /// Records the live session, clears the snapshot and resets to "no session".
   /// Safe to call with nothing running (returns null and changes nothing).
   Future<int?> closeCurrentSession() async {
+    ref.read(handReadsProvider.notifier).abandonSession(state.startedAt);
     final id = await _recordEndedSession();
     _cancelLoop();
     _cancelAutoDeal();

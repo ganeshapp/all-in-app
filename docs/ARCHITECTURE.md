@@ -309,3 +309,28 @@ Backup restore retains its narrower stats/history semantics and is not a factory
 Hand-over results always open expanded; fast Next-hand taps no longer hide reveals.
 Coach verdict haptics belong to `SessionNotifier._pushReview` only. The chip renders a
 review without emitting feedback, so rebuilding or moving it as bots act stays quiet.
+
+
+### Hand predictions versus estimated ranges (0.8.2)
+
+P7 now saves a prediction before reveal, one per session/hand/opponent/street. Reopening
+restores that immutable selection and the range estimate at submission. New hands and new
+sessions cannot reuse its result. `HandReadsNotifier` resolves pending predictions only at
+hand-over, using `cardsToLabel` on revealed cards. AKo includes AhKs; AKs does not. The picker
+predicts hand types, not exact suits. Folded cards hidden by realistic reveal remain unscored;
+unfinished sessions are abandoned, never counted as misses. Restart reconciles pending reads
+with the saved session. Preference writes are ordered and use the reset-aware storage lease.
+
+The reveal leads with “Read saved”, “Called it”, “Read hit” or “Read missed” plus selection size.
+The estimated range comparison is an optional disclosure with neutral labels; its F1 score is
+still persisted as a legacy `GuessRecord`, but displayed as **Range overlap**, not hand accuracy.
+Home and Stats copy no longer equate low overlap with a failed actual-hand prediction.
+
+`allin.hand_reads.v1` retains up to 500 completed predictions plus pending ones. Stats shows
+revealed hits, mean selection size, single-hand outcomes and the latest 20 detailed reads. A
+broad hit is never labelled “Called it”. Hidden/abandoned reads are excluded from hit counts.
+All predictions are removed by full reset. They are device-local and are not included in the
+existing stats/history backup format (the reset backup disclosure states this).
+
+This supersedes DESIGN §4.9’s graded Peek headline and empty-on-reopen rule and §4.12’s
+percentage badge. Existing study range drills keep their chart-based grading.

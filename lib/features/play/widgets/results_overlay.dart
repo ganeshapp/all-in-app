@@ -10,10 +10,8 @@
 ///   [defaultHandOverOverlay], is this file's [ResultsOverlay].
 /// * [revealNote] / [foldPhrase] — port §18, verbatim.
 ///
-/// "Your read 64 % ›" comes from P7's own `guessProvider.scoresBySeat`, scoped
-/// here to the hand on the felt: `GuessState` only drops the map when P7 is
-/// *opened* on a later hand, so a read from hand #12 would otherwise still
-/// label hand #13's row (§4.12).
+/// Saved predictions are labelled by actual revealed-card hits, scoped by
+/// session and hand. The latest street’s read opens in P7 for review.
 ///
 /// The card's band is fixed (y 372–560 at 390): it never grows up into the
 /// board and never grows down into the hero cards. The coach row's 44 pt comes
@@ -26,7 +24,8 @@ import 'package:allin/app/routes.dart';
 import '../hand_log_format.dart';
 import 'package:allin/data/preflop_charts.g.dart';
 import 'package:allin/engine/engine.dart';
-import 'package:allin/features/play/providers/guess_provider.dart';
+import '../providers/hand_reads_provider.dart';
+import 'hand_read_copy.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/all_reveals_sheet.dart';
 import 'package:allin/theme/motion.dart';
@@ -166,21 +165,20 @@ class ResultsOverlay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final table = data.table;
     final summary = data.summary;
-    final guess = ref.watch(guessProvider);
-    final reads =
-        guess.handNumber == table.handNumber
-            ? guess.scoresBySeat
-            : const <int, double>{};
+    final sessionId = ref.watch(sessionProvider.select((s) => s.startedAt));
+    final reads = <int, HandRead>{
+      for (final read in ref.watch(handReadsProvider))
+        if (read.sessionId == sessionId && read.handNumber == table.handNumber)
+          read.seat: read,
+    };
 
     final rows = buildRevealRows(
       table: table,
       summary: summary,
       realisticReveal: data.realisticReveal,
       readLabel:
-          (seat) => switch (reads[seat]) {
-            final double score => ResultsCopy.yourRead(score),
-            null => null,
-          },
+          (seat) =>
+              reads[seat] == null ? null : HandReadCopy.badge(reads[seat]!),
     );
 
     final overflow = rows.length > kInlineRevealCap;

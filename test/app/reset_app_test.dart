@@ -9,6 +9,8 @@ import 'package:allin/features/drills/providers/drill_provider.dart';
 import 'package:allin/features/onboarding/providers/onboarding_provider.dart';
 import 'package:allin/features/onboarding/screens/onboarding_screen.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
+import 'package:allin/features/play/providers/hand_reads_provider.dart';
+import 'package:allin/engine/types.dart' show Street;
 import 'package:allin/features/settings/providers/settings_providers.dart';
 import 'package:allin/features/stats/providers/data_actions.dart';
 import 'package:allin/features/study/providers/study_providers.dart';
@@ -67,6 +69,23 @@ void main() {
         before.read(sessionProvider.notifier).newSession();
         await tester.pump(const Duration(milliseconds: 10));
         expect(before.read(sessionProvider).active, isTrue);
+        before
+            .read(handReadsProvider.notifier)
+            .submit(
+              HandRead(
+                sessionId: before.read(sessionProvider).startedAt,
+                handNumber: 1,
+                seat: 1,
+                playerName: 'Ivey',
+                street: Street.preflop,
+                selected: {'AKo'},
+                estimatedRange: {'AKo', 'AA'},
+                rangeOverlap: .8,
+                submittedAt: 1,
+              ),
+            );
+        await tester.pump();
+        expect(before.read(handReadsProvider), hasLength(1));
         expect(before.read(drillScoreboardProvider).solved, 12);
         expect(before.read(studyCompletedCountProvider), 1);
         expect(before.read(themeProvider), AppThemeMode.light);
@@ -83,6 +102,7 @@ void main() {
         final after = scope(tester);
         expect(identical(before, after), isFalse);
         expect(after.read(sessionProvider).active, isFalse);
+        expect(after.read(handReadsProvider), isEmpty);
         expect(after.read(drillScoreboardProvider).solved, 0);
         expect(after.read(drillScoreboardProvider).rating, 1000);
         expect(after.read(studyCompletedCountProvider), 0);

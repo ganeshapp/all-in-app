@@ -9,5 +9,5 @@ abstract final class AppResetCopy {
   static const back = 'Back to app';
   static const backupScope =
       'Backups include stats and hand/session history, but not drills, '
-      'study progress, notes or settings.';
+      'study progress, hand predictions, notes or settings.';
 }

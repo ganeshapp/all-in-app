@@ -431,23 +431,30 @@ class _RevealRowView extends StatelessWidget {
                             onTap: onRead,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 2),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    row.readLabel!,
-                                    style: AllInText.body(
-                                      12,
-                                      weight: FontWeight.w600,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 44,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        row.readLabel!,
+                                        style: AllInText.body(
+                                          12,
+                                          weight: FontWeight.w600,
+                                          color: c.gold,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 14,
                                       color: c.gold,
                                     ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 14,
-                                    color: c.gold,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

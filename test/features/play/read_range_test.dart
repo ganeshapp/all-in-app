@@ -8,7 +8,10 @@ library;
 
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/engine/engine.dart';
+import 'package:allin/engine/types.dart' as poker show Action;
+import 'package:allin/features/play/providers/hand_reads_provider.dart';
 import 'package:allin/features/play/providers/guess_provider.dart';
+import 'package:allin/features/play/widgets/hand_read_copy.dart';
 import 'package:allin/features/play/providers/session_provider.dart';
 import 'package:allin/features/play/widgets/coach_copy.dart';
 import 'package:allin/services/persistence/records.dart';
@@ -138,15 +141,19 @@ void main() {
       expect(guess.actual, isNotEmpty);
       expect(guess.score, isNotNull);
 
-      // The grade word is the headline, and the percentage is not.
-      expect(find.text(guess.grade!.label), findsOneWidget);
+      // A saved prediction is not judged against an estimated range.
+      expect(find.text(HandReadCopy.saved), findsOneWidget);
+      expect(find.text('Way off'), findsNothing);
+      expect(find.text('Sharp read'), findsNothing);
+      await tester.tap(find.text(HandReadCopy.overlap(guess.score!.accuracy)));
+      await tester.pumpAndSettle();
       expect(find.text(CoachSheetCopy.revealTitle(name)), findsOneWidget);
       expect(
         find.text(CoachSheetCopy.theirRange(guess.actualCombos)),
         findsOneWidget,
       );
       expect(find.text(CoachSheetCopy.continueLabel), findsOneWidget);
-      expect(find.text(CoachSheetCopy.exactCardsAtHandOver), findsOneWidget);
+      expect(find.text(HandReadCopy.waiting), findsOneWidget);
 
       final matrix = tester.widget<RangeMatrix>(find.byType(RangeMatrix));
       expect(matrix.mode, RangeMatrixMode.compare);
@@ -154,11 +161,12 @@ void main() {
       expect(legend.mode, RangeLegendMode.compare);
 
       // Layer 2 carries the desktop's own numbers.
+      await tester.ensureVisible(find.text(CoachCopy.showMath));
       await tester.tap(find.text(CoachCopy.showMath));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(
-        find.text('Score: ${fmtPct(guess.score!.accuracy)}'),
+        find.textContaining('Range overlap: ${fmtPct(guess.score!.accuracy)}'),
         findsOneWidget,
       );
 
@@ -168,7 +176,7 @@ void main() {
       expect(recorded.single.accuracy, closeTo(guess.score!.accuracy, 1e-9));
       expect(recorded.single.street, Street.preflop.label);
       // §4.12: the score is remembered for the seat, for the results card.
-      expect(container.read(seatReadScoreProvider(1)), isNotNull);
+      expect(container.read(handReadsProvider).single.selected, guess.painted);
     });
 
     testWidgets('an empty guess reveals the range and records nothing', (
@@ -248,7 +256,11 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.text(CoachSheetCopy.continueLabel), findsOneWidget);
+        expect(find.text(HandReadCopy.saved), findsOneWidget);
+        await tester.tap(find.textContaining('Range overlap ·'));
+        await tester.pumpAndSettle();
         expect(find.byType(RangeMatrix), findsOneWidget);
+        expect(tester.takeException(), isNull);
       });
     }
 
@@ -259,6 +271,58 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  for (final dark in [true, false]) {
+    testWidgets('narrow hand prediction on 360 at 1.3x, dark=$dark', (
+      tester,
+    ) async {
+      final c = await readingSeatOne(
+        tester,
+        size: phone360,
+        textScale: 1.3,
+        dark: dark,
+      );
+      final table = c.read(sessionProvider).table!;
+      final hand = cardsToLabel(
+        table.players[1].hole![0],
+        table.players[1].hole![1],
+      );
+      c.read(guessProvider.notifier).setPainted({hand});
+      await tester.pump();
+      await tester.tap(find.text(CoachSheetCopy.peekAndScore));
+      await tester.pumpAndSettle();
+      expect(find.text(HandReadCopy.saved), findsOneWidget);
+      expect(
+        find.byType(PlayingCardView),
+        findsNothing,
+        reason: 'no private cards before reveal',
+      );
+      expect(find.text('1 hand type selected'), findsOneWidget);
+      final session = c.read(sessionProvider.notifier);
+      for (var i = 0; i < 400 && !c.read(sessionProvider).handOver; i++) {
+        final state = c.read(sessionProvider);
+        if (state.heroToAct) {
+          session.heroAction(
+            state.legal!.canCheck
+                ? const poker.Action.check()
+                : const poker.Action.fold(),
+          );
+        } else {
+          session.stepBot();
+        }
+      }
+      await tester.pumpAndSettle();
+      expect(c.read(handReadsProvider).single.hit, isTrue);
+      expect(find.text('Called it · $hand'), findsOneWidget);
+      expect(find.byType(PlayingCardView), findsNWidgets(2));
+      await tester.tap(find.textContaining('Range overlap ·'));
+      await tester.pumpAndSettle();
+      expect(find.byType(RangeMatrix), findsOneWidget);
+      expect(find.text('Correct'), findsNothing);
+      expect(find.text('Model only'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   group('§14 · nothing to read', () {
     testWidgets('a deep link with no session offers a way out', (tester) async {

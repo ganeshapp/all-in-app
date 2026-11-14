@@ -84,7 +84,7 @@ void main() {
 
     expect(note.source, CoachNoteSource.reads);
     expect(note.sentence, HomeCopy.coachReadLine);
-    expect(note.math, contains('Your last 5 range reads'));
+    expect(note.math, contains('Your last 5 range comparisons'));
     expect(note.lessonId, kReadsLessonId);
   });
 

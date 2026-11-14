@@ -99,7 +99,7 @@ class KpiGrid extends ConsumerWidget {
                   value: reads == 0 ? '\u2014' : fmtPct(metrics.avgAcc),
                   sub: StatsCopy.kpiReadsSub(reads),
                   onInfo: () => _explainReadAccuracy(context, ref),
-                  infoSemanticLabel: 'About read accuracy',
+                  infoSemanticLabel: 'About range overlap',
                 ),
               ),
             ],

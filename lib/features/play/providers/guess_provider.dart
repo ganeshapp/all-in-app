@@ -20,16 +20,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../engine/engine.dart';
 import '../../../services/persistence/records.dart';
-import '../../../widgets/coach/coach_note_view.dart' show PeekGrade;
 import '../../stats/providers/stats_providers.dart' show statsRevisionProvider;
 import 'play_providers.dart';
 import 'session_provider.dart';
+import 'hand_reads_provider.dart';
 
 @immutable
 class GuessState {
   const GuessState({
     this.seat,
     this.handNumber = 0,
+    this.sessionId = 0,
     this.street = Street.preflop,
     this.painted = const <HandLabel>{},
     this.presetId,
@@ -37,14 +38,14 @@ class GuessState {
     this.scored = false,
     this.actual = const <HandLabel>{},
     this.score,
-    this.scoresBySeat = const <int, double>{},
   });
 
   /// The seat being read, or null when P7 is closed.
   final int? seat;
 
-  /// The hand the read belongs to — a new deal resets [scoresBySeat].
+  /// The hand the read belongs to, scoped by sessionId.
   final int handNumber;
+  final int sessionId;
 
   /// The street the read was opened on (the `GuessRecord`'s street).
   final Street street;
@@ -65,10 +66,6 @@ class GuessState {
 
   final GuessScore? score;
 
-  /// Accuracy per seat for this hand — what P8's results card prints as
-  /// "Your read 64 %" (§4.12).
-  final Map<int, double> scoresBySeat;
-
   bool get open => seat != null;
 
   int get paintedCombos => combosInSet(painted);
@@ -83,13 +80,10 @@ class GuessState {
     return n;
   }
 
-  /// §4.9's grade word, or null when nothing was painted.
-  PeekGrade? get grade =>
-      score == null ? null : PeekGrade.forScore(score!.accuracy);
-
   GuessState copyWith({
     int? seat,
     int? handNumber,
+    int? sessionId,
     Street? street,
     Set<HandLabel>? painted,
     String? presetId,
@@ -98,11 +92,11 @@ class GuessState {
     bool? scored,
     Set<HandLabel>? actual,
     GuessScore? score,
-    Map<int, double>? scoresBySeat,
     bool clearSeat = false,
   }) => GuessState(
     seat: clearSeat ? null : (seat ?? this.seat),
     handNumber: handNumber ?? this.handNumber,
+    sessionId: sessionId ?? this.sessionId,
     street: street ?? this.street,
     painted: painted ?? this.painted,
     presetId: clearPreset ? null : (presetId ?? this.presetId),
@@ -110,28 +104,48 @@ class GuessState {
     scored: scored ?? this.scored,
     actual: actual ?? this.actual,
     score: score ?? this.score,
-    scoresBySeat: scoresBySeat ?? this.scoresBySeat,
   );
 }
 
 class GuessNotifier extends Notifier<GuessState> {
+  bool _alive = true;
   @override
-  GuessState build() => const GuessState();
+  GuessState build() {
+    ref.onDispose(() => _alive = false);
+    return const GuessState();
+  }
 
-  /// P7 opened on [seat]. Port §12.4: the paint is reset **whenever the modal
-  /// opens** — a second read of the same seat starts from an empty grid, and
-  /// a reveal never survives its own screen.
+  /// Restore the locked prediction for this street, or start a fresh read.
+  /// At hand-over only existing predictions may be reviewed.
   void open(int seat) {
-    final table = ref.read(sessionProvider).table;
+    final session = ref.read(sessionProvider);
+    final table = session.table;
     final hand = table?.handNumber ?? 0;
     final street = table?.street ?? Street.preflop;
-    final sameHand = state.handNumber == hand;
+    final saved = ref
+        .read(handReadsProvider.notifier)
+        .latest(
+          session.startedAt,
+          hand,
+          seat,
+          street: session.handOver ? null : street,
+        );
     state = GuessState(
       seat: seat,
       handNumber: hand,
-      street: street,
-      // Reads from an earlier hand are not this hand's reads (§4.12).
-      scoresBySeat: sameHand ? state.scoresBySeat : const <int, double>{},
+      sessionId: session.startedAt,
+      street: saved?.street ?? street,
+      painted: saved?.selected ?? const {},
+      actual: saved?.estimatedRange ?? const {},
+      revealed: saved != null || session.handOver,
+      scored: saved != null,
+      score:
+          saved == null
+              ? null
+              : scoreGuess(
+                saved.selected.toList(),
+                saved.estimatedRange.toList(),
+              ),
     );
   }
 
@@ -153,7 +167,13 @@ class GuessNotifier extends Notifier<GuessState> {
     final seat = state.seat;
     if (seat == null || state.revealed) return;
     final table = ref.read(sessionProvider).table;
-    if (table == null || seat >= table.players.length) {
+    if (table == null ||
+        seat < 1 ||
+        seat >= table.players.length ||
+        table.phase == GamePhase.handOver ||
+        state.sessionId != ref.read(sessionProvider).startedAt ||
+        state.handNumber != table.handNumber ||
+        state.street != table.street) {
       state = state.copyWith(revealed: true, scored: false);
       return;
     }
@@ -163,22 +183,32 @@ class GuessNotifier extends Notifier<GuessState> {
     final scored = painted.isNotEmpty;
     final score = scored ? scoreGuess(painted.toList(), actual) : null;
 
-    final haptics = ref.read(hapticsProvider);
-    if (score != null && score.accuracy >= 0.8) {
-      haptics.peekSharp();
-    } else {
-      haptics.peekReveal();
+    if (score != null) {
+      ref
+          .read(handReadsProvider.notifier)
+          .submit(
+            HandRead(
+              sessionId: state.sessionId,
+              handNumber: state.handNumber,
+              seat: seat,
+              playerName: player.name,
+              street: state.street,
+              selected: painted,
+              estimatedRange: actual.toSet(),
+              rangeOverlap: score.accuracy,
+              submittedAt: ref.read(playClockProvider).nowMs,
+            ),
+          );
     }
 
-    final seatScores = <int, double>{...state.scoresBySeat};
-    if (score != null) seatScores[seat] = score.accuracy;
+    // A neutral acknowledgement; overlap is not a correctness verdict.
+    ref.read(hapticsProvider).peekReveal();
 
     state = state.copyWith(
       revealed: true,
       scored: scored,
       actual: actual.toSet(),
       score: score,
-      scoresBySeat: seatScores,
     );
 
     if (score == null || player.archetype == null) return;
@@ -208,6 +238,7 @@ class GuessNotifier extends Notifier<GuessState> {
     );
     () async {
       await ref.read(statsRepositoryProvider).persistGuess(record);
+      if (!_alive) return;
       // Read accuracy is a Progress KPI (§7.2): let T0 re-read.
       ref.read(statsRevisionProvider.notifier).bump();
     }();
@@ -217,9 +248,4 @@ class GuessNotifier extends Notifier<GuessState> {
 /// P7's whole state. One notifier, because only one read is open at a time.
 final guessProvider = NotifierProvider<GuessNotifier, GuessState>(
   GuessNotifier.new,
-);
-
-/// "Your read 64 %" for [seat] on the hand being played, or null (§4.12).
-final seatReadScoreProvider = Provider.family<double?, int>(
-  (ref, seat) => ref.watch(guessProvider.select((g) => g.scoresBySeat[seat])),
 );
