@@ -73,11 +73,11 @@ abstract class KeyValueStore {
     }
   }
 
-  /// Removes every `allin.`-prefixed key. Used by tests and by a full wipe;
-  /// no product flow calls it (Reset is deliberately narrower, DESIGN §7.10).
+  /// Removes every app-owned key, including future stores. A failed deletion
+  /// must be reported instead of claiming the app was successfully reset.
   Future<void> clearAllInKeys() async {
     for (final k in keys().where((k) => k.startsWith(kAllInKeyPrefix))) {
-      await remove(k);
+      if (!await remove(k)) throw StateError('Could not erase app data.');
     }
   }
 }

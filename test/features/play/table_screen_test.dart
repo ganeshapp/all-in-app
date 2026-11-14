@@ -216,11 +216,7 @@ void main() {
       expect(find.byType(ResultsCard), findsOneWidget);
     });
 
-    // §4.12 collapses the card to a strip after three quick "Next hand" taps.
-    // Tapping the strip asks for the reveals back, and used only to cancel the
-    // auto-deal countdown — so it answered with nothing, hand after hand,
-    // until two slow hands happened to reset the run.
-    testWidgets('the collapsed results strip expands when tapped', (
+    testWidgets('reveals stay expanded after repeated quick Next hand taps', (
       tester,
     ) async {
       final container = makeContainer(seed: 11);
@@ -246,10 +242,13 @@ void main() {
         await tester.pump();
       }
 
-      // Three hands dealt on straight away: the card gives up the reveals.
-      for (var hand = 0; hand < 4; hand++) {
+      // Skipping quickly must never change the next hand's default reveal.
+      for (var hand = 0; hand < 6; hand++) {
         await playToHandOver();
         expect(container.read(sessionProvider).handOver, isTrue);
+        final card = tester.widget<ResultsCard>(find.byType(ResultsCard));
+        expect(card.collapsed, isFalse, reason: 'hand ${hand + 1}');
+        expect(card.rows, isNotEmpty);
         await tester.tap(
           find.descendant(
             of: find.byType(ActionRow),
@@ -260,19 +259,7 @@ void main() {
         await tester.pump();
       }
 
-      await playToHandOver();
-      expect(
-        tester.widget<ResultsCard>(find.byType(ResultsCard)).collapsed,
-        isTrue,
-      );
-
-      await tester.tap(find.textContaining('See everyone'));
-      await settleWidgets(tester);
-      await tester.pump();
-      expect(
-        tester.widget<ResultsCard>(find.byType(ResultsCard)).collapsed,
-        isFalse,
-      );
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('State G — no session shows "Ready to play?"', (tester) async {

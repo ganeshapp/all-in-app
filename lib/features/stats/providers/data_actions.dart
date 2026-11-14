@@ -18,6 +18,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../../app/providers/reset_provider.dart';
 import '../../../engine/engine.dart' show HHHand, formatSession;
 import '../../../services/file_service.dart';
 import '../../../services/persistence.dart';
@@ -95,8 +96,8 @@ class StatsDataActions {
 
   /* ----------------------------------------------------------- reset */
 
-  /// X2 (§7.10). Notes, leaks, review cards, goals, study and settings stay.
-  Future<void> resetProgress() => _ref.read(statsProvider.notifier).reset();
+  /// Full reset, shared with Settings. Also restarts navigation and caches.
+  Future<bool> resetProgress() => _ref.read(resetAppProvider)();
 
   /* ----------------------------------------------------------- share */
 

@@ -72,13 +72,6 @@ class _TableScreenState extends ConsumerState<TableScreen>
   /// §4.14: the "Session paused" toast shows once per session.
   bool _pauseToastShown = false;
 
-  /// §4.12's learn-by-reveal counter: three consecutive sub-1 s "Next hand"
-  /// taps collapse the results card until two are opened again.
-  int _fastNextRun = 0;
-  int _slowNextRun = 0;
-  bool _collapseResults = false;
-  DateTime? _handOverAt;
-
   /// P10 is on screen (pushed by "End session" or by a bust).
   bool _summaryOpen = false;
 
@@ -354,12 +347,8 @@ class _TableScreenState extends ConsumerState<TableScreen>
           .read(coachMarksProvider.notifier)
           .handStarted(table.handNumber, headsUp: table.config.seats == 2);
       setState(() {
-        _handOverAt = null;
         _raiseSignature = null;
       });
-    }
-    if (after.handOver && before?.handOver != true) {
-      _handOverAt = DateTime.now();
     }
     if (after.resumeCaption != null && before?.resumeCaption == null) {
       _armCaptionTimer();
@@ -471,7 +460,7 @@ class _TableScreenState extends ConsumerState<TableScreen>
                       reducedMotion: reduced,
                       enableHaptics: haptics,
                       coachOn: coachOn,
-                      collapseResults: _collapseResults,
+                      collapseResults: false,
                       onSeatTap: _openPlayerSheet,
                       onSeatEye: _openReadRange,
                       onSeatLongPress: _openReadRange,
@@ -771,10 +760,7 @@ class _TableScreenState extends ConsumerState<TableScreen>
       onNextActionHoldStart: notifier.startFastForward,
       onNextActionHoldEnd: notifier.stopFastForward,
       onPauseResume: notifier.togglePause,
-      onNextHand: () {
-        _recordRevealSpeed();
-        notifier.deal();
-      },
+      onNextHand: notifier.deal,
       onDealMeIn: () => notifier.newSession(),
     );
   }
@@ -824,35 +810,9 @@ class _TableScreenState extends ConsumerState<TableScreen>
     if (anyEye) marks.request(CoachMark.eye);
   }
 
-  /// Tapping the collapsed strip asks for the reveals back, so the heuristic
-  /// has to let go of them: without this the strip answered every tap with
-  /// nothing until two slow hands happened to reset the run.
-  void _expandResults() {
-    ref.read(sessionProvider.notifier).cancelAutoDeal();
-    if (!_collapseResults) return;
-    setState(() {
-      _collapseResults = false;
-      _fastNextRun = 0;
-    });
-  }
-
-  /// §4.12's learn-by-reveal heuristic.
-  void _recordRevealSpeed() {
-    final at = _handOverAt;
-    if (at == null) return;
-    final fast = DateTime.now().difference(at) < const Duration(seconds: 1);
-    setState(() {
-      if (fast) {
-        _fastNextRun += 1;
-        _slowNextRun = 0;
-        if (_fastNextRun >= 3) _collapseResults = true;
-      } else {
-        _slowNextRun += 1;
-        _fastNextRun = 0;
-        if (_slowNextRun >= 2) _collapseResults = false;
-      }
-    });
-  }
+  // Results always open with the opponent cards visible. Touching them still
+  // cancels auto-deal so there is time to read the hand.
+  void _expandResults() => ref.read(sessionProvider.notifier).cancelAutoDeal();
 }
 
 /* ------------------------------------------------------------------ bands */

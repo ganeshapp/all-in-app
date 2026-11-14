@@ -10,6 +10,7 @@ library;
 
 import 'package:allin/app/providers/app_providers.dart';
 import 'package:allin/app/routes.dart';
+import 'package:allin/app/providers/reset_provider.dart';
 import 'package:allin/features/settings/content/about_copy.dart';
 import 'package:allin/features/settings/screens/about_screen.dart';
 import 'package:allin/features/settings/screens/settings_screen.dart';
@@ -374,6 +375,32 @@ void main() {
   });
 
   group('X2 · reset all progress', () {
+    testWidgets(
+      'full-reset confirmation fits a small phone with keyboard and large text',
+      (tester) async {
+        await pumpSettings(
+          tester,
+          store: KeyValueStore.memory(),
+          size: const Size(360, 780),
+          textScale: 1.3,
+        );
+        await reveal(tester, find.text(SettingsCopy.reset));
+        await tester.tap(find.text(SettingsCopy.reset));
+        await tester.pumpAndSettle();
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byType(TextField));
+        await tester.enterText(find.byType(TextField), ResetCopy.confirmWord);
+        await tester.pumpAndSettle();
+        final erase = find.widgetWithText(TextButton, ResetCopy.confirmLabel);
+        expect(tester.widget<TextButton>(erase).onPressed, isNotNull);
+        expect(tester.getBottomRight(erase).dy, lessThanOrEqualTo(480));
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.text(ResetCopy.cancelLabel));
+        await tester.pumpAndSettle();
+      },
+    );
+
     testWidgets('the danger button only wakes on the exact word', (
       tester,
     ) async {
@@ -407,9 +434,19 @@ void main() {
       expect(confirm().onPressed, isNotNull);
     });
 
-    testWidgets('confirming erases stats and toasts', (tester) async {
+    testWidgets('confirming delegates to the full app reset', (tester) async {
       final store = KeyValueStore.memory();
-      await pumpSettings(tester, store: store);
+      var resets = 0;
+      await pumpSettings(
+        tester,
+        store: store,
+        overrides: [
+          resetAppProvider.overrideWithValue(() async {
+            resets++;
+            return true;
+          }),
+        ],
+      );
 
       await reveal(tester, find.text(SettingsCopy.reset));
       await tester.tap(find.text(SettingsCopy.reset));
@@ -419,6 +456,7 @@ void main() {
       await tester.tap(find.text(ResetCopy.confirmLabel));
       await tester.pumpAndSettle();
 
+      expect(resets, 1);
       expect(find.text(ResetCopy.title), findsNothing);
       expect(
         find.text(SettingsDataService.progressErased),

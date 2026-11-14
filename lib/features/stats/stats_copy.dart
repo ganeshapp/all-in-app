@@ -10,6 +10,8 @@
 /// asks for; when that table lands these constants move into it unchanged.
 library;
 
+import 'package:allin/app/reset_copy.dart';
+
 import '../../engine/engine.dart'
     show fmtNeed, fmtPct, fmtSigned, fmtTimes, jsToFixed, kArchetypes;
 
@@ -595,9 +597,7 @@ abstract final class StatsCopy {
 
   /// §7.10 *(desktop)*.
   static const String resetTitle = 'Reset all progress?';
-  static const String resetBody =
-      'This permanently deletes your lifetime stats, decisions, reads, and '
-      'saved hands.';
+  static const String resetBody = AppResetCopy.body;
   static const String resetBackupFirst = 'Download a backup first';
   static const String resetFieldLabel = 'Type RESET to confirm:';
   static const String resetConfirmWord = 'RESET';

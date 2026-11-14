@@ -1140,7 +1140,6 @@ void main() {
           verdict: Verdict.great,
           title: 'Your bet · Flop',
           clause: 'Betting with the goods',
-          enableHaptics: false,
           onTap: () => taps++,
         ),
       );

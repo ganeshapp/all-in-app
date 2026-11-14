@@ -239,6 +239,7 @@ class _AllInDialogState extends State<AllInDialog> {
     }
 
     return AlertDialog(
+      scrollable: widget.isTyped,
       backgroundColor: c.ink800,
       titleTextStyle: AllInText.display(19, color: c.text),
       title: Text(widget.title),

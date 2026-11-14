@@ -225,7 +225,6 @@ class TableFelt extends StatelessWidget {
                 title: content.title,
                 clause: content.clause,
                 width: metrics.coachChipWidth,
-                enableHaptics: enableHaptics,
                 reducedMotion: reducedMotion,
                 onTap: onChipTap,
                 onSwipeUp: onChipSwipeUp,

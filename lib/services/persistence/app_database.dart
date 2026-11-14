@@ -41,9 +41,12 @@ class AppDatabase {
   final DatabaseFactory? _factory;
   final String? _path;
   Database? _db;
+  Future<Database>? _opening;
+  bool _retired = false;
 
   /// The open handle. Throws [StateError] before [open] has completed.
   Database get db {
+    if (_retired) throw StateError('This app session has been reset.');
     final d = _db;
     if (d == null) {
       throw StateError('AppDatabase.open() has not been awaited yet.');
@@ -58,9 +61,16 @@ class AppDatabase {
   String? _resolvedPath;
 
   /// Idempotent: a second call returns the same handle.
-  Future<Database> open() async {
+  Future<Database> open() {
+    if (_retired) {
+      return Future.error(StateError('This app session has been reset.'));
+    }
     final existing = _db;
-    if (existing != null) return existing;
+    if (existing != null) return Future.value(existing);
+    return _opening ??= _open().whenComplete(() => _opening = null);
+  }
+
+  Future<Database> _open() async {
     final f = _factory ?? databaseFactory;
     final target = _path ?? p.join(await f.getDatabasesPath(), defaultFileName);
     _resolvedPath = target;
@@ -92,6 +102,39 @@ class AppDatabase {
     final d = _db;
     _db = null;
     if (d != null) await d.close();
+  }
+
+  /// Permanently disconnects the old app scope before a full reset. SQLite
+  /// closes after queued operations; captured handles cannot be used again.
+  Future<void> retire() async {
+    _retired = true;
+    try {
+      await _opening;
+    } catch (_) {
+      // A failed open has no handle to close.
+    }
+    await close();
+  }
+
+  AppDatabase freshHandle() => AppDatabase(factory: _factory, path: _path);
+
+  /// Full factory reset, intentionally separate from the narrower stats
+  /// replacement used by backup restore. Throws on failure so UI can retry.
+  Future<void> eraseAllData() async {
+    final database = await open();
+    await database.transaction((txn) async {
+      for (final table in const [
+        'hand_history',
+        'range_guess',
+        'decisions',
+        'sessions',
+        'user_stats',
+      ]) {
+        await txn.delete(table);
+      }
+      await txn.delete('sqlite_sequence');
+      await txn.insert('user_stats', {'id': 1});
+    });
   }
 
   /// The v1 DDL — verbatim from the desktop `ensureBackend()`.

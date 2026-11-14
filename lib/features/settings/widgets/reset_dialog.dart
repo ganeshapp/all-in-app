@@ -1,11 +1,13 @@
 /// X2 · "Reset all progress?" — the typed confirmation of DESIGN.md §7.10
 /// (docs/port/persistence-stats-settings.md §7.11).
 ///
-/// Copy is the desktop's, verbatim: the title, the description, the backup
-/// offer, the "Type RESET to confirm:" label and the two buttons. The danger
+/// The reset now covers all app data; its description and backup caption
+/// make that scope explicit. The danger
 /// button stays disabled until the field reads exactly `RESET` — a wrong entry
 /// shows no error text, deliberately (§14 "Reset · typed wrong").
 library;
+
+import 'package:allin/app/reset_copy.dart';
 
 import 'package:allin/features/settings/providers/settings_providers.dart';
 import 'package:allin/theme/tokens.dart';
@@ -13,12 +15,10 @@ import 'package:allin/theme/typography.dart';
 import 'package:allin/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
-/// Verbatim §7.10 copy.
+/// §7.10 copy, with the full-reset description shared with Stats.
 abstract final class ResetCopy {
   static const String title = 'Reset all progress?';
-  static const String body =
-      'This permanently deletes your lifetime stats, decisions, reads, and '
-      'saved hands.';
+  static const String body = AppResetCopy.body;
   static const String backupFirst = 'Download a backup first';
   static const String fieldLabel = 'Type RESET to confirm:';
   static const String confirmWord = 'RESET';
@@ -88,6 +88,11 @@ class _ResetBackupOfferState extends State<ResetBackupOffer> {
           busy: _busy,
           leading: Icons.download_rounded,
           onPressed: _run,
+        ),
+        const SizedBox(height: AllInSpace.sm),
+        Text(
+          AppResetCopy.backupScope,
+          style: AllInText.body(12, color: c.textFaint),
         ),
         if (result != null) ...[
           const SizedBox(height: AllInSpace.sm),

@@ -83,15 +83,6 @@ class StatsNotifier extends AsyncNotifier<StatsMetrics> {
       () async => computeStatsMetrics(await repository.loadStats()),
     );
   }
-
-  /// X2 "Erase everything" (§7.10): wipes stats, hands, reads, decisions and
-  /// the ended-session list. Notes, tags, leaks, review cards, goals, study
-  /// progress and settings survive, exactly as the desktop's `resetStats`.
-  Future<void> reset() async {
-    await ref.read(statsRepositoryProvider).resetStats();
-    await ref.read(sessionRepositoryProvider).clearEndedSessions();
-    ref.read(statsRevisionProvider.notifier).bump();
-  }
 }
 
 final statsProvider = AsyncNotifierProvider<StatsNotifier, StatsMetrics>(

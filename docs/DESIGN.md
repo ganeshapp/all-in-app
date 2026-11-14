@@ -1673,14 +1673,9 @@ At `phase == hand-over` (all steps skippable by tapping Next hand):
     acknowledged first (§4.8).
   - Coach off, or no verdict for the last action: no row, and the card's top is its net line,
     exactly as drawn above.
-- **Learn-by-reveal**: the card opens automatically at every hand-over (it is the desktop
-  overlay). If the user taps Next hand within 1 s on three consecutive hands, the card collapses
-  to a one-line strip ("+12.5 bb · You won the pot · See everyone's cards ›") on subsequent
-  hands until they open it twice in a row again. Nothing is ever hidden; only the default
-  height adapts. **The collapse never takes the coach row with it**: when the card is a strip, the
-  coach row is drawn *above* the strip and the strip below it — the collapse hides the reveals,
-  which the user has just told us they are skipping, never the verdict, which is the one thing
-  they have not seen yet.
+- **Always-expanded reveals**: the card opens expanded at every hand-over, regardless
+  of how quickly previous hands were skipped. The reveal list scrolls within its band.
+  The former timing-based auto-collapse behavior was removed at the user's request.
 - "Next hand" → `deal()`. With **Auto-deal next hand** on (default off) and Auto pace, a 3 s ring
   counts down in the context row; **touching the results card cancels the countdown** and the
   button becomes explicit. Under reduced motion the ring is a static "3 s" caption that counts.
@@ -2587,13 +2582,16 @@ with the badge. No "share into app" intent in v1 (§15).
 
 ### 7.10 Reset all progress (X2)
 
-Dialog with a typed confirmation: title "Reset all progress?" · description "This permanently
-deletes your lifetime stats, decisions, reads, and saved hands." · full-width secondary
-"Download a backup first" (→ the backup share; the returned message shown beneath in faint) ·
-label "Type RESET to confirm:" + a text field (autocorrect off, capitals on) · ghost "Cancel" ·
-danger "Erase everything" enabled only when the field is exactly `RESET`. Reset does not clear
-notes, leaks, review cards, goals, study or settings *(desktop)*. After reset: toast "Progress
-erased", T0 shows all empty states, the table route shows State G.
+Dialog with a typed confirmation: title "Reset all progress?"; description explicitly lists
+stats, saved hands, sessions, drills, reviews, study progress, notes and settings. An active
+table is discarded too. "Download a backup first" offers the existing backup share, with a
+caption explaining that backups cover stats and hand/session history, not drills, study,
+notes or settings. "Type RESET to confirm:" enables "Erase everything" only for exact `RESET`.
+
+Both Stats and Settings perform the same full reset: erase all SQLite records and app-owned
+preferences, discard live sessions and provider caches, and restart at first-time onboarding.
+Pending writes from the old app cannot restore erased data. A storage error shows a retry
+screen rather than claiming success. This intentionally replaces the desktop's narrower reset.
 
 ### 7.11 Practice heatmap
 

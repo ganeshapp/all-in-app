@@ -3,15 +3,13 @@
 /// `ProviderScope` around [AllInApp].
 library;
 
-import 'package:allin/app/app.dart';
-import 'package:allin/app/providers/app_providers.dart';
+import 'package:allin/app/app_runtime.dart';
 import 'package:allin/services/persistence/app_database.dart';
 import 'package:allin/services/persistence/key_value_store.dart';
 import 'package:allin/services/persistence/settings_store.dart';
 import 'package:allin/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,20 +38,11 @@ Future<void> main() async {
   // opened the app still runs: the repositories fall back to the key-value
   // store and the user sees the §14 "Some data couldn't be saved" toast.
   final database = AppDatabase();
-  var databaseReady = true;
   try {
     await database.open();
   } catch (_) {
-    databaseReady = false;
+    // Keep the handle so a later reset still attempts to erase SQLite.
   }
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        keyValueStoreProvider.overrideWithValue(store),
-        appDatabaseProvider.overrideWithValue(databaseReady ? database : null),
-      ],
-      child: const AllInApp(),
-    ),
-  );
+  runApp(AppRuntime(store: store, database: database));
 }

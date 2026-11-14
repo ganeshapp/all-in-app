@@ -5,6 +5,7 @@
 /// document from either place and "Reset all progress" clears the same tables.
 library;
 
+import 'package:allin/app/reset_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -169,8 +170,7 @@ Future<bool> showResetProgressDialog(
     ),
   );
   if (erased != true) return false;
-  await ref.read(statsDataActionsProvider).resetProgress();
-  return true;
+  return ref.read(statsDataActionsProvider).resetProgress();
 }
 
 /// "Download a backup first" plus the message the share sheet came back with
@@ -223,6 +223,11 @@ class _BackupFirstState extends State<_BackupFirst> {
           expand: true,
           busy: _busy,
           onPressed: _busy ? null : _backup,
+        ),
+        const SizedBox(height: AllInSpace.sm),
+        Text(
+          AppResetCopy.backupScope,
+          style: AllInText.body(12, color: c.textFaint),
         ),
         if (_message != null && _message!.isNotEmpty) ...[
           const SizedBox(height: AllInSpace.sm),

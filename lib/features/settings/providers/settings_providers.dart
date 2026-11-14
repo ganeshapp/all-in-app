@@ -8,6 +8,7 @@
 library;
 
 import 'package:allin/app/providers/app_providers.dart';
+import 'package:allin/app/providers/reset_provider.dart';
 import 'package:allin/services/persistence/backup_service.dart';
 import 'package:allin/services/share_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -203,11 +204,14 @@ class SettingsDataService {
     return DataActionResult.ok('Backup restored — $n hand${n == 1 ? '' : 's'}');
   }
 
-  /// X2's "Erase everything" (§7.10). Notes, leaks, review cards, goals,
-  /// study and settings are deliberately untouched.
+  /// The same full factory reset as the Stats page.
   Future<DataActionResult> resetProgress() async {
     try {
-      await _ref.read(statsRepositoryProvider).resetStats();
+      if (!await _ref.read(resetAppProvider)()) {
+        return const DataActionResult.failed(
+          "Progress couldn't be erased — try again.",
+        );
+      }
     } catch (_) {
       return const DataActionResult.failed(
         "Progress couldn't be erased — try again.",

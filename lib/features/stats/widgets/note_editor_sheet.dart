@@ -3,7 +3,7 @@
 /// Sheet M, keyboard-aware: the content scrolls and the Save row is pushed up
 /// by `MediaQuery.viewInsetsOf`, so it stays visible above the keyboard (§14
 /// "Any sheet · keyboard up"). Key is `startedAt`, exactly as the desktop's
-/// `handKey` — the note survives a reset, because `resetStats` never touches
+/// `handKey` — the note survives backup restore, because `resetStats` never touches
 /// `allin.handnotes.v1`.
 ///
 /// The desktop's "bookmark" *is* the `review later` tag (§15.4): there is no

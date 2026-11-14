@@ -204,6 +204,7 @@ reads, which were rewritten on both editions together.
 
 | Where | Desktop | Mobile | Why |
 |---|---|---|---|
+| Reset confirmation (Stats and Settings) | Deletes stats, decisions, reads and saved hands only | Lists every app-data category, active table and first-time setup; explains the limited backup contents | Reset now means a fresh install, including drills, study, notes, preferences and onboarding |
 | Lesson `position` | "(Hover the dotted terms for a definition…)" | "(Tap the dotted terms for a definition…)" | No mouse |
 | Lesson `hud-reading` | "Hover a bot's HUD in the game…" | "Tap a bot's plate at the table…" | No mouse; §4.2.2 moved the 9-max HUD into P6 |
 | Lesson `cheat-sheet` glossary | "Every term below is also hoverable wherever it appears in a lesson." | "Tap any dotted term wherever it appears in a lesson to see this definition." | No mouse |
@@ -294,3 +295,17 @@ Mobile copy additions: the replay's “Win equity” status, view toggle and exp
 live in `StatsCopy`. They explain sampling, ties, unavailable cards and side-pot limitations.
 The replayer also preserves each engine frame's `actionIndex` so action explanations continue
 working after the frame wording is adapted for the phone.
+
+### Full reset lifecycle
+
+`AppRuntime` owns the entire provider scope. Both Data screens call `resetAppProvider`.
+Reset retires the old preferences lease, unmounts the scope (cancelling session timers and
+coach work), drains outstanding preference writes, and retires the old SQLite handle.
+A fresh handle clears all five data tables and resets their sequences in one transaction;
+all `allin.*` preferences are removed. A new scope then reads defaults and shows onboarding.
+Old database handles and preference leases reject late saves. Failures show a retry screen.
+Backup restore retains its narrower stats/history semantics and is not a factory reset.
+
+Hand-over results always open expanded; fast Next-hand taps no longer hide reveals.
+Coach verdict haptics belong to `SessionNotifier._pushReview` only. The chip renders a
+review without emitting feedback, so rebuilding or moving it as bots act stays quiet.

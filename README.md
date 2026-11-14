@@ -89,7 +89,7 @@ disagree about which lesson is next.
 - **Hand log** — a live ticker on the felt and a full log in the session sheet with coach notes
   interleaved, plus copy-to-clipboard. Written in second person and in big blinds (see below).
 - **Hand-over reveals** on the felt with the board still visible, optional realistic reveals, and a
-  learn-by-reveal heuristic that collapses the results card if you're spamming "Next hand".
+  results card that always opens expanded so you can see the opponent reveals.
 - **Session tiles** (hands, net bb, bb/100, read accuracy, your style) and an **end-of-session
   summary** that leads with decision quality, not money, and shares as a PokerStars-style history.
 - **Resume.** Leaving the table pauses it; Home, the lobby and a session pill all bring it back, and
@@ -160,7 +160,7 @@ Chess-puzzle practice: a spot is replayed to the decision point, you answer, you
 Theme (light/dark), reduce motion, haptics, four-colour deck with a live preview, realistic reveals,
 coach strictness, simulation quality, "always expand Show me the math", pace/speed, EV coach on/off,
 auto-deal, rerun the tour and placement, **back up / restore / import / reset** (reset needs a typed
-confirmation), and the About page with the same honesty notes as the desktop.
+confirmation and clears all app data, returning to first-time setup), and the About page with the same honesty notes as the desktop.
 
 **Restore from a backup is new here** — the desktop can export its data but not import it back.
 
@@ -242,7 +242,7 @@ dart format lib test
 flutter test
 ```
 
-**1,678 tests** across 88 test files, all runnable on a Mac with no device attached
+**1,686 tests** across 91 test files, all runnable on a Mac with no device attached
 (`sqflite_common_ffi` backs the database tests):
 
 | Area | What it covers |

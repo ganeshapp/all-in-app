@@ -8,7 +8,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../engine/coach.dart';
 import '../../theme/motion.dart';
@@ -28,7 +27,7 @@ class CoachChipContent {
   final String? clause;
 }
 
-class CoachChip extends StatefulWidget {
+class CoachChip extends StatelessWidget {
   const CoachChip({
     super.key,
     required this.verdict,
@@ -38,7 +37,6 @@ class CoachChip extends StatefulWidget {
     this.onSwipeUp,
     this.onSwipeDown,
     this.width = 300,
-    this.enableHaptics = true,
     this.reducedMotion = false,
   }) : computing = false;
 
@@ -54,7 +52,6 @@ class CoachChip extends StatefulWidget {
        onTap = null,
        onSwipeUp = null,
        onSwipeDown = null,
-       enableHaptics = false,
        computing = true;
 
   final Verdict verdict;
@@ -72,7 +69,6 @@ class CoachChip extends StatefulWidget {
 
   /// 300 at 390; 274 at 360; 330 at 430 (§4.2.3).
   final double width;
-  final bool enableHaptics;
   final bool reducedMotion;
   final bool computing;
 
@@ -133,47 +129,26 @@ class CoachChip extends StatefulWidget {
     return '${(space > maxClauseChars ~/ 2 ? cut.substring(0, space) : cut).trimRight()}…';
   }
 
-  @override
-  State<CoachChip> createState() => _CoachChipState();
-}
-
-class _CoachChipState extends State<CoachChip> {
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.computing && widget.enableHaptics) {
-      // §4.8: great/ok light · thin medium · mistake notification.warning.
-      switch (widget.verdict) {
-        case Verdict.mistake:
-          HapticFeedback.heavyImpact();
-        case Verdict.thin:
-          HapticFeedback.mediumImpact();
-        case Verdict.ok:
-        case Verdict.great:
-        case Verdict.info:
-          HapticFeedback.lightImpact();
-      }
-    }
-  }
-
+  // The session emits haptics when a new review arrives. Rendering or
+  // remounting an existing review must never announce it again.
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
 
-    if (widget.computing) {
+    if (computing) {
       return SizedBox(
-        width: widget.width,
+        width: width,
         height: CoachChip.height,
-        child: Center(child: _Computing(reducedMotion: widget.reducedMotion)),
+        child: Center(child: _Computing(reducedMotion: reducedMotion)),
       );
     }
 
-    final tone = CoachChip.verdictColor(context, widget.verdict);
-    final label = CoachChip.verdictLabel(widget.verdict);
-    final clause = widget.clause ?? widget.title ?? '';
+    final tone = CoachChip.verdictColor(context, verdict);
+    final label = CoachChip.verdictLabel(verdict);
+    final clause = this.clause ?? title ?? '';
 
     final chip = Container(
-      width: widget.width,
+      width: width,
       height: CoachChip.height,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
@@ -190,7 +165,7 @@ class _CoachChipState extends State<CoachChip> {
       ),
       child: Row(
         children: [
-          VerdictDisc(verdict: widget.verdict, size: 24),
+          VerdictDisc(verdict: verdict, size: 24),
           const SizedBox(width: AllInSpace.sm),
           Expanded(
             child: Text(
@@ -206,30 +181,27 @@ class _CoachChipState extends State<CoachChip> {
       ),
     );
 
-    final entrance = _SpringIn(
-      reducedMotion: widget.reducedMotion,
-      child: chip,
-    );
+    final entrance = _SpringIn(reducedMotion: reducedMotion, child: chip);
 
     return Semantics(
       container: true,
       liveRegion: true,
-      button: widget.onTap != null,
+      button: onTap != null,
       label: [
         label,
-        if (widget.title != null) widget.title!,
+        if (title != null) title!,
         if (clause.isNotEmpty) clause,
       ].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
+          onTap: onTap,
           onVerticalDragEnd: (details) {
             final dy = details.velocity.pixelsPerSecond.dy;
             if (dy < -200) {
-              widget.onSwipeUp?.call();
+              onSwipeUp?.call();
             } else if (dy > 200) {
-              widget.onSwipeDown?.call();
+              onSwipeDown?.call();
             }
           },
           child: entrance,
