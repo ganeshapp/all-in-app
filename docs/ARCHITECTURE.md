@@ -300,6 +300,16 @@ Four invariants hold this down, each with a test that failed once:
   0 for an all-in opponent, so the whole field product collapses. The desktop's
   `allFoldChance` lacked this and its 0.02 floor credited fold equity against a player
   contesting regardless, which had bots 4-betting 72o into a standing all-in.
+- **The mixing band is denominated in the winnable pot too.** Sized off the table pot it grew
+  precisely where part of that pot cannot be won, so a short stack got a *wider* licence to
+  mix in a losing call than a deep one, and called off with Q3o. Everything in the comparison
+  has to be denominated in the same pot.
+- **A call that puts you all-in realises its full equity.** Realisation discounts future
+  streets you might be outplayed on; with nothing behind there are none, so it sees all five
+  cards and collects its whole share. `realisation` now blends to 1 as stack-to-pot goes to
+  0. Pricing those calls at 0.72 understated every one of them by 28%, and nothing showed it
+  because the band was wide enough to take the call anyway — narrowing the band exposed it
+  immediately, as a shove-every-hand maniac going from losing to +1736bb.
 
 Both engines run the heads-up equity arm at **600 iterations, deliberately equal**. The
 `eq > 0.58` 4-bet gate sits inside this sampler's own noise: at 300 iterations the standard
@@ -307,15 +317,23 @@ error is about 2.9%, so a hand whose true equity is 0.574 clears or misses the g
 draw rather than on its merits. They were 300 and 450, which is how the same spot 4-bet on
 one engine and not the other.
 
-Known cost, not yet addressed: bot-versus-bot all-ins rose from 3.3% of hands to 5.2%
-(live is ~2%) because wider pre-flop continues make low-SPR pots that reach the felt. Almost
-all of the remainder is post-flop (flop 20, turn 38, river 98 per 3000 hands against
-pre-flop's 1), and post-flop stack-off still decides by rule rather than by price — that is
-the next thing to price. It is not the 4-bet size: shrinking it to 2.0x/0.75-pot moved the
-money to the flop and made the rate marginally worse. Flops seen (58.2% vs ~60%) and
-showdowns (17.4% vs ~25%) both sit at or near live rates.
+Known cost, not yet addressed: bot-versus-bot all-ins rose from 3.3% of hands to 6.0%
+(live is ~2%) because wider pre-flop continues make low-SPR pots that reach the felt. All of
+the remainder is post-flop (flop 35, turn 54, river 92 per 3000 hands, and zero pre-flop),
+and post-flop stack-off still decides by rule rather than by price — that is the next thing
+to price. It is not the 4-bet size: shrinking it to 2.0x/0.75-pot moved the money to the flop
+and made the rate marginally worse. Part of the rise is the price of being right: correcting
+all-in realisation to 1 took it from 5.2% to 6.0%, because the lower figure was partly bought
+by understating every all-in call. Flops seen (58.3% vs ~60%) and showdowns (18.1% vs ~25%)
+both sit at or near live rates, and against the logged line all-ins nearly halved — 28.9% to
+15.1% — as the pricing bugs came out.
 
-The desktop at `../poker` now carries the same policy, measured with its own probes
+**The desktop is behind by three commits' worth of this.** `../poker` has the priced branch
+as of its v1.8.1, but not the winnable-pot mixing band, the all-in realisation fix, or the
+three regression tests added here (roll-oscillation, 4-bet depth, short-stack call-off).
+Port those before treating the two engines as matched again.
+
+The desktop at `../poker` carries the rest of the policy, measured with its own probes
 (`scripts/_probe.ts`, `_table.ts`, `_threebet.ts`, `grade_bots.ts`): fold-to-3-bet
 73.4% → 47.3%, 3-bets taken uncontested 49.7% → 2.8%, and the EV left behind per fold in the
 "facing a re-raise" bucket 0.38bb → 0.23bb. Hand for hand at a good price the two engines now

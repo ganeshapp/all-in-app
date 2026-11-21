@@ -714,8 +714,14 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
       // The band has to be tied to the SIZE OF THE DECISION, not the pot: a
       // share of the pot alone grew to hundreds of chips facing an all-in,
       // and a call worth -900 counted as "close enough to mix".
+      // `winnable`, not `s.pot`: the band has to be denominated in the same
+      // pot the EVs were. Sized off the table pot it grew precisely where
+      // part of that pot cannot be won, so a short stack got a WIDER licence
+      // to mix in a losing call than a deep one — and called off its last
+      // chips with Q3o.
       final band =
-          min(s.pot * 0.05, max(bb, la.callAmount * 0.2)) * (0.6 + stickiness);
+          min(winnable * 0.05, max(bb, la.callAmount * 0.2)) *
+          (0.6 + stickiness);
       final pick = chooseByEv(ranked, rnd, band.toDouble());
       // The range a bot SAYS it has must never come back empty: an empty
       // stored range sends `villainRangeFor` to the archetype's whole

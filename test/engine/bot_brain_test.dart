@@ -518,18 +518,21 @@ void main() {
     group('facing a 3-bet it prices rather than folds', () {
       // Hands with a claim to continue for a good price. Deliberately not
       // the set a chart would hold: a measure that encodes the exploit it is
-      // meant to catch has stopped being a measure.
+      // meant to catch has stopped being a measure. Sixteen DISTINCT labels —
+      // Ac Kd and Ac Ks are both AKo, which left no suited AK tested at all
+      // and pegged the dead-zone bar below to a duplicate.
       const continues = <List<Card>>[
         ['Ac', 'Ad'], ['Kc', 'Kd'], ['Qc', 'Qd'], ['Jc', 'Jd'], //
         ['Tc', 'Td'], ['9c', '9d'], ['8c', '8d'], ['7c', '7d'],
-        ['Ac', 'Kd'], ['Ac', 'Ks'], ['Ac', 'Qs'], ['Ac', 'Js'],
+        ['Ac', 'Kd'], ['As', 'Ks'], ['Ac', 'Qs'], ['Ac', 'Js'],
         ['Kc', 'Qs'], ['Ad', '5d'], ['Jc', 'Ts'], ['Qc', 'Js'],
       ];
 
       /// Seat 3 (UTG) opens 50, folds through to seat 0 (BTN) who makes it
       /// [to], blinds fold, and UTG answers for `to - 50`. The logged spot.
-      TableState opened(Archetype a, List<Card> hole, int to) {
+      TableState opened(Archetype a, List<Card> hole, int to, [int? stack]) {
         var s = _setup({3: a}, {3: hole});
+        if (stack != null) s.players[3].stack = stack;
         s = applyAction(s, 3, const Action.raise(50));
         s = _fold(s, [4, 5]);
         s = applyAction(s, 0, Action.raise(to));
@@ -623,6 +626,148 @@ void main() {
           folds((a, h) => opened(a, h, 140), Archetype.tag, 3),
           lessThan(folds((a, h) => cold(a, h, 140), Archetype.tag, 5)),
         );
+      });
+
+      // The equity in this branch comes from a Monte Carlo, and the branch is
+      // reached from reference fixtures that pin the generator at a constant.
+      // Fed from such a generator the sampler is degenerate — same index every
+      // iteration — and the estimate tracks the pinned constant instead of the
+      // hand. The symptom is this property breaking: with the seed removed the
+      // measured rates run 29% / 41% / 34% / 50% / 50%, so a 10bb 3-bet gets
+      // CALLED more often than a 7bb one. No single-price assertion catches
+      // that; only the shape across prices does.
+      // The equity here comes from a Monte Carlo, and this branch is reached
+      // from fixtures that pin the generator at a constant. Fed from such a
+      // generator the sampler is degenerate — same index every iteration — so
+      // the estimate tracks the pinned constant instead of the hand.
+      //
+      // The property that catches it: for ONE fixed spot, `chooseByEv` walks
+      // the roll down a FIXED ranking, so as the roll rises the chosen action
+      // can only move away from the best one and never come back. If the
+      // equity moves with the roll the ranking is rebuilt each time and the
+      // sequence oscillates. Measured: 0 of 16 hands oscillate as written,
+      // 11 of 16 with the seed removed, with sequences like
+      // `f r c f r f r f c c r r r f r f r f r f`.
+      //
+      // Stated per-spot rather than across prices on purpose: each price gets
+      // its own seed, so with 16 hands the fold rate per price carries about
+      // 12 points of sampling noise and a cross-price comparison cannot
+      // resolve anything smaller than that.
+      test('for a fixed spot the action never oscillates with the roll', () {
+        var oscillating = 0;
+        final detail = <String>[];
+        for (final hole in continues) {
+          final s = opened(Archetype.tag, hole, 140);
+          final seq = [
+            for (var i = 0; i < 20; i++)
+              decideBot(s, 3, rng: _FixedRandom(i / 20)).action.type,
+          ];
+          final seen = <ActionType>{};
+          ActionType? prev;
+          var osc = false;
+          for (final a in seq) {
+            if (a != prev && seen.contains(a)) osc = true;
+            seen.add(a);
+            prev = a;
+          }
+          if (osc) {
+            oscillating++;
+            detail.add('${hole.join()}: ${seq.map((t) => t.label[0]).join()}');
+          }
+        }
+        expect(oscillating, 0, reason: detail.join('  '));
+      });
+
+      // Past 12bb a re-raise needs the hand, not the read: this same branch
+      // answers 4-bets and 5-bets, and each priced re-raise is 2.2x the last,
+      // so three compound into a pre-flop jam. Removing that gate left every
+      // test in both repos green while the states were reached a thousand
+      // times over, so the jam could come back silently.
+      test('a 4-bet is re-raised less often than a 3-bet', () {
+        /// UTG opens 50, BTN 3-bets 160, UTG 4-bets to [to]; BTN answers.
+        TableState fourBet(Archetype a, List<Card> hole, int to) {
+          var s = _setup({0: a}, {0: hole});
+          s = applyAction(s, 3, const Action.raise(50));
+          s = _fold(s, [4, 5]);
+          s = applyAction(s, 0, const Action.raise(160));
+          s = _fold(s, [1, 2]);
+          return applyAction(s, 3, Action.raise(to));
+        }
+
+        int raises(TableState Function(Archetype, List<Card>) spot, int seat) {
+          var n = 0;
+          for (final hole in continues) {
+            for (final r in [0.05, 0.3, 0.5, 0.7, 0.95]) {
+              final d = decideBot(
+                spot(Archetype.tag, hole),
+                seat,
+                rng: _FixedRandom(r),
+              );
+              if (d.action.type == ActionType.raise) n++;
+            }
+          }
+          return n;
+        }
+
+        // 352 is past 12bb, so the deep gate is live; 160 is not.
+        final deepRaises = raises((a, h) => fourBet(a, h, 352), 0);
+        final shallowRaises = raises((a, h) => opened(a, h, 160), 3);
+        expect(
+          deepRaises,
+          lessThan(shallowRaises),
+          reason:
+              'facing a 4-bet raised $deepRaises times, a 3-bet $shallowRaises',
+        );
+      });
+
+      // When a bot cannot cover the re-raise the engine returns the raiser's
+      // excess uncalled, so those chips were never winnable. Priced on the
+      // whole pot the call shows positive EV and short stacks stack off. This
+      // goes through decideBot deliberately: the evaluator-level test asserts
+      // arithmetic the test itself performs, which cannot catch the brain
+      // handing over the wrong pot.
+      test('a short stack does not call off on a pot it cannot win', () {
+        // Stack 400: it opens 50, leaving 350 behind against a 1000 re-raise,
+        // so 600 of the 1080 on the table comes straight back to the raiser
+        // and only 480 is winnable. That geometry is chosen because it makes
+        // the difference decide the hand: break-even is 350/1430 = 24.5% on
+        // the table pot but 350/830 = 42.2% on the real one, and junk all-in
+        // against a re-raising range runs about 27%. Shallower spots do not
+        // discriminate — 5bb into 16.5bb is a correct call with almost
+        // anything, so the fix moves nothing there.
+        TableState shortStack(Archetype a, List<Card> hole) {
+          var s = _setup({3: a}, {3: hole});
+          s.players[3].stack = 400;
+          s = applyAction(s, 3, const Action.raise(50));
+          s = _fold(s, [4, 5]);
+          s = applyAction(s, 0, const Action.raise(1000));
+          return _fold(s, [1, 2]);
+        }
+
+        const junk = <List<Card>>[
+          ['3c', '2d'],
+          ['4c', '2d'],
+          ['5c', '3d'],
+          ['6c', '2d'],
+        ];
+        for (final arch in Archetype.values) {
+          for (final hole in junk) {
+            final s = shortStack(arch, hole);
+            final la = legalActions(s);
+            expect(la.callAmount, 350, reason: 'spot drifted');
+            expect(la.toCall, 950, reason: 'spot drifted');
+            expect(s.pot, 1080, reason: 'spot drifted');
+            for (final r in [0.05, 0.3, 0.5, 0.7, 0.95]) {
+              expect(
+                decideBot(s, 3, rng: _FixedRandom(r)).action.type,
+                ActionType.fold,
+                reason:
+                    '$arch called off 350 with ${hole.join()} at roll $r, '
+                    'into a pot where only 480 is winnable',
+              );
+            }
+          }
+        }
       });
 
       test('the archetype still means something', () {

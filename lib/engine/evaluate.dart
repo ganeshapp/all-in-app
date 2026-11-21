@@ -44,7 +44,20 @@ double realisation(int opponents, bool inPosition, [double spr = 2]) {
   final depth = _clamp((spr - 2) * (inPosition ? 0.016 : 0.03), 0, 0.3);
   // The bases are deliberately pessimistic: a caller gets neither five free
   // cards nor the last word.
-  return _clamp((inPosition ? 0.9 : 0.72) - (seats - 1) * 0.08 - depth, 0.4, 1);
+  final base = _clamp(
+    (inPosition ? 0.9 : 0.72) - (seats - 1) * 0.08 - depth,
+    0.4,
+    1,
+  );
+  // …but with nothing behind there is nothing left to misplay. Realisation
+  // discounts future streets you might get outplayed on; a call that puts you
+  // all-in has none, so it collects all five cards and its full share. Pricing
+  // those calls at 0.72 understated every one of them by 28%, and the only
+  // reason it did not show was a mixing band wide enough to take the call
+  // anyway. Narrow the band and the bots started folding to a shove-every-hand
+  // maniac — who went from losing to +1736bb.
+  final committed = _clamp(1 - spr / 2, 0, 1);
+  return _clamp(base + (1 - base) * committed, 0.4, 1);
 }
 
 /// Chips won or lost, on average, by calling [cost] to contest [pot].
