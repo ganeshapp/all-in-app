@@ -590,14 +590,32 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
         final c = toCombos(inferredPreflopRange(q, q.position, act));
         if (c.isNotEmpty) oppCombos.add(c);
       }
+      // SEEDED, not handed the shared `rng`. This is the only pre-flop
+      // decision that runs a Monte Carlo, and the reference fixtures pin
+      // pre-flop decisions by holding the generator at a constant — which
+      // makes a sampler fed from it degenerate: it draws the same index every
+      // iteration and returns a number that moves with the pinned constant
+      // instead of with the hand. A seed derived from the spot keeps the
+      // estimate deterministic, reproducible in a replay, and independent of
+      // however the caller's generator is behaving.
+      final eqSeed = hashSeed(
+        '3bet|${s.handNumber}|$seat|${hole[0]}${hole[1]}'
+        '|${s.currentBet}|${live.length}',
+      );
       final eq =
           oppCombos.length == live.length && oppCombos.length == 1
               ? equityVsRange(
                 comboToInts((hole[0], hole[1])),
                 const [],
                 oppCombos[0],
-                iters: 300,
-                rng: rng,
+                // 600, matching the desktop. The `eq > 0.58` gate below sits
+                // inside this sampler's own noise: at 300 iterations the
+                // standard error is ~2.9%, so a hand whose true equity is
+                // 0.574 clears or misses the gate on the draw rather than on
+                // its merits. 600 halves the variance; the two engines must
+                // also agree, or the same spot 4-bets on one and not the other.
+                iters: 600,
+                seed: eqSeed,
               ).equity
               : oppCombos.length == live.length && oppCombos.length > 1
               ? equityVsRanges(
@@ -605,13 +623,13 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
                 const [],
                 oppCombos,
                 iters: 450,
-                rng: rng,
+                seed: eqSeed,
               ).equity
               : equityVsRandom(
                 comboToInts((hole[0], hole[1])),
                 const [],
                 iters: 300,
-                rng: rng,
+                seed: eqSeed,
               ).equity;
 
       final potAfter = s.pot + la.callAmount;
@@ -642,11 +660,28 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
         seat,
         kBluffHands[archetype]! * policyPre.frequency * viablePre,
       );
+      // How deep the raise war already is. An open is ~2.5bb and a 3-bet
+      // ~7bb, so past 12bb this is a 4-bet or worse. Re-raising on fold
+      // equity down there is how a table gets all-in before the flop: every
+      // priced re-raise is 2.2x the last, and this same branch answers each
+      // one, so three of them compound into a jam. Deep in the war a raise
+      // needs the hand, not the read.
+      final deep = s.currentBet > 12 * bb;
       final mayRaise =
-          la.canRaise && fourBetTo > s.currentBet && (eq > 0.58 || bluffingPre);
+          la.canRaise &&
+          fourBetTo > s.currentBet &&
+          (deep ? eq > 0.72 : (eq > 0.58 || bluffingPre));
+      // The pot this bot can actually WIN, not the pot on the table. When it
+      // cannot cover the re-raise, `legalActions` caps `callAmount` at its
+      // stack and the engine returns the raiser's excess uncalled — so those
+      // chips were never winnable. Handing the full `s.pot` to the evaluator
+      // priced a call above zero in spots that were clearly negative, and
+      // short stacks called off their last chips with 72o.
+      final uncallable = max(0, la.toCall - la.callAmount);
+      final winnable = max(0, s.pot - uncallable);
       final priced = priceActions(
         equity: eq,
-        pot: s.pot,
+        pot: winnable,
         callCost: la.callAmount,
         canCall: la.canCall,
         canRaise: mayRaise,
@@ -660,6 +695,7 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
           fraction: s.pot > 0 ? (fourBetTo - s.currentBet) / s.pot : .6,
         ),
         realise: realise,
+        toCall: la.toCall,
       );
       // How much -EV this player will wear to stay in the hand — the same
       // expression the post-flop call uses, so one knob explains both. A nit

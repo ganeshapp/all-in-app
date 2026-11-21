@@ -277,13 +277,55 @@ Four invariants hold this down, each with a test that failed once:
   "close enough to mix", which is how a bot called 157bb with J2o.
 - **A 4-bet is a bluff and answers to the bluff bandit**, not to fold equity alone. Pricing
   it on fold equity opened an ungoverned bluff channel and pre-flop all-ins doubled.
+- **The equity estimate is seeded** (`hashSeed` of the spot), never handed the caller's
+  generator. This is the only pre-flop decision that runs a Monte Carlo, and the reference
+  fixtures pin pre-flop decisions by holding the generator at a constant — which makes a
+  sampler fed from it degenerate: it draws the same index every iteration and returns a
+  number that tracks the pinned constant instead of the hand. The symptom was a *bigger*
+  3-bet getting called more often than a smaller one.
+- **A re-raise past 12bb needs the hand, not the read.** This same branch answers 4-bets and
+  5-bets, and each priced re-raise is 2.2x the last, so three of them compound into a
+  pre-flop jam. Requiring real equity (>0.72) that deep took pre-flop all-ins from 38 per
+  3000 hands back to 2.
+- **The pot handed to the evaluator is the pot this seat can WIN**, not the pot on the table.
+  When a bot cannot cover a re-raise, `legalActions` caps `callAmount` at its stack and the
+  engine returns the raiser's excess uncalled, so those chips were never winnable. Passing
+  the full pot priced the call above zero in clearly negative spots and short stacks called
+  off their last chips with 72o.
+- **A caller matches the raise minus what the raiser already owed.** `raiseEv` counted the
+  caller as putting in the full cost, but they already have the current bet in: facing a
+  3-bet to 160 after owing 110, they add 192, not 302. The inflated called pot made a 4-bet
+  outrank a call across a band of equities where the same arithmetic says call.
+- **Nobody folds to a bluff when somebody is already all-in.** `fieldFoldProbability` returns
+  0 for an all-in opponent, so the whole field product collapses. The desktop's
+  `allFoldChance` lacked this and its 0.02 floor credited fold equity against a player
+  contesting regardless, which had bots 4-betting 72o into a standing all-in.
 
-Known cost, not yet addressed: bot-versus-bot all-ins rose from 3.3% of hands to 5.5%
-(live is ~2%) because wider pre-flop continues make low-SPR pots that reach the felt. It is
-not the 4-bet size — shrinking it to 2.0x/0.75-pot moved the money to the flop and made the
-rate marginally worse. It is post-flop stack-off behaviour, which still decides by rule
-rather than by price, and is the next thing to price. Flops seen (59.6% vs ~60%) and
-showdowns (20.2% vs ~25%) both sit at live rates.
+Both engines run the heads-up equity arm at **600 iterations, deliberately equal**. The
+`eq > 0.58` 4-bet gate sits inside this sampler's own noise: at 300 iterations the standard
+error is about 2.9%, so a hand whose true equity is 0.574 clears or misses the gate on the
+draw rather than on its merits. They were 300 and 450, which is how the same spot 4-bet on
+one engine and not the other.
+
+Known cost, not yet addressed: bot-versus-bot all-ins rose from 3.3% of hands to 5.2%
+(live is ~2%) because wider pre-flop continues make low-SPR pots that reach the felt. Almost
+all of the remainder is post-flop (flop 20, turn 38, river 98 per 3000 hands against
+pre-flop's 1), and post-flop stack-off still decides by rule rather than by price — that is
+the next thing to price. It is not the 4-bet size: shrinking it to 2.0x/0.75-pot moved the
+money to the flop and made the rate marginally worse. Flops seen (58.2% vs ~60%) and
+showdowns (17.4% vs ~25%) both sit at or near live rates.
+
+The desktop at `../poker` now carries the same policy, measured with its own probes
+(`scripts/_probe.ts`, `_table.ts`, `_threebet.ts`, `grade_bots.ts`): fold-to-3-bet
+73.4% → 47.3%, 3-bets taken uncontested 49.7% → 2.8%, and the EV left behind per fold in the
+"facing a re-raise" bucket 0.38bb → 0.23bb. Hand for hand at a good price the two engines now
+agree exactly — TAG 16%, LAG 13%, Nit 19%, Station 5%, and 63% for every archetype on the
+cold call. Getting there needed one correction the desktop needed on its own: its
+`opponentRange` took the pre-flop role from `aggressorPreflop`, which the engine overwrites
+on every pre-flop raise, so the 3-bettor was modelled with an OPENING range and the opener
+with a re-raising one. Because only bot moves store a range, that was the live path every
+time the human 3-bet — the exact spot the range cap was widened for, which the inversion had
+made inert.
 
 - `engine/replay_equity.dart` takes a frozen map of recorded hole cards, live seat IDs and
   only the selected frame's board. Known folded cards are dead; unknown folded cards are

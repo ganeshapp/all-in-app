@@ -573,9 +573,22 @@ void main() {
         }
       });
 
-      test('every hand in the set continues at least sometimes', () {
-        // The leak folded 11 of these 16 hands at every RNG draw. A policy
-        // that prices has no such dead zone.
+      test('the dead zone is far smaller than the leak\'s', () {
+        // The old policy continued with AA/KK/QQ/AK and nothing else — 5 of
+        // these 16 hands — and folded the other 11 at every draw. Requiring
+        // at least twice as many to survive ties the bar to the leak rather
+        // than to whatever the current numbers happen to be.
+        //
+        // Deliberately NOT all 16: JTo for 90 into 220, out of position
+        // against a re-raising range, is a genuine fold, and a test that
+        // demanded otherwise would be asking the bots to play worse.
+        const premium = {'AA', 'KK', 'QQ', 'AKs', 'AKo'};
+        final premiums =
+            continues
+                .where((h) => premium.contains(cardsToLabel(h[0], h[1])))
+                .length;
+        var alive = 0;
+        final dead = <String>[];
         for (final hole in continues) {
           final kept = [
             for (final r in [0.05, 0.3, 0.5, 0.7, 0.95])
@@ -585,12 +598,17 @@ void main() {
                 rng: _FixedRandom(r),
               ).action.type,
           ];
-          expect(
-            kept.any((t) => t != ActionType.fold),
-            isTrue,
-            reason: '${hole.join()} folded at every draw',
-          );
+          if (kept.any((t) => t != ActionType.fold)) {
+            alive++;
+          } else {
+            dead.add(cardsToLabel(hole[0], hole[1]));
+          }
         }
+        expect(
+          alive,
+          greaterThanOrEqualTo(2 * premiums),
+          reason: '$alive/${continues.length} continue; always folded: $dead',
+        );
       });
 
       test('a worse price folds more', () {

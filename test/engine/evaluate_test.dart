@@ -86,6 +86,22 @@ void main() {
       );
     });
 
+    // The caller matches our raise from further along than us: they already
+    // have the current bet in. Counting their call as our full cost inflated
+    // the called pot and made the raise outrank the call for a band of
+    // equities where this function's own arithmetic says call.
+    test('the caller only owes the raise minus what we owed', () {
+      // Pot 240, we owe 110, we raise to 352 so our cost is 302. They put in
+      // 302 - 110 = 192, so a called pot is 240 + 302 + 192 = 734, not 844.
+      const pot = 240, cost = 302, toCall = 110;
+      final got = raiseEv(1, pot, cost, 0, 1, toCall);
+      expect(got, closeTo(pot + cost + (cost - toCall) - cost, 1e-9));
+      // Over-counting is strictly generous, so the corrected figure is lower.
+      expect(got, lessThan(raiseEv(1, pot, cost, 0)));
+      // With nothing owed the two agree — that is the pre-existing contract.
+      expect(raiseEv(0.5, pot, cost, 0.3, 1, 0), raiseEv(0.5, pot, cost, 0.3));
+    });
+
     test('more folds, and a better hand, are each worth more', () {
       expect(
         raiseEv(0.5, 100, 50, 0.9),
@@ -155,6 +171,31 @@ void main() {
       for (var i = 0; i < 50; i++) {
         expect(chooseByEv(lopsided, i / 50, 50).kind, PricedKind.fold);
       }
+    });
+
+    // When the bot cannot cover the re-raise the engine returns the raiser's
+    // excess uncalled, so those chips were never winnable. The branch passes
+    // the reduced pot; this pins what that reduction is worth.
+    test('a pot it cannot win does not make the call positive', () {
+      // Stack 100 against a 350 re-raise into a pot of 480: 250 comes back.
+      const onTable = 480, toCall = 350, canPay = 100;
+      final winnable = onTable - (toCall - canPay);
+      final honest = priceActions(
+        equity: 0.25,
+        pot: winnable,
+        callCost: canPay,
+        canCall: true,
+        realise: 0.72,
+      );
+      final inflated = priceActions(
+        equity: 0.25,
+        pot: onTable,
+        callCost: canPay,
+        canCall: true,
+        realise: 0.72,
+      );
+      expect(honest.first.kind, PricedKind.fold);
+      expect(inflated.first.kind, PricedKind.call);
     });
 
     test('no options at all is a fold', () {

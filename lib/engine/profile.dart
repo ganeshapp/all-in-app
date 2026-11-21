@@ -431,7 +431,13 @@ List<HandLabel> inferredPreflopRange(
       // — given a belief wrong by a factor of three. The ceiling is now high
       // enough that a maniac is modelled as a maniac.
       final rate = (w.threeBet + 10 * .07) / (w.threeBetOpp + 10);
-      return topPercentRange(_clamp(rate * 100 * 1.4, 2.5, 80)).toList();
+      // The multiplier stays at 1.6, as it was. Lowering it while raising
+      // the ceiling would have narrowed every ordinary opponent's modelled
+      // re-raising range by 12.5% — the opposite of the point — and the
+      // ceiling is what this change is for: measured across bot-versus-bot
+      // play the smoothed rate peaks around 0.18, so the cap only ever
+      // binds against a human who really does re-raise relentlessly.
+      return topPercentRange(_clamp(rate * 100 * 1.6, 2.5, 80)).toList();
     case PreflopAction.open:
       return ranges.raise.toList();
     case PreflopAction.call:

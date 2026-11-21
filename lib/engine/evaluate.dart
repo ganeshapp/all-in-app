@@ -55,17 +55,25 @@ double callEv(double equity, num pot, num cost, [double realise = 1]) {
 
 /// Chips won or lost by raising, counting both ways it can end: everybody
 /// folds, or somebody continues and the hand plays on for a bigger pot.
+/// [toCall] is what WE already owed before raising. The caller matches our
+/// raise from further along than us — they have the current bet in already, so
+/// they put in `cost - toCall`, not `cost`. Counting their call as the full
+/// `cost` inflated the called pot by exactly that much, enough to make the
+/// raise outrank the call across a band of equities where this function's own
+/// arithmetic says call.
 double raiseEv(
   double equity,
   num pot,
   num cost,
   double foldsEverybody, [
   double realise = 1,
+  num toCall = 0,
 ]) {
   final fe = _clamp(foldsEverybody, 0, 1);
   final share = _clamp(equity * realise, 0, 1);
-  // Called: the pot now holds the raise twice over.
-  final called = share * (pot + 2 * cost) - cost;
+  // Called: our raise plus theirs, and theirs is short by what we owed.
+  final theirs = math.max(0, cost - toCall);
+  final called = share * (pot + cost + theirs) - cost;
   return fe * pot + (1 - fe) * called;
 }
 
@@ -97,6 +105,9 @@ List<PricedAction> priceActions({
   num? raiseCost,
   double foldsEverybody = 0.5,
   double realise = 1,
+
+  /// What we owe before acting — see [raiseEv].
+  num toCall = 0,
 }) {
   final out = <PricedAction>[const PricedAction(PricedKind.fold, 0)];
   if (canCall) {
@@ -112,7 +123,7 @@ List<PricedAction> priceActions({
     out.add(
       PricedAction(
         PricedKind.raise,
-        raiseEv(equity, pot, raiseCost, foldsEverybody, realise),
+        raiseEv(equity, pot, raiseCost, foldsEverybody, realise, toCall),
         raiseTo,
       ),
     );
