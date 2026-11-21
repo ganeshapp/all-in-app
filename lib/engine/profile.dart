@@ -423,12 +423,15 @@ List<HandLabel> inferredPreflopRange(
 
   switch (action) {
     case PreflopAction.threebet:
-      // Re-raising range: scaled by how often they actually do it, floored
-      // so a maniac's 3-bet is still wide and a rock's is still premium.
-      var pct = (w.threeBet + 10 * .07) / (w.threeBetOpp + 10) * 100 * 1.6;
-      if (pct < 2.5) pct = 2.5;
-      if (pct > 30) pct = 30;
-      return topPercentRange(pct).toList();
+      // Re-raising range: what they actually re-raise, not a polite guess.
+      //
+      // This used to cap at 30%, which quietly broke the read it was meant
+      // to serve: somebody re-raising 84% of the time was modelled as
+      // holding the top 30% of hands, so everybody folded to them correctly
+      // — given a belief wrong by a factor of three. The ceiling is now high
+      // enough that a maniac is modelled as a maniac.
+      final rate = (w.threeBet + 10 * .07) / (w.threeBetOpp + 10);
+      return topPercentRange(_clamp(rate * 100 * 1.4, 2.5, 80)).toList();
     case PreflopAction.open:
       return ranges.raise.toList();
     case PreflopAction.call:

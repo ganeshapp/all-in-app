@@ -244,7 +244,7 @@ dart format lib test
 flutter test
 ```
 
-**1,698 tests** across 93 test files, all runnable on a Mac with no device attached
+**1,716 tests** across 94 test files, all runnable on a Mac with no device attached
 (`sqflite_common_ffi` backs the database tests):
 
 | Area | What it covers |

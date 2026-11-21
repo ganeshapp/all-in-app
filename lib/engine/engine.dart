@@ -10,6 +10,7 @@ export 'bot_read.dart';
 export 'cards.dart';
 export 'coach.dart';
 export 'equity.dart';
+export 'evaluate.dart';
 export 'evaluator.dart';
 export 'format.dart';
 export 'hand_engine.dart';

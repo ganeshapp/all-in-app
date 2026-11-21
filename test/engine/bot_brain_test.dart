@@ -502,6 +502,122 @@ void main() {
       _pinPre(stationA5, 5, 0.9, 'P8c_station_co_A5s_vs_3bet_090');
     });
 
+    // The exploit, as a test. Across 769 logged hands the bots folded 94.5%
+    // of the time to a 7bb 3-bet and never adjusted: re-raises are looked up
+    // as `myPosition_vs_raiserPosition`, the brain skips the charts entirely
+    // once the bet is past 4.5bb, and the fallback was to fold. The pins
+    // above cannot catch that — they are seven fixed hands and the leak is a
+    // rate across the whole range.
+    //
+    // What is asserted here is deliberately NOT a magic fold rate, which
+    // would just be the old chart written in a different place. It is the
+    // three properties an evaluator has and a missing chart does not: most
+    // hands continue when the price is good, folds go UP when the price gets
+    // worse, and the archetype still means something. See
+    // `tool/_threebet.dart` for the same measurement by hand.
+    group('facing a 3-bet it prices rather than folds', () {
+      // Hands with a claim to continue for a good price. Deliberately not
+      // the set a chart would hold: a measure that encodes the exploit it is
+      // meant to catch has stopped being a measure.
+      const continues = <List<Card>>[
+        ['Ac', 'Ad'], ['Kc', 'Kd'], ['Qc', 'Qd'], ['Jc', 'Jd'], //
+        ['Tc', 'Td'], ['9c', '9d'], ['8c', '8d'], ['7c', '7d'],
+        ['Ac', 'Kd'], ['Ac', 'Ks'], ['Ac', 'Qs'], ['Ac', 'Js'],
+        ['Kc', 'Qs'], ['Ad', '5d'], ['Jc', 'Ts'], ['Qc', 'Js'],
+      ];
+
+      /// Seat 3 (UTG) opens 50, folds through to seat 0 (BTN) who makes it
+      /// [to], blinds fold, and UTG answers for `to - 50`. The logged spot.
+      TableState opened(Archetype a, List<Card> hole, int to) {
+        var s = _setup({3: a}, {3: hole});
+        s = applyAction(s, 3, const Action.raise(50));
+        s = _fold(s, [4, 5]);
+        s = applyAction(s, 0, Action.raise(to));
+        return _fold(s, [1, 2]);
+      }
+
+      /// Seat 5 (CO) cold-calls into UTG's open and MP's 3-bet, owing the
+      /// whole raise out of position with UTG still behind.
+      TableState cold(Archetype a, List<Card> hole, int to) {
+        var s = _setup({5: a}, {5: hole});
+        s = applyAction(s, 3, const Action.raise(50));
+        return applyAction(s, 4, Action.raise(to));
+      }
+
+      /// Fraction of (hand x RNG draw) that folds.
+      double folds(
+        TableState Function(Archetype, List<Card>) spot,
+        Archetype arch,
+        int seat,
+      ) {
+        var folded = 0;
+        var seen = 0;
+        for (final hole in continues) {
+          final s = spot(arch, hole);
+          for (final r in [0.05, 0.3, 0.5, 0.7, 0.95]) {
+            seen++;
+            final d = decideBot(s, seat, rng: _FixedRandom(r));
+            if (d.action.type == ActionType.fold) folded++;
+          }
+        }
+        return folded / seen;
+      }
+
+      test('most hands continue when the price is good', () {
+        for (final arch in Archetype.values) {
+          final rate = folds((a, h) => opened(a, h, 140), arch, 3);
+          // 94.5% was the measured leak. AA/KK/QQ/AK — all the old policy
+          // kept — is 5 of these 16 hands, so the leak scores about 69%
+          // here. Half is a wide margin that still fails the old code.
+          expect(rate, lessThan(0.5), reason: '$arch folded ${rate * 100}%');
+        }
+      });
+
+      test('every hand in the set continues at least sometimes', () {
+        // The leak folded 11 of these 16 hands at every RNG draw. A policy
+        // that prices has no such dead zone.
+        for (final hole in continues) {
+          final kept = [
+            for (final r in [0.05, 0.3, 0.5, 0.7, 0.95])
+              decideBot(
+                opened(Archetype.tag, hole, 140),
+                3,
+                rng: _FixedRandom(r),
+              ).action.type,
+          ];
+          expect(
+            kept.any((t) => t != ActionType.fold),
+            isTrue,
+            reason: '${hole.join()} folded at every draw',
+          );
+        }
+      });
+
+      test('a worse price folds more', () {
+        for (final arch in Archetype.values) {
+          final cheap = folds((a, h) => opened(a, h, 110), arch, 3);
+          final dear = folds((a, h) => opened(a, h, 400), arch, 3);
+          expect(cheap, lessThan(dear), reason: '$arch: $cheap vs $dear');
+        }
+        // And owing the whole raise, out of position, with a player still
+        // behind is worse than owing the remainder of your own open.
+        expect(
+          folds((a, h) => opened(a, h, 140), Archetype.tag, 3),
+          lessThan(folds((a, h) => cold(a, h, 140), Archetype.tag, 5)),
+        );
+      });
+
+      test('the archetype still means something', () {
+        // One knob — stickiness — decides how much -EV a bot will wear to
+        // stay in. Without it the priced branch ignored the archetype and
+        // all four answered a 3-bet identically.
+        expect(
+          folds((a, h) => opened(a, h, 140), Archetype.nit, 3),
+          greaterThan(folds((a, h) => opened(a, h, 140), Archetype.station, 3)),
+        );
+      });
+    });
+
     test(
       'BB with the option: raise over limps (3bb + 1bb per limper) or check',
       () {

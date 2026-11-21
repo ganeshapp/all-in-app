@@ -26,6 +26,7 @@ import 'format.dart';
 import 'hand_engine.dart';
 import 'notation.dart';
 import 'prng.dart';
+import 'evaluate.dart';
 import 'profile.dart';
 import 'opponent_model.dart';
 import 'ranges.dart';
@@ -544,18 +545,161 @@ BotDecision _decideBotInner(TableState s, int seat, Random rng) {
         );
       }
     }
-    // Speculative continues vs a 3-bet: at a sane price, by the hand's own
-    // 3-bet-chart frequency, widened by how often this particular player
-    // re-raises. Somebody 3-betting half their hands is not representing
-    // anything, and folding everything but QQ+ to them is free money.
-    if (f3vs > 0 &&
-        la.canCall &&
-        la.callAmount <= 12 * bb &&
-        rnd < f3vs * (0.4 + stickiness) * adj.defend) {
-      return BotDecision(
-        action: Action.call(amount: la.callAmount),
-        range: chartLabels(threebetVs, 0.25),
+    // Price it.
+    //
+    // Everything above this line is the book. Below it there is no chart to
+    // consult: `charts` is keyed `myPosition_vs_raiserPosition`, and every
+    // one of those is "defender versus an EARLIER seat", so a re-raise from
+    // a LATER seat — which is what a 3-bet is — misses the lookup every
+    // time. The old code multiplied the missing value by the adaptation
+    // terms and got zero, folded everything but AA/KK/QQ/AK, and did that
+    // 94.5% of the time across 769 real hands without ever adjusting. The
+    // read was correct the whole time; it had nowhere to go.
+    //
+    // So out of book now falls through to arithmetic instead of to folding.
+    final villain = s.aggressor != null ? s.players[s.aggressor!] : null;
+    if (villain != null && la.canCall) {
+      final live =
+          s.players.where((q) => !q.hasFolded && q.id != seat).toList();
+      // Against EVERYONE still in, not just the raiser: equity against one
+      // opponent's range is the wrong number in a multiway pot, and using it
+      // had bots calling 125bb with 83o into three live players.
+      final blocked = <int>{...comboToInts((hole[0], hole[1]))};
+      List<IntCombo> toCombos(List<HandLabel> labels) {
+        final out = <IntCombo>[];
+        for (final l in labels) {
+          for (final (a, b) in labelToCombos(l)) {
+            final ai = cardToInt(a);
+            final bi = cardToInt(b);
+            if (!blocked.contains(ai) && !blocked.contains(bi)) {
+              out.add([ai, bi]);
+            }
+          }
+        }
+        return out;
+      }
+
+      final oppCombos = <List<IntCombo>>[];
+      for (final q in live) {
+        final act =
+            q.id == s.aggressor
+                ? (facing3bet ? PreflopAction.threebet : PreflopAction.open)
+                : q.pfrThisHand
+                ? PreflopAction.open
+                : PreflopAction.call;
+        final c = toCombos(inferredPreflopRange(q, q.position, act));
+        if (c.isNotEmpty) oppCombos.add(c);
+      }
+      final eq =
+          oppCombos.length == live.length && oppCombos.length == 1
+              ? equityVsRange(
+                comboToInts((hole[0], hole[1])),
+                const [],
+                oppCombos[0],
+                iters: 300,
+                rng: rng,
+              ).equity
+              : oppCombos.length == live.length && oppCombos.length > 1
+              ? equityVsRanges(
+                comboToInts((hole[0], hole[1])),
+                const [],
+                oppCombos,
+                iters: 450,
+                rng: rng,
+              ).equity
+              : equityVsRandom(
+                comboToInts((hole[0], hole[1])),
+                const [],
+                iters: 300,
+                rng: rng,
+              ).equity;
+
+      final potAfter = s.pot + la.callAmount;
+      final behind = max(0, p.stack - la.callAmount);
+      final realise = realisation(
+        live.length,
+        p.position == Position.btn,
+        potAfter > 0 ? behind / potAfter : 2,
       );
+      // 2.2x, and never more than the pot. A 4-bet sized off the current
+      // bet alone becomes an effective jam once the bet is already large,
+      // and a table that 4-bet-jams is a table that stacks off: all-in
+      // actions ran at twice the rate with 2.4x and no pot cap.
+      final fourBetTo = _clampInt(
+        min(s.currentBet * 2.2, s.currentBet + s.pot),
+        la.minRaiseTo,
+        la.maxRaiseTo,
+      );
+      // Re-raising a weak hand IS a bluff, so it answers to the same
+      // governor the post-flop bluffs do rather than to fold equity alone.
+      // Pricing the raise on fold equity by itself opened a brand new bluff
+      // channel with nothing watching it: pre-flop all-ins went from about
+      // 3% of hands to 6.6%.
+      final viablePre = bluffViability(live, difficulty);
+      final policyPre = bluffPolicy(p);
+      final bluffingPre = bluffsThisHand(
+        s.handNumber,
+        seat,
+        kBluffHands[archetype]! * policyPre.frequency * viablePre,
+      );
+      final mayRaise =
+          la.canRaise && fourBetTo > s.currentBet && (eq > 0.58 || bluffingPre);
+      final priced = priceActions(
+        equity: eq,
+        pot: s.pot,
+        callCost: la.callAmount,
+        canCall: la.canCall,
+        canRaise: mayRaise,
+        raiseTo: fourBetTo,
+        raiseCost: fourBetTo - p.committed,
+        // The learned, per-opponent fold model, not a fresh guess.
+        foldsEverybody: fieldFoldProbability(
+          live,
+          bettor: seat,
+          street: Street.preflop,
+          fraction: s.pot > 0 ? (fourBetTo - s.currentBet) / s.pot : .6,
+        ),
+        realise: realise,
+      );
+      // How much -EV this player will wear to stay in the hand — the same
+      // expression the post-flop call uses, so one knob explains both. A nit
+      // gets essentially none and needs a clear edge; a station wears most
+      // of a big blind and calls the marginal ones. Without it nothing
+      // archetype-dependent reached the priced branch at all and all four
+      // archetypes answered a 3-bet identically, which is neither human nor
+      // hard to learn.
+      final slack = bb * max(0.0, stickiness * 1.2 - 0.2);
+      final ranked = [
+        for (final a in priced)
+          a.kind == PricedKind.fold
+              ? a
+              : PricedAction(a.kind, a.ev + slack, a.to),
+      ]..sort((a, b) => b.ev.compareTo(a.ev));
+      // The band has to be tied to the SIZE OF THE DECISION, not the pot: a
+      // share of the pot alone grew to hundreds of chips facing an all-in,
+      // and a call worth -900 counted as "close enough to mix".
+      final band =
+          min(s.pot * 0.05, max(bb, la.callAmount * 0.2)) * (0.6 + stickiness);
+      final pick = chooseByEv(ranked, rnd, band.toDouble());
+      // The range a bot SAYS it has must never come back empty: an empty
+      // stored range sends `villainRangeFor` to the archetype's whole
+      // playing range, 46% wide for a Station, and leaves Peek blank.
+      final own = _rangesFor(archetype, p.position);
+      if (pick.kind == PricedKind.raise && pick.to != null) {
+        if (eq < 0.5) p.bluffedThisHand = true;
+        final shown = chartLabels(threebetVs, 0.25);
+        return BotDecision(
+          action: _betOrRaise(s, pick.to!.toInt()),
+          range: shown.isNotEmpty ? shown : kPremiumList,
+        );
+      }
+      if (pick.kind == PricedKind.call) {
+        final shown = chartLabels(threebetVs, 0.25);
+        return BotDecision(
+          action: Action.call(amount: la.callAmount),
+          range: shown.isNotEmpty ? shown : own.play.toList(),
+        );
+      }
     }
     return const BotDecision(action: Action.fold(), range: []);
   }

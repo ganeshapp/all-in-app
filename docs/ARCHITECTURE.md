@@ -255,6 +255,36 @@ regression suites. `test/fixtures/lockstep_bots.txt` now pins the **mobile polic
 four seeded table configurations; regenerate it only for deliberate policy changes with
 `ALLIN_UPDATE_BOT_FIXTURE=1 flutter test test/engine/lockstep_test.dart`.
 
+**Facing a re-raise is priced, not looked up.** `engine/evaluate.dart` prices fold / call /
+4-bet in chips and the brain picks between them; `test/engine/bot_brain_ref.dart`'s seven
+`P7*`/`P8*` entries therefore come from this engine (`dart run tool/regen_3bet_ref.dart`),
+not from the desktop generator, and the desktop still has the old policy. The reason is a
+measured leak: re-raises are looked up as `myPosition_vs_raiserPosition`, every one of
+those 15 charts is "defender versus an **earlier** seat", and the brain skips charts
+entirely once the bet passes 4.5bb — so there was no book for the spot and the fallback was
+to fold. Across 769 logged hands the bots folded 94.5% of the time to a 7bb 3-bet, took 93%
+of 3-bets uncontested, and never adjusted. The same absence of arithmetic had a bot fold for
+12 chips into a pot of 534.
+
+Four invariants hold this down, each with a test that failed once:
+
+- **Folding is the zero.** Chips already in the pot never enter the comparison, which is
+  what makes the fold-for-12-into-534 unchoosable without a rule about small bets.
+- **Equity is measured against everyone still in**, not the raiser alone — using the
+  raiser's range in a multiway pot had bots calling 125bb with 83o into three players.
+- **The mixing band is tied to the size of the decision**, never a share of the pot: as a
+  pot share it grew to hundreds of chips facing an all-in and a call worth −900 counted as
+  "close enough to mix", which is how a bot called 157bb with J2o.
+- **A 4-bet is a bluff and answers to the bluff bandit**, not to fold equity alone. Pricing
+  it on fold equity opened an ungoverned bluff channel and pre-flop all-ins doubled.
+
+Known cost, not yet addressed: bot-versus-bot all-ins rose from 3.3% of hands to 5.5%
+(live is ~2%) because wider pre-flop continues make low-SPR pots that reach the felt. It is
+not the 4-bet size — shrinking it to 2.0x/0.75-pot moved the money to the flop and made the
+rate marginally worse. It is post-flop stack-off behaviour, which still decides by rule
+rather than by price, and is the next thing to price. Flops seen (59.6% vs ~60%) and
+showdowns (20.2% vs ~25%) both sit at live rates.
+
 - `engine/replay_equity.dart` takes a frozen map of recorded hole cards, live seat IDs and
   only the selected frame's board. Known folded cards are dead; unknown folded cards are
   marginalized. It enumerates flop/turn/river runouts, samples 12,000 pre-flop runouts, and
